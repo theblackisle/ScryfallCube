@@ -1,6 +1,7 @@
 import urllib.request
 import pprint
 import json
+import re
 
 def scryprint(string, indent=0):
     if string == list:
@@ -12,8 +13,7 @@ def scryprint(string, indent=0):
         print(string)
 
 def getCard(searchquery):
-
-    url = "https://api.scryfall.com/cards/search?&q=" + "is%3Afirstprint+oracle%3A" + searchquery
+    url = "https://api.scryfall.com/cards/search?&q=" + re.sub(r' ', r'+', searchquery) + "+is%3Afirstprint"
 
     response = urllib.request.urlopen(url)
     # requested = urllib.request.Request(url)
@@ -55,7 +55,8 @@ def prettyprint(data, indent=2, mode="pprint"):
 # client_id = "MY_CLIENT_ID"  # 애플리케이션 등록시 발급 받은 값 입력
 # client_secret = "MY_CLIENT_SECRET"  # 애플리케이션 등록시 발급 받은 값 입력
 
-searchquery = input("search for: ")
-result = getCard(searchquery)
-
-prettyprint(result, 4)
+while(True):
+    searchquery = input("search for: ")
+    if searchquery == "quit":
+        break
+    prettyprint(getCard(searchquery), 4)
