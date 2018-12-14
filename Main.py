@@ -3,15 +3,6 @@ import pprint
 import json
 import re
 
-def scryprint(string, indent=0):
-    if string == list:
-        for index in string:
-            print(string)
-    elif string == dict:
-        pass
-    else:
-        print(string)
-
 def getCard(searchquery):
     url = "https://api.scryfall.com/cards/search?&q=" + re.sub(r' ', r'+', searchquery) + "+is%3Afirstprint"
 
@@ -55,7 +46,7 @@ def prettyprint(data, indent=2, mode="pprint"):
 # client_id = "MY_CLIENT_ID"  # 애플리케이션 등록시 발급 받은 값 입력
 # client_secret = "MY_CLIENT_SECRET"  # 애플리케이션 등록시 발급 받은 값 입력
 
-while(True):
+while(__name__ == '__main__'):
     searchquery = input("search for: ")
     if searchquery == "quit":
         break
