@@ -67,7 +67,8 @@ def openGsFile(gsclient, filename):
 
     return gsfile
 
-if(__name__ == '__main__'):
+
+if __name__ == '__main__':
     try:
         client = openGsClient('ScryfallCube-80b58226a864.json')
         file = openGsFile(client, 'ScryfallCubeIO')

@@ -42,7 +42,8 @@ class CubeInterface():
     def putCard(self, cardname):
         card = ScryfallIO.getCard(cardname)
 
-if(__name__ == '__main__'):
+
+if __name__ == '__main__':
     try:
         MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
         MyCube.currentFile = 'ScryfallCubeIO'
