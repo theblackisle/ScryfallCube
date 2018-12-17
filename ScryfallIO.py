@@ -43,9 +43,6 @@ def prettyprint(data, indent=2, mode="pprint"):
     else:
         print('''prettyprinter: input "%s" is not a Mtg card''' % data)
 
-# client_id = "MY_CLIENT_ID"  # 애플리케이션 등록시 발급 받은 값 입력
-# client_secret = "MY_CLIENT_SECRET"  # 애플리케이션 등록시 발급 받은 값 입력
-
 while(__name__ == '__main__'):
     searchquery = input("search for: ")
     if searchquery == "quit":

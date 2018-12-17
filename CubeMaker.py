@@ -1,11 +1,17 @@
+from typing import Optional
+
+from gspread import Client
+
 import GspreadIO
 import ScryfallIO
 
 class CubeInterface():
     def __init__(self, credentials, filename=None, sheetname=None):
         self._currentClient = GspreadIO.openGsClient(credentials)
+        if self._currentClient is None:
+            raise ValueError
         self._currentFile = GspreadIO.openGsFile(self._currentClient, filename) if type(filename) is str else None
-        self._currentSheet = self._currentFile.worksheet(sheetname) if type(sheetname) == str else None
+        self._currentSheet = self._currentFile.worksheet(sheetname) if type(sheetname) is str else None
 
     @property
     def currentFile(self):
@@ -33,13 +39,19 @@ class CubeInterface():
     def currentSheet(self):
         return self._currentSheet
 
-    def putCard(self, cardname, sheetname):
+    def putCard(self, cardname):
         card = ScryfallIO.getCard(cardname)
 
 if(__name__ == '__main__'):
-    MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
-    MyCube.currentFile = 'ScryfallCubeIO'
-    MyCube.currentSheet = "시트1"
-    # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음
+    try:
+        MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
+        MyCube.currentFile = 'ScryfallCubeIO'
+        MyCube.currentSheet = "시트1"
+        # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음
 
-    print(MyCube.currentSheet.get_all_records())
+        print(MyCube.currentSheet.get_all_records())
+    except:
+        print("Failed to load google spreadsheet")
+
+
+
