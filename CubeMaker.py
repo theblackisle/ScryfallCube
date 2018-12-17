@@ -2,20 +2,44 @@ import GspreadIO
 import ScryfallIO
 
 class CubeInterface():
-    def __init__(self, credentials, filename, sheetname):
-        currentClient = GspreadIO.openGsClient(credentials)
-        currentFile = GspreadIO.openGsFile(currentClient, filename)
-        currentSheet = currentFile.worksheet(sheetname)
+    def __init__(self, credentials, filename=None, sheetname=None):
+        self._currentClient = GspreadIO.openGsClient(credentials)
+        self._currentFile = GspreadIO.openGsFile(self._currentClient, filename) if type(filename) is str else None
+        self._currentSheet = self._currentFile.worksheet(sheetname) if type(sheetname) == str else None
 
-    def moveFile(self, filename):
-        currentFile = GspreadIO.openGsFile(currentClient, filename)
+    @property
+    def currentFile(self):
+        return self._currentFile
+    @currentFile.setter
+    def currentFile(self, filename):
+        if type(filename) is str:
+            self._currentFile = GspreadIO.openGsFile(self._currentClient, filename)
+        else:
+            print("inappropriate file name")
+    @currentFile.getter
+    def currentFile(self):
+        return self._currentFile
 
-    def moveSheet(self, sheetname):
-        currentSheet = currentFile.workdsheet(sheetname)
+    @property
+    def currentSheet(self):
+        return self._currentSheet
+    @currentSheet.setter
+    def currentSheet(self, sheetname):
+        if type(sheetname) is str:
+            self._currentSheet = self._currentFile.worksheet(sheetname)
+        else:
+            print("inappropriate sheet name")
+    @currentSheet.getter
+    def currentSheet(self):
+        return self._currentSheet
 
-def putCard(cardname, sheetname):
-    card = ScryfallIO.getCard(cardname)
+    def putCard(self, cardname, sheetname):
+        card = ScryfallIO.getCard(cardname)
 
 if(__name__ == '__main__'):
-    MyCube = CubeInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1")
+    MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
+    MyCube.currentFile = 'ScryfallCubeIO'
+    MyCube.currentSheet = "시트1"
+    # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음
+
     print(MyCube.currentSheet.get_all_records())

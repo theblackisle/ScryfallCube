@@ -29,6 +29,7 @@ def create_assertion_session(conf_file, scopes, subject=None):
     )
 
 def openGsClient(credentials):
+
     scopes = [
         'https://spreadsheets.google.com/feeds',
         'https://www.googleapis.com/auth/drive',
@@ -38,14 +39,14 @@ def openGsClient(credentials):
     gc = gspread.Client(None, session)
 
     return gc
-    #예외처리 추후 추가
+    # 예외처리 추후 추가
 
 
 def openGsFile(gsclient, filename):
-    file = gsclient.open(filename)
+    gsfile = gsclient.open(filename)
 
-    return file
-    #예외처리 추후 추가
+    return gsfile
+    # 예외처리 추후 추가
 
 if(__name__ == '__main__'):
     client = openGsClient('ScryfallCube-80b58226a864.json')
