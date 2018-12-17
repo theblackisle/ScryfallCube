@@ -50,8 +50,8 @@ def openGsClient(credentials):
     except ValueError:
         print("Cannot get the session")
         return None
-    except:
-        print("unknown error during opening Google Spreadsheet client")
+    except Exception as e:
+        print("%s error during opening Google Spreadsheet client" % e)
         return None
 
 def openGsFile(gsclient, filename):
@@ -62,8 +62,9 @@ def openGsFile(gsclient, filename):
     except ValueError:
         print("Cannot get the file")
         return None
-    except:
-        print("unknown error during opening spreadsheet file")
+    except Exception as e:
+        print("%s error during opening spreadsheet file" % e)
+        return None
 
     return gsfile
 
@@ -74,5 +75,5 @@ if __name__ == '__main__':
         file = openGsFile(client, 'ScryfallCubeIO')
         wks = file.worksheet("시트1")
         print(wks.get_all_records())
-    except:
-        print("Failed to load google spreadsheet")
+    except Exception as e:
+        print("%s: Failed to load google spreadsheet" % e)

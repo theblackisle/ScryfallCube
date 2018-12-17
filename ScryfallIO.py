@@ -7,10 +7,21 @@ import re
 def getCard(searchquery):
     url = "https://api.scryfall.com/cards/search?&q=" + re.sub(r' ', r'+', searchquery) + "+is%3Afirstprint"
 
-    response = urllib.request.urlopen(url)
     # requested = urllib.request.Request(url)
     # response = urllib.request.urlopen(requested) 로 쓸수도 있음
     # url can be either a string or a Request object.
+
+    try:
+        response = urllib.request.urlopen(url)
+    except UnicodeEncodeError:
+        print("getCard: Unicode error")
+        return "Unicode error"
+    except urllib.error.HTTPError as error:
+        print("getCard: HTTP %d error" % error.code)
+        return "HTTP %d error" % error.code
+    except Exception as e:
+        print("getCard: unknown error")
+        return "unknown error: %s" % e
 
     # 참고
     # type of reponse == http.client.HTTPResponse
@@ -31,7 +42,8 @@ def getCard(searchquery):
             print("no such card: %s" % searchquery)
             return searchquery
     else:
-        print("Error Code:" + rescode)
+        print("getCard: HTTP %d error" % response.getcode())
+        return None
 
 
 def prettyprint(data, indent=2, mode="pprint"):

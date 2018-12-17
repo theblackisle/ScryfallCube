@@ -5,6 +5,7 @@ from gspread import Client
 import GspreadIO
 import ScryfallIO
 
+
 class CubeInterface():
     def __init__(self, credentials, filename=None, sheetname=None):
         self._currentClient = GspreadIO.openGsClient(credentials)
@@ -53,6 +54,3 @@ if __name__ == '__main__':
         print(MyCube.currentSheet.get_all_records())
     except:
         print("Failed to load google spreadsheet")
-
-
-
