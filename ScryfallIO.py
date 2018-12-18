@@ -4,30 +4,29 @@ import json
 import re
 
 
-def getCard(searchquery, printmode="f"):
+def getCard(searchquery, sets="f"):
 
-    url = "https://api.scryfall.com/cards/search?&q=" + re.sub(r' ', r'+', searchquery)
-    if printmode == "f":
+    url = 'https://api.scryfall.com/cards/search?&q=%22{0}%22'.format( re.sub(r' ', r'+', searchquery) )
+    if sets == "f":
         url = url + "+is%3Afirstprint"
-    elif printmode == "l":
+    elif sets == "l":
         pass
-    elif type(printmode) == str:
-        url = url + "+set%3A" + printmode
-
-    # requested = urllib.request.Request(url)
-    # response = urllib.request.urlopen(requested) 로 쓸수도 있음
-    # url can be either a string or a Request object.
+    elif type(sets) == str:
+        url = url + "+set%3A" + sets
 
     try:
         response = urllib.request.urlopen(url)
+        # requested = urllib.request.Request(url)
+        # response = urllib.request.urlopen(requested) 로 쓸수도 있음
+        # url can be either a string or a Request object.
     except UnicodeEncodeError:
-        printmode("getCard: Unicode error")
+        print("getCard: Unicode error")
         return "Unicode error"
     except urllib.error.HTTPError as error:
-        printmode("getCard: HTTP %d error" % error.code)
+        print("getCard: HTTP %d error" % error.code)
         return "HTTP %d error" % error.code
     except Exception as e:
-        printmode("getCard: unknown error")
+        print("getCard: unknown error")
         return "unknown error: %s" % e
 
     # 참고
@@ -42,14 +41,14 @@ def getCard(searchquery, printmode="f"):
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
             return json_structure["data"][0]
         elif json_structure["total_cards"] > 1:
-            printmode('''"%s" has not unique search result: %d many cards are found''' % (
+            print('''"%s" has not unique search result: %d many cards are found''' % (
                 searchquery, json_structure["total_cards"]))
             return searchquery
         else:  # (json_structure["total_cards"]==0)
-            printmode("no such card: %s" % searchquery)
+            print("no such card: %s" % searchquery)
             return searchquery
     else:
-        printmode("getCard: HTTP %d error" % response.getcode())
+        print("getCard: HTTP %d error" % response.getcode())
         return None
 
 
@@ -63,7 +62,7 @@ def prettyprint(data, indent=2, mode="pprint"):
         else:
             print("no such print mode")
     else:
-        print('''prettyprinter: input "%s" is not a Mtg card''' % data)
+        print('''prettyprinter: input "%s" is not dict type''' % data)
 
 
 while __name__ == '__main__':
