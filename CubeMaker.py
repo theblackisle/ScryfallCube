@@ -1,9 +1,6 @@
-from typing import Optional
-
-from gspread import Client
-
 import GspreadIO
 import ScryfallIO
+import Card
 
 
 class CubeInterface():
@@ -41,7 +38,8 @@ class CubeInterface():
         return self._currentSheet
 
     def putCard(self, cardname):
-        card = ScryfallIO.getCard(cardname)
+        card = Card( ScryfallIO.getCard(cardname) )
+
 
 
 if __name__ == '__main__':

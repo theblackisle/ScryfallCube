@@ -4,8 +4,15 @@ import json
 import re
 
 
-def getCard(searchquery):
-    url = "https://api.scryfall.com/cards/search?&q=" + re.sub(r' ', r'+', searchquery) + "+is%3Afirstprint"
+def getCard(searchquery, printmode="f"):
+
+    url = "https://api.scryfall.com/cards/search?&q=" + re.sub(r' ', r'+', searchquery)
+    if printmode == "f":
+        url = url + "+is%3Afirstprint"
+    elif printmode == "l":
+        pass
+    elif type(printmode) == str:
+        url = url + "+set%3A" + printmode
 
     # requested = urllib.request.Request(url)
     # response = urllib.request.urlopen(requested) 로 쓸수도 있음
@@ -14,13 +21,13 @@ def getCard(searchquery):
     try:
         response = urllib.request.urlopen(url)
     except UnicodeEncodeError:
-        print("getCard: Unicode error")
+        printmode("getCard: Unicode error")
         return "Unicode error"
     except urllib.error.HTTPError as error:
-        print("getCard: HTTP %d error" % error.code)
+        printmode("getCard: HTTP %d error" % error.code)
         return "HTTP %d error" % error.code
     except Exception as e:
-        print("getCard: unknown error")
+        printmode("getCard: unknown error")
         return "unknown error: %s" % e
 
     # 참고
@@ -35,14 +42,14 @@ def getCard(searchquery):
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
             return json_structure["data"][0]
         elif json_structure["total_cards"] > 1:
-            print('''"%s" has not unique search result: %d many cards are found''' % (
+            printmode('''"%s" has not unique search result: %d many cards are found''' % (
                 searchquery, json_structure["total_cards"]))
             return searchquery
         else:  # (json_structure["total_cards"]==0)
-            print("no such card: %s" % searchquery)
+            printmode("no such card: %s" % searchquery)
             return searchquery
     else:
-        print("getCard: HTTP %d error" % response.getcode())
+        printmode("getCard: HTTP %d error" % response.getcode())
         return None
 
 
