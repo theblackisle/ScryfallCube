@@ -49,7 +49,7 @@ if __name__ == '__main__':
         MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
         MyCube.currentFile = 'ScryfallCubeIO'
         MyCube.currentSheet = "시트1"
-        # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음
+        # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음!
 
         print(MyCube.currentSheet.get_all_records())
     except:
