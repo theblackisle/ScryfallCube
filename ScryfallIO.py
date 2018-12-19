@@ -6,7 +6,7 @@ import re
 
 def getCard(searchquery, sets="f"):
 
-    url = 'https://api.scryfall.com/cards/search?&q=%22{0}%22'.format( re.sub(r' ', r'+', searchquery) )
+    url = "https://api.scryfall.com/cards/search?&q=%22{0}%22".format( re.sub(r' ', r'+', searchquery) )
     if sets == "f":
         url = url + "+is%3Afirstprint"
     elif sets == "l":

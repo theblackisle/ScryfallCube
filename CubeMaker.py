@@ -37,9 +37,17 @@ class CubeInterface():
     def currentSheet(self):
         return self._currentSheet
 
-    def putCard(self, cardname):
-        card = Card( ScryfallIO.getCard(cardname) )
+    def exportCard(self, cardname):
+        card = Card.Card(ScryfallIO.getCard(cardname))
+        cardlist = card.gsExport()
+        self._currentSheet.append_row(cardlist)
 
+    def importCard(self, row):
+        self._currentsheet.row_values(row)
+
+
+    def gsImport(self):
+        pass
 
 
 if __name__ == '__main__':
@@ -49,6 +57,14 @@ if __name__ == '__main__':
         MyCube.currentSheet = "시트1"
         # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음!
 
-        print(MyCube.currentSheet.get_all_records())
-    except:
-        print("Failed to load google spreadsheet")
+        while True:
+            searchquery = input("put card: ")
+            if searchquery == "quit":
+                break
+            MyCube.exportCard(searchquery)
+
+        print(MyCube.currentSheet.row_values(1))
+        print(MyCube.currentSheet.row_values(2))
+        #print(MyCube.currentSheet.get_all_records())
+    except Exception as e:
+        print("Failed to load google spreadsheet: %s" % e)

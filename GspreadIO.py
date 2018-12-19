@@ -2,12 +2,13 @@ import gspread
 import json
 from authlib.client import AssertionSession
 
+
 def create_assertion_session(conf_file, scopes, subject=None):
     with open(conf_file, 'r') as f:
         try:
             conf = json.load(f)
         except json.decoder.JSONDecodeError:
-            print("Credential file is not decodable")
+            print("unable to decode Credential file")
             return None
 
     token_url = conf['token_uri']
@@ -32,6 +33,7 @@ def create_assertion_session(conf_file, scopes, subject=None):
         header=header,
     )
 
+
 def openGsClient(credentials):
     scopes = [
         'https://spreadsheets.google.com/feeds',
@@ -51,8 +53,9 @@ def openGsClient(credentials):
         print("Cannot get the session")
         return None
     except Exception as e:
-        print("%s error during opening Google Spreadsheet client" % e)
+        print("%s during opening Google Spreadsheet client" % e)
         return None
+
 
 def openGsFile(gsclient, filename):
     try:
@@ -65,7 +68,6 @@ def openGsFile(gsclient, filename):
     except Exception as e:
         print("%s error during opening spreadsheet file" % e)
         return None
-
     return gsfile
 
 
