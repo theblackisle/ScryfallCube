@@ -43,11 +43,8 @@ class CubeInterface():
         self._currentSheet.append_row(cardlist)
 
     def importCard(self, row):
-        self._currentsheet.row_values(row)
-
-
-    def gsImport(self):
-        pass
+        card = Card.Card(self._currentSheet.row_values(row))
+        return card
 
 
 if __name__ == '__main__':
@@ -57,14 +54,15 @@ if __name__ == '__main__':
         MyCube.currentSheet = "시트1"
         # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음!
 
+        print(MyCube.importCard(4).showCard())
+
         while True:
             searchquery = input("put card: ")
             if searchquery == "quit":
                 break
             MyCube.exportCard(searchquery)
 
-        print(MyCube.currentSheet.row_values(1))
-        print(MyCube.currentSheet.row_values(2))
+        print(MyCube.importCard(2).showCard())
         #print(MyCube.currentSheet.get_all_records())
     except Exception as e:
         print("Failed to load google spreadsheet: %s" % e)
