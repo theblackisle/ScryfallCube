@@ -1,7 +1,7 @@
 import GspreadIO
 import ScryfallIO
-import Card
-
+from Card import Card
+from Converter import prettify
 
 class CubeInterface():
     def __init__(self, credentials, filename=None, sheetname=None):
@@ -38,17 +38,16 @@ class CubeInterface():
         return self._currentSheet
 
     def exportCard(self, cardname):
-        card = Card.Card(ScryfallIO.getCard(cardname))
-        cardlist = card.gsExport()
-        self._currentSheet.append_row(cardlist)
+        card = Card(ScryfallIO.getCard(cardname))
+        self._currentSheet.append_row(prettify(card.gsExport()))
 
     def importCard(self, row):
-        card = Card.Card(self._currentSheet.row_values(row))
+        card = Card(prettify(self._currentSheet.row_values(row), mode="reverse"))
         return card
 
 
 if __name__ == '__main__':
-    try:
+#    try:
         MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
         MyCube.currentFile = 'ScryfallCubeIO'
         MyCube.currentSheet = "시트1"
@@ -64,5 +63,5 @@ if __name__ == '__main__':
 
         print(MyCube.importCard(2).showCard())
         #print(MyCube.currentSheet.get_all_records())
-    except Exception as e:
-        print("Failed to load google spreadsheet: %s" % e)
+#    except Exception as e:
+#        print("Failed to load google spreadsheet: %s" % e)
