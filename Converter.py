@@ -3,7 +3,7 @@ import re
 enchantment_subtypes = "Aura, Cartouche, Curse, Saga, Shrine".split(', ')
 artifact_subtypes = "Clue, Contraption, Equipment, Fortification, Treasure, Vehicle".split(', ')
 land_subtypes = "Desert, Forest, Gate, Island, Lair, Locus, Mine, Mountain, Plains, Power-Plant, Swamp, Tower, Urza’s".split(', ')
-basic_land_subtypes = "Forest, Island, Mountain, Plains, Swamp".split(', ')
+basic_land_subtypes = "Plains, Island, Swamp, Mountain, Forest".split(', ')
 planeswalker_subtypes = "Ajani, Aminatou, Angrath, Arlinn, Ashiok, Bolas, Chandra, Dack, Daretti, Domri, Dovin, Elspeth, Estrid, Freyalise, Garruk, Gideon, Huatli, Jace, Jaya, Karn, Kaya, Kiora, Koth, Liliana, Nahiri, Narset, Nissa, Nixilis, Ral, Rowan, Saheeli, Samut, Sarkhan, Sorin, Tamiyo, Teferi, Tezzeret, Tibalt, Ugin, Venser, Vivien, Vraska, Will, Windgrace, Xenagos, Yanggu, Yanling".split(', ')
 spell_subtypes = "Arcane, Trap".split(', ')
 creature_subtypes = "Advisor, Aetherborn, Ally, Angel, Antelope, Ape, Archer, Archon, Artificer, Assassin, Assembly-Worker, Atog, Aurochs, Avatar, Azra, Badger, Barbarian, Basilisk, Bat, Bear, Beast, Beeble, Berserker, Bird, Blinkmoth, Boar, Bringer, Brushwagg, Camarid, Camel, Caribou, Carrier, Cat, Centaur, Cephalid, Chimera, Citizen, Cleric, Cockatrice, Construct, Coward, Crab, Crocodile, Cyclops, Dauthi, Demon, Deserter, Devil, Dinosaur, Djinn, Dragon, Drake, Dreadnought, Drone, Druid, Dryad, Dwarf, Efreet, Egg, Elder, Eldrazi, Elemental, Elephant, Elf, Elk, Eye, Faerie, Ferret, Fish, Flagbearer, Fox, Frog, Fungus, Gargoyle, Germ, Giant, Gnome, Goat, Goblin, God, Golem, Gorgon, Graveborn, Gremlin, Griffin, Hag, Harpy, Hellion, Hippo, Hippogriff, Homarid, Homunculus, Horror, Horse, Hound, Human, Hydra, Hyena, Illusion, Imp, Incarnation, Insect, Jackal, Jellyfish, Juggernaut, Kavu, Kirin, Kithkin, Knight, Kobold, Kor, Kraken, Lamia, Lammasu, Leech, Leviathan, Lhurgoyf, Licid, Lizard, Manticore, Masticore, Mercenary, Merfolk, Metathran, Minion, Minotaur, Mole, Monger, Mongoose, Monk, Monkey, Moonfolk, Mutant, Myr, Mystic, Naga, Nautilus, Nephilim, Nightmare, Nightstalker, Ninja, Noggle, Nomad, Nymph, Octopus, Ogre, Ooze, Orb, Orc, Orgg, Ouphe, Ox, Oyster, Pangolin, Pegasus, Pentavite, Pest, Phelddagrif, Phoenix, Pilot, Pincher, Pirate, Plant, Praetor, Prism, Processor, Rabbit, Rat, Rebel, Reflection, Rhino, Rigger, Rogue, Sable, Salamander, Samurai, Sand, Saproling, Satyr, Scarecrow, Scion, Scorpion, Scout, Serf, Serpent, Servo, Shade, Shaman, Shapeshifter, Sheep, Siren, Skeleton, Slith, Sliver, Slug, Snake, Soldier, Soltari, Spawn, Specter, Spellshaper, Sphinx, Spider, Spike, Spirit, Splinter, Sponge, Squid, Squirrel, Starfish, Surrakar, Survivor, Tetravite, Thalakos, Thopter, Thrull, Treefolk, Trilobite, Triskelavite, Troll, Turtle, Unicorn, Vampire, Vedalken, Viashino, Volver, Wall, Warrior, Weird, Werewolf, Whale, Wizard, Wolf, Wolverine, Wombat, Worm, Wraith, Wurm, Yeti, Zombie, Zubera".split(', ')
@@ -13,92 +13,109 @@ race_subtypes.sort()
 
 #island 검색문제 해결
 
-def subtypeSort(type_list):
-    basic_types = set(type_list) & set(basic_land_subtypes)
-    if len(basic_types) > 1
-
-    else
-
-        type_set.sort(key=typesort)
-
-
-    pass
 
 
 def determineBlock(setCode):
     pass
 
-def colorsort(color_set):
-    if color_set == set():
+
+def subtypeSort(type_list):
+    basic_types = set(type_list) & set(basic_land_subtypes)
+    if len(basic_types) >= 2:
+        other_types = sorted(list(set(type_list) - set(basic_land_subtypes)), key=typesort)
+        basic_types = WUBRGsort(basic_types, basic_land_subtypes)
+        return basic_types + other_types
+    else:
+        return sorted(type_list, key=typesort)
+
+
+def colorsort(color_list):
+    result = WUBRGsort(color_list)
+    if result == []:
         return 'Colorless'
+    else:
+        return result
 
-    if color_set == set("W"):
-        return 'W'
-    if color_set == set("U"):
-        return 'U'
-    if color_set == set("B"):
-        return 'B'
-    if color_set == set("R"):
-        return 'R'
-    if color_set == set("G"):
-        return 'G'
 
-    if color_set == set("WU"):
-        return 'WU'
-    if color_set == set("UB"):
-        return 'UB'
-    if color_set == set("BR"):
-        return 'BR'
-    if color_set == set("RG"):
-        return 'RG'
-    if color_set == set("GW"):
-        return 'GW'
-    if color_set == set("WB"):
-        return 'WB'
-    if color_set == set("BG"):
-        return 'BG'
-    if color_set == set("GU"):
-        return 'GU'
-    if color_set == set("UR"):
-        return 'UR'
-    if color_set == set("RW"):
-        return 'RW'
+def WUBRGsort(color_list, sortstd=['W', 'U', 'B', 'R', 'G']):
+    W = sortstd[0]
+    U = sortstd[1]
+    B = sortstd[2]
+    R = sortstd[3]
+    G = sortstd[4]
+    color_set = set(color_list)
 
-    if color_set == set("WUB"):
-        return 'WUB'
-    if color_set == set("UBR"):
-        return 'UBR'
-    if color_set == set("BRG"):
-        return 'BRG'
-    if color_set == set("RGW"):
-        return 'RGW'
-    if color_set == set("GWU"):
-        return 'GWU'
+    if color_set == set():
+        return []
 
-    if color_set == set("WBG"):
-        return 'WBG'
-    if color_set == set("URW"):
-        return 'URW'
-    if color_set == set("BGU"):
-        return 'BGU'
-    if color_set == set("RWB"):
-        return 'RWB'
-    if color_set == set("GUR"):
-        return 'GUR'
+    if color_set == {W}:
+        return [W]
+    if color_set == {U}:
+        return [U]
+    if color_set == {B}:
+        return [B]
+    if color_set == {R}:
+        return [R]
+    if color_set == {G}:
+        return [G]
 
-    if color_set == set("WUBR"):
-        return 'WUBR'
-    if color_set == set("UBRG"):
-        return 'UBRG'
-    if color_set == set("BRGW"):
-        return 'BRGW'
-    if color_set == set("RGWU"):
-        return 'RGWU'
-    if color_set == set("GWUB"):
-        return 'GWUB'
+    if color_set == {W,U}:
+        return [W,U]
+    if color_set == {U,B}:
+        return [U,B]
+    if color_set == {B,R}:
+        return [B,R]
+    if color_set == {R,G}:
+        return [R,G]
+    if color_set == {G,W}:
+        return [G,W]
 
-    if color_set == set("WUBRG"):
-        return 'WUBRG'
+    if color_set == {W,B} :
+        return [W,B]
+    if color_set == {B,G}:
+        return [B,G]
+    if color_set == {G,U}:
+        return [G,U]
+    if color_set == {U,R}:
+        return [U,R]
+    if color_set == {R,W}:
+        return [R,W]
+
+    if color_set == {W,U,B}:
+        return [W,U,B]
+    if color_set == {U,B,R}:
+        return [U,B,R]
+    if color_set == {B,R,G}:
+        return [B,R,G]
+    if color_set == {R,G,W}:
+        return [R,G,W]
+    if color_set == {G,W,U}:
+        return [G,W,U]
+
+    if color_set == {W,B,G}:
+        return [W,B,G]
+    if color_set == {U,R,W}:
+        return [U,R,W]
+    if color_set == {B,G,U}:
+        return [B,G,U]
+    if color_set == {R,W,B}:
+        return [R,W,B]
+    if color_set == {G,U,R}:
+        return [G,U,R]
+
+    if color_set == {W,U,B,R}:
+        return [W,U,B,R]
+    if color_set == {U,B,R,G}:
+        return [U,B,R,G]
+    if color_set == {B,R,G,W}:
+        return [B,R,G,W]
+    if color_set == {R,G,W,U}:
+        return [R,G,W,U]
+    if color_set == {G,W,U,B}:
+        return [G,W,U,B]
+
+    if color_set == {W,U,B,R,G}:
+        return [W,U,B,R,G]
 
 
 def typesort(string):  # case sensitive!
@@ -125,7 +142,7 @@ def typesort(string):  # case sensitive!
     if string in class_subtypes:
         return "k" + string
     else:  # nonland noncreature subtypes
-        return "z" + string;
+        return "z" + string
 
 
 def symbolprettify(string, mode=None):
@@ -183,7 +200,7 @@ def symbolprettify(string, mode=None):
         string = re.sub(r'([0-9]+)([^/])', r'{\1}\2', string)
         string = re.sub(r'^([A-Z])([^}])', r'{\1}\2', string)
         string = re.sub(r'([^{])([A-Z])$', r'\1{\2}', string)
-        oldstring = "dump"
+        oldstring = ""  # dump value
         while(oldstring != string):  # lookahead assertion 지원X
             oldstring = string
             string = re.sub(r'([^{])([A-Z])([^}])', r'\1{\2}\3', string)
@@ -198,9 +215,9 @@ def prettify(cardlist, mode=None):
         prettylist[0] = cardlist[0]  # name
         prettylist[1] = symbolprettify(cardlist[1])  # mana_cost
         prettylist[2] = cardlist[2]  # CMC
-        prettylist[3] = colorsort(cardlist[3])  # color(=set)
-        prettylist[4] = colorsort(cardlist[4])  # color_identity(=set)
-        prettylist[5] = cardlist[5]  #type_line
+        prettylist[3] = ''.join(colorsort(cardlist[3]))  # color(=list)
+        prettylist[4] = ''.join(colorsort(cardlist[4]))  # color_identity(=list)
+        prettylist[5] = cardlist[5]  # type_line
         prettylist[6] = '\n'.join(cardlist[6])  # supertype(=list)
         prettylist[7] = '\n'.join(cardlist[7])  # subtype(=list)
         prettylist[8] = cardlist[8].upper()  # set
@@ -218,9 +235,9 @@ def prettify(cardlist, mode=None):
         prettylist[0] = cardlist[0]  # name
         prettylist[1] = symbolprettify(cardlist[1], "reverse")  # mana_cost
         prettylist[2] = cardlist[2]  # CMC
-        prettylist[3] = set(cardlist[3]) if cardlist[3] != "Colorless" else set()  # color(=set)
-        prettylist[4] = set(cardlist[4]) if cardlist[4] != "Colorless" else set()  # color_identity(=set)
-        prettylist[5] = cardlist[5]  #type_line
+        prettylist[3] = list(cardlist[3]) if cardlist[3] != "Colorless" else []  # color(=list)
+        prettylist[4] = list(cardlist[4]) if cardlist[4] != "Colorless" else []  # color_identity(=list)
+        prettylist[5] = cardlist[5]  # type_line
         prettylist[6] = cardlist[6].split("\n")  # supertype(=list)
         prettylist[7] = cardlist[7].split("\n")  # subtype(=list)
         prettylist[8] = cardlist[8].lower()  # set
@@ -240,16 +257,7 @@ if __name__ == '__main__':
     print(symbolprettify("{11}{B}{R}{G}{W/B}{R/W}{2/B}{G/P}"))
     print(symbolprettify("11BRGOS(2/B)(G/P)", "reverse"))
 
-
-    alist = ['W', 'U', 'B']
-    print("set: %s" % set(alist))
-    string = '\n'.join(alist)
-    print(string)
-    print(string.split("\n"))
-
-    emptylist = []
-    string = '\n'.join(emptylist)
-    print("printed: %s" % string)
-
-    setlist = {'B', 'U', 'W'}
-    print(type(setlist))
+    alist = ['Swamp', 'Knight', 'Island']
+    print(alist)
+    alist = subtypeSort(alist)
+    print(alist)

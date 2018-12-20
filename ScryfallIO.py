@@ -3,7 +3,7 @@ import pprint
 import json
 import re
 
-def massGet(searchquery)
+def massGet(searchquery):
     pass
     #대량검색
 

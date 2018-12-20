@@ -1,5 +1,5 @@
 import ScryfallIO
-from Converter import landsort, colorsort, typesort
+from Converter import typesort, colorsort, subtypeSort
 
 
 class Card():
@@ -8,8 +8,8 @@ class Card():
             self.name = ""
             self.mana_cost = ""
             self.cmc = ""
-            self.color = set([])
-            self.color_identity = set([])
+            self.color = []
+            self.color_identity = []
             self.type_line = ""
             self.supertype = []
             self.subtype = []
@@ -48,13 +48,13 @@ class Card():
             self.nerf = []
             self.tags = []  # fixing, infect, selfmill, big, small, ... ...
             self.cmc = data['cmc']
-            self.color_identity = set(data['color_identity'])
+            self.color_identity = data['color_identity']
             self.set = data['set'].upper()
             self.rarity = data['rarity']
 
             self.layout = data['layout'].title()
             if self.layout == 'Transform':
-                self.color = set(data['card_faces'][0]['colors'])
+                self.color = data['card_faces'][0]['colors']
                 self.mana_cost = data['card_faces'][0]['mana_cost']
                 self.name = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
                 self.crop_image = '{0}\n{1}'.format(data['card_faces'][0]['image_uris']['border_crop'], data['card_faces'][1]['image_uris']['border_crop'])  # 다름
@@ -86,7 +86,7 @@ class Card():
                 self.oracle = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
 
             elif self.layout == 'Flip':
-                self.color = set(data['colors'])  # 다름
+                self.color = data['colors']  # 다름
                 self.mana_cost = data['card_faces'][0]['mana_cost']
                 self.name = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
                 self.crop_image = data['image_uris']['border_crop']  # 다름
@@ -104,7 +104,7 @@ class Card():
             else:  # normal, meld, saga, token, double_faced_token, emblem, planar, scheme, vanguard, augment, host
                 self.name = data['name']
                 self.mana_cost = data['mana_cost']
-                self.color = set(data['colors'])
+                self.color = data['colors']
                 self.crop_image = data['image_uris']['border_crop']
                 self.type_line = data['type_line']
                 types = data['type_line'].split("—")
@@ -112,8 +112,10 @@ class Card():
                 self.subtype = types[1].split() if len(types) > 1 else []
                 self.oracle = data['oracle_text']
 
+            self.color = colorsort(self.color)
+            self.color_identity = colorsort(self.color_identity)
             self.supertype.sort(key=typesort)
-            self.subtype.sort(key=typesort)
+            self.subtype = subtypeSort(self.subtype)
 
 
     def setter(self, data=None):
