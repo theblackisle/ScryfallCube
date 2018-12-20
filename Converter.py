@@ -13,7 +13,15 @@ race_subtypes.sort()
 
 #island 검색문제 해결
 
-def landsort(list):
+def subtypeSort(type_list):
+    basic_types = set(type_list) & set(basic_land_subtypes)
+    if len(basic_types) > 1
+
+    else
+
+        type_set.sort(key=typesort)
+
+
     pass
 
 
