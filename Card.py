@@ -34,13 +34,13 @@ class Card():
             self.subtype = data[7]
             self.set = data[8]
             self.rarity = data[9]
-            self.crop_image = data[10]
-            self.oracle = data[11]
-            self.layout = data[12]
-            self.hate = data[13]
-            self.buff = data[14]
-            self.nerf = data[15]
-            self.tags = data[16]
+            self.oracle = data[10]
+            self.layout = data[11]
+            self.hate = data[12]
+            self.buff = data[13]
+            self.nerf = data[14]
+            self.tags = data[15]
+            self.crop_image = data[16]
 
         if type(data) == dict:  # data is JSON from Scryfall
             self.hate = []
@@ -52,8 +52,8 @@ class Card():
             self.set = data['set'].upper()
             self.rarity = data['rarity']
 
-            self.layout = data['layout'].upper()
-            if self.layout == 'TRANSFORM':
+            self.layout = data['layout'].title()
+            if self.layout == 'Transform':
                 self.color = set(data['card_faces'][0]['colors'])
                 self.mana_cost = data['card_faces'][0]['mana_cost']
                 self.name = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
@@ -69,7 +69,7 @@ class Card():
                 self.subtype = list(set(front_subtypes) | set(back_subtypes))
                 self.oracle = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
 
-            elif self.layout == 'SPLIT':
+            elif self.layout == 'Split':
                 self.color = self.color_identity  # 다름
                 self.mana_cost = '{0} // {1}'.format(data['card_faces'][0]['mana_cost'], data['card_faces'][1]['mana_cost'])  # 다름
                 self.name = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
@@ -85,7 +85,7 @@ class Card():
                 self.subtype = list(set(front_subtypes) | set(back_subtypes))
                 self.oracle = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
 
-            elif self.layout == 'FLIP':
+            elif self.layout == 'Flip':
                 self.color = set(data['colors'])  # 다름
                 self.mana_cost = data['card_faces'][0]['mana_cost']
                 self.name = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])

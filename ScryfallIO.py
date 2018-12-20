@@ -3,6 +3,9 @@ import pprint
 import json
 import re
 
+def massGet(searchquery)
+    pass
+    #대량검색
 
 def getCard(searchquery, sets="f"):
 
