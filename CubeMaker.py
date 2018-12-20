@@ -47,7 +47,7 @@ class CubeInterface():
 
 
 if __name__ == '__main__':
-    try:
+#    try:
         MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
         MyCube.currentFile = 'ScryfallCubeIO'
         MyCube.currentSheet = "시트1"
@@ -61,5 +61,5 @@ if __name__ == '__main__':
 
         print(MyCube.importCard(2).showCard())
         #print(MyCube.currentSheet.get_all_records())
-    except Exception as e:
-        print("Failed to load google spreadsheet: %s" % e)
+#    except Exception as e:
+#        print("Failed to load google spreadsheet: %s" % e)

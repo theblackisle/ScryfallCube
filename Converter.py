@@ -20,21 +20,21 @@ def subtypeSort(type_list):
     basic_types = set(type_list) & set(basic_land_subtypes)
     if len(basic_types) >= 2:
         other_types = sorted(list(set(type_list) - set(basic_land_subtypes)), key=typesort)
-        basic_types = WUBRGsort(basic_types, basic_land_subtypes)
+        basic_types = cyclicOrder(basic_types, basic_land_subtypes)
         return basic_types + other_types
     else:
         return sorted(type_list, key=typesort)
 
 
 def colorsort(color_list):
-    result = WUBRGsort(color_list)
+    result = cyclicOrder(color_list)
     if result == []:
-        return 'Colorless'
+        return ['Colorless']
     else:
         return result
 
 
-def WUBRGsort(color_list, sortstd=['W', 'U', 'B', 'R', 'G']):
+def cyclicOrder(color_list, sortstd=['W', 'U', 'B', 'R', 'G']):
     W = sortstd[0]
     U = sortstd[1]
     B = sortstd[2]
@@ -212,8 +212,8 @@ def prettify(cardlist, mode=None):
         prettylist[0] = cardlist[0]  # name
         prettylist[1] = symbolprettify(cardlist[1])  # mana_cost
         prettylist[2] = cardlist[2]  # CMC
-        prettylist[3] = ''.join(colorsort(cardlist[3]))  # color(=list)
-        prettylist[4] = ''.join(colorsort(cardlist[4]))  # color_identity(=list)
+        prettylist[3] = ''.join(cardlist[3])  # color(=list)
+        prettylist[4] = ''.join(cardlist[4])  # color_identity(=list)
         prettylist[5] = cardlist[5]  # type_line
         prettylist[6] = '\n'.join(cardlist[6])  # supertype(=list)
         prettylist[7] = '\n'.join(cardlist[7])  # subtype(=list)
