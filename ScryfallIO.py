@@ -7,15 +7,22 @@ def massGet(searchquery):
     pass
     #대량검색
 
-def getCard(searchquery, sets="f"):
 
-    url = "https://api.scryfall.com/cards/search?&q=%22{0}%22".format( re.sub(r' ', r'+', searchquery) )
+def urlize(searchquery, sets="f"):
+    url = "https://api.scryfall.com/cards/search?&q=%22{0}%22".format(re.sub(r' ', r'+', searchquery))
     if sets == "f":
         url = url + "+is%3Afirstprint"
     elif sets == "l":
         pass
     elif type(sets) == str:
         url = url + "+set%3A" + sets
+
+    return url
+
+
+def getCard(searchquery, sets="f"):
+
+    url = urlize(searchquery, sets)
 
     try:
         response = urllib.request.urlopen(url)
@@ -41,11 +48,15 @@ def getCard(searchquery, sets="f"):
     if response.getcode() == 200:  # HTTP Status codes 200 == OK
         json_structure = json.loads(s=response.read().decode('utf-8'))
         # 둘다 str이지만 인자로 response.read()를 넣어야지 json_dump를 넣으면 pretty printing 안됨.
+        #prettyprint(json_structure)
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
             return json_structure["data"][0]
         elif json_structure["total_cards"] > 1:
-            print('''"%s" has not unique search result: %d many cards are found''' % (
-                searchquery, json_structure["total_cards"]))
+            for datum in json_structure["data"]:
+                if datum['name'].lower() == searchquery.lower():
+                    return datum
+
+            print('''"%s" has not unique search result: %d many cards are found''' % (searchquery, json_structure["total_cards"]))
             return searchquery
         else:  # (json_structure["total_cards"]==0)
             print("no such card: %s" % searchquery)
