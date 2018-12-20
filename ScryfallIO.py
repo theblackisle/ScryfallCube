@@ -52,9 +52,9 @@ def getCard(searchquery, sets="f"):
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
             return json_structure["data"][0]
         elif json_structure["total_cards"] > 1:
-            for datum in json_structure["data"]:
+            for datum in json_structure["data"]:  # query에 ~~query, query~~가 반환된 경우
                 if datum['name'].lower() == searchquery.lower():
-                    return datum
+                    return datum  # 정확한 카드 매칭 찾기
 
             print('''"%s" has not unique search result: %d many cards are found''' % (searchquery, json_structure["total_cards"]))
             return searchquery
