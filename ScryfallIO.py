@@ -86,7 +86,7 @@ def getMass(searchquery, sets="f", sort=None, order=None):
         json_structure = json.loads(s=response.read().decode('utf-8'))
 
         if json_structure["total_cards"] >= 1:
-            return json_structure["data"]
+            return json_structure["data"]  # type == list
 
         else:  # (json_structure["total_cards"]==0)
             print("no such card: %s" % searchquery)
