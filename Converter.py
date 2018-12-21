@@ -211,7 +211,7 @@ def prettify(cardlist, mode=None):
     if mode != "reverse":
         prettylist.append(cardlist[0])  # name
         prettylist.append(symbolprettify(cardlist[1]))  # mana_cost
-        prettylist.append(cardlist[2])  # CMC
+        prettylist.append(cardlist[2])  # CMC(=float)
         prettylist.append(''.join(cardlist[3]))  # color(=list)
         prettylist.append(''.join(cardlist[4]))  # color_identity(=list)
         prettylist.append(cardlist[5])  # type_line
@@ -225,12 +225,14 @@ def prettify(cardlist, mode=None):
         prettylist.append('\n'.join(cardlist[13]))  # buff(=list)
         prettylist.append('\n'.join(cardlist[14]))  # nerf(=list)
         prettylist.append('\n'.join(cardlist[15]))  # tags(=list)
-        prettylist.append(cardlist[16])  # crop_image
+        prettylist.append("{:.2f}".format(cardlist[16]))  # usd(=float)
+        prettylist.append(cardlist[17])  # crop_image
+
 
     if mode == "reverse":
         prettylist.append(cardlist[0])  # name
         prettylist.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
-        prettylist.append(cardlist[2])  # CMC
+        prettylist.append(float(cardlist[2]))  # CMC
         prettylist.append(list(cardlist[3]) if cardlist[3] != "Colorless" else [])  # color(=list)
         prettylist.append(list(cardlist[4]) if cardlist[4] != "Colorless" else [])  # color_identity(=list)
         prettylist.append(cardlist[5])  # type_line
@@ -244,7 +246,8 @@ def prettify(cardlist, mode=None):
         prettylist.append(cardlist[13].split("\n"))  # buff(=list)
         prettylist.append(cardlist[14].split("\n"))  # nerf(=list)
         prettylist.append(cardlist[15].split("\n"))  # tags(=list)
-        prettylist.append(cardlist[16])  # crop_image
+        prettylist.append(float(cardlist[16]))  # usd(=float)
+        prettylist.append(cardlist[17])  # crop_image
 
     return prettylist
 

@@ -7,7 +7,7 @@ class Card():
         if type(data) == None:  # empty initialization
             self.name = ""
             self.mana_cost = ""
-            self.cmc = ""
+            self.cmc = float(-1)
             self.color = []
             self.color_identity = []
             self.type_line = ""
@@ -15,13 +15,14 @@ class Card():
             self.subtype = []
             self.set = ""
             self.rarity = ""
-            self.crop_image = ""
             self.oracle = ""
             self.layout = ""
             self.hate = []
             self.buff = []
             self.nerf = []
             self.tags = []
+            self.usd = float(-1)
+            self.crop_image = ""
 
         if type(data) == list:  # data is "reverse-prettified" Google spreadsheet row
             self.name = data[0]
@@ -40,7 +41,8 @@ class Card():
             self.buff = data[13]
             self.nerf = data[14]
             self.tags = data[15]
-            self.crop_image = data[16]
+            self.usd = data[16]
+            self.crop_image = data[17]
 
         if type(data) == dict:  # data is JSON from Scryfall
             self.hate = []
@@ -51,6 +53,7 @@ class Card():
             self.color_identity = data['color_identity']
             self.set = data['set'].upper()
             self.rarity = data['rarity']
+            self.usd = float(data['usd'])
 
             self.layout = data['layout'].title()
             if self.layout == 'Transform':
@@ -170,7 +173,7 @@ class Card():
             print("no such elements")
 
     def gsExport(self):
-        cardlist = [self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.supertype, self.subtype, self.set, self.rarity, self.oracle, self.layout, self.hate, self.buff, self.nerf, self.tags, self.crop_image]
+        cardlist = [self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.supertype, self.subtype, self.set, self.rarity, self.oracle, self.layout, self.hate, self.buff, self.nerf, self.tags, self.usd, self.crop_image]
         return cardlist
 
     def showCard(self):

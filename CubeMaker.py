@@ -48,6 +48,7 @@ class CubeInterface():
 
     def searchExportCard(self, cardname, sets='f'):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
+        print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
         self._currentSheet.append_row(prettify(card.gsExport()))
 
     def exportMass(self, cardlist):
@@ -71,18 +72,10 @@ class CubeInterface():
             end = self._currentSheet.row_count
 
         cardlist = []
-        for i in range(start, end + 1):
+        for i in range(start, end+1):  # 1에서 'end'까지
             cardlist.append(Card(prettify(self._currentSheet.row_values(i), mode="reverse")))
 
         return cardlist
-
-    def findincolumn(self, query, *columns):
-        found_row = set()
-        for i in columns:  # columns = tuple
-            row_list = set([found.row for found in self._currentSheet.range("{0}1:{0}{1}".format(i, self._currentSheet.row_count)) if re.match(r'([\s]|^)' + query, found.value)])
-            found_row |= row_list  # set 합집합연산자 |의 __iadd__
-
-        return sorted(list(found_row))
 
     def findcell(self, query):
         regexp = re.compile(r'([\s]*|^)' + query)
@@ -101,6 +94,31 @@ class CubeInterface():
             print('Cannot find "%s" in %s' % (query, self._currentSheet.title))
             return None
 
+    def findincol(self, query, *columns):
+        found_row = set()
+        for i in columns:  # columns = tuple
+            row_list = set([found.row for found in self._currentSheet.range("{0}1:{0}{1}".format(i, self._currentSheet.row_count)) if re.search(query, found.value)])  # r'([\s]|^)' + query
+            found_row |= row_list  # set 합집합연산자 |의 __iadd__
+
+        return sorted(list(found_row))
+
+    def copyrows(self, rows, mode="newfile"):  # rows = list of row values(=int).
+        rowlist = []
+        for i in rows:
+            rowlist.append(self._currentSheet.row_values(i))
+
+        print(rowlist)
+
+        if mode == "newfile":
+            newsheet = self._currentFile.add_worksheet("asdfasdf", 20, 18)
+
+            for i in range(len(rowlist)):
+                for j in range(18):
+                    newsheet.update_cell(i+1, j+1, rowlist[i][j])  # 너무느림, 구글 Quota 넘김...
+        return rowlist
+
+
+
 
 if __name__ == '__main__':
     MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
@@ -111,11 +129,13 @@ if __name__ == '__main__':
     # print(MyCube.importCard(12).showCard())
     # MyCube.importMass()
 
-
-    findcol = MyCube.findincolumn("Dwarf", "H", "N")
-    print(findcol)
-    for row in findcol:
-        print("%s" % MyCube.currentSheet.cell(row,1).value)
+    while True:
+        searchquery = input("findcol: ")
+        if searchquery == "quit":
+            break
+        foundrow = MyCube.findincol(searchquery, "H", "K")
+        print(foundrow)
+        MyCube.copyrows(foundrow)
 
     while True:
         searchquery = input("find: ")
