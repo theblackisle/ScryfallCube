@@ -37,13 +37,24 @@ class CubeInterface():
     def currentSheet(self):
         return self._currentSheet
 
-    def exportCard(self, cardname):
-        card = Card(ScryfallIO.getCard(cardname))
+    def exportCard(self, cardname, sets='f'):
+        card = Card(ScryfallIO.getCard(cardname, sets=sets))
         self._currentSheet.append_row(prettify(card.gsExport()))
+
+    def exportMass(self, searchquery, sets='f', sort=None, order=None):
+        data = ScryfallIO.getMass(searchquery, sets=sets, sort=sort, order=order)
+        for datum in data:
+            card = Card(datum)
+            print("{0} is recorded in {1}".format(card.name, self._currentSheet))
+            self._currentSheet.append_row(prettify(card.gsExport()))
 
     def importCard(self, row):
         card = Card(prettify(self._currentSheet.row_values(row), mode="reverse"))
         return card
+
+    def importMass(self, start=0, end=None):
+        for i in range(start, end):
+            card = Card(prettify(self._currentSheet.row_values(row), mode="reverse"))
 
 
 if __name__ == '__main__':
@@ -51,6 +62,12 @@ if __name__ == '__main__':
     MyCube.currentFile = 'ScryfallCubeIO'
     MyCube.currentSheet = "시트1"
     # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음!
+
+    while True:
+        searchquery = input("put query: ")
+        if searchquery == "quit":
+            break
+        MyCube.exportMass(searchquery, sort="released", order="asc")
 
     while True:
         searchquery = input("put card: ")
