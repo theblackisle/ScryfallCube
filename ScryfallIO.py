@@ -27,6 +27,7 @@ def urlize(searchquery, sets="f", mode="exact", sort=None, order=None):
 
     return url
 
+
 def getResponse(url):
     try:
         return urllib.request.urlopen(url)
@@ -44,9 +45,9 @@ def getResponse(url):
         return "unknown error: %s" % e
 
 
-def getCard(searchquery, sets="f"):
+def getCard(searchquery, sets="f", mode="exact"):
 
-    response = getResponse(urlize(searchquery, sets=sets, mode="exact"))
+    response = getResponse(urlize(searchquery, sets=sets, mode=mode))
     if type(response) == str:
         return None
 
@@ -62,7 +63,7 @@ def getCard(searchquery, sets="f"):
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
             return json_structure["data"][0]
         elif json_structure["total_cards"] > 1:
-            for datum in json_structure["data"]:  # query에 ~~query, query~~가 반환된 경우
+            for datum in json_structure["data"]:  # query에 xxxquery, queryxxx가 반환된 경우
                 if datum['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
                     return datum
 

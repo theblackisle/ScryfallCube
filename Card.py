@@ -1,10 +1,11 @@
 import ScryfallIO
 from Converter import typesort, colorsort, subtypeSort
+import pprint
 
 
 class Card():
     def __init__(self, data=None):
-        if type(data) == None:  # empty initialization
+        if data is None:  # empty initialization
             self.name = ""
             self.mana_cost = ""
             self.cmc = float(-1)
@@ -120,7 +121,6 @@ class Card():
             self.supertype.sort(key=typesort)
             self.subtype = subtypeSort(self.subtype)
 
-
     def setter(self, data=None):
         pass
 
@@ -177,8 +177,8 @@ class Card():
         return cardlist
 
     def showCard(self):
-        print("name: {0}\nmana cost: {1}\ncmc: {2}\ncolor: {3}\ncolor_identity: {4}\ntype_line: {5}\nsupertype: {6}\nsubtype: {7}\nset: {8}\nrarity: {9}\nimage: {10}\noracle: {11}".
-              format(self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.supertype, self.subtype, self.set, self.rarity, self.crop_image, self.oracle)
+        print("Name: {0}\nMana cost: {1}\nCMC: {2}\nColor: {3}\nColor_identity: {4}\nType: {5}\nSet: {6}\nRarity: {7}\nPrice: {8}\noracle: {9}".
+              format(self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.set, self.rarity, self.usd, self.oracle)
               )
 
 

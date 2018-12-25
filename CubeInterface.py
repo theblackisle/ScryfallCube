@@ -10,8 +10,9 @@ class CubeInterface():
         self._currentClient = GspreadIO.openGsClient(credentials)
         if self._currentClient is None:
             raise ValueError
-        self._currentFile = GspreadIO.openGsFile(self._currentClient, filename) if type(filename) is str else None
-        self._currentSheet = self._currentFile.worksheet(sheetname) if type(sheetname) is str else None
+
+        self.currentFile = filename
+        self.currentSheet = sheetname  # setter 사용
 
     @property
     def currentFile(self):
@@ -19,8 +20,16 @@ class CubeInterface():
 
     @currentFile.setter
     def currentFile(self, filename):
-        if type(filename) is str:
-            self._currentFile = GspreadIO.openGsFile(self._currentClient, filename)
+        if filename is None:  # if type(A) is type(None) || if A is None 형식으로 써야
+            self._currentFile = None
+
+        elif type(filename) is str:
+            if filename in [found.title for found in self._currentClient.openall()]:
+                self._currentFile = self._currentClient.open(filename)
+            else:
+                self._currentFile = self._currentClient.create(filename)
+                print("file created")
+
         else:
             print("inappropriate file name")
 
@@ -34,34 +43,43 @@ class CubeInterface():
 
     @currentSheet.setter
     def currentSheet(self, sheetname):
-        if type(sheetname) is str:
-            self._currentSheet = self._currentFile.worksheet(sheetname)
+        if sheetname is None:
+            self._currentFile = None
+
+        elif type(sheetname) is str:
+            if sheetname in [found.title for found in self._currentFile.worksheets()]:
+                self._currentSheet = self._currentFile.worksheet(sheetname)
+            else:
+                self._currentSheet = self._currentFile.add_worksheet(sheetname, 1, 18)
+
         else:
-            print("inappropriate sheet name")
+            print("inappropriate Sheet name")
 
     @currentSheet.getter
     def currentSheet(self):
         return self._currentSheet
 
-    def exportCard(self, Card):
-        self._currentSheet.append_row(prettify(Card.gsExport()))
+    def exportCard(self, card):
+        self._currentSheet.append_row(prettify(card.gsExport()))
+        print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
+
 
     def searchExportCard(self, cardname, sets='f'):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
-        print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
         self._currentSheet.append_row(prettify(card.gsExport()))
+        print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
 
     def exportMass(self, cardlist):
-        for datum in cardlist:
-            print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
+        for card in cardlist:
             self._currentSheet.append_row(prettify(card.gsExport()))
+            print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
 
     def searchExportMass(self, searchquery, sets='f', sort=None, order=None):
         cardlist = ScryfallIO.getMass(searchquery, sets=sets, sort=sort, order=order)
         for datum in cardlist:
             card = Card(datum)
-            print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
             self._currentSheet.append_row(prettify(card.gsExport()))
+            print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
 
     def importCard(self, row):
         card = Card(prettify(self._currentSheet.row_values(row), mode="reverse"))
@@ -78,7 +96,7 @@ class CubeInterface():
         return cardlist
 
     def findcell(self, query):
-        regexp = re.compile(r'([\s]*|^)' + query)
+        regexp = re.compile(r'([\s]|^)' + query)
         try:
             return self._currentSheet.find(regexp)
         except GspreadIO.gspread.exceptions.CellNotFound:  # gspread는 GspreadIO에 import되어있음
@@ -86,7 +104,7 @@ class CubeInterface():
             return None
 
     def findcardname(self, query):
-        regexp = re.compile(r'([\s]*|^)' + query)
+        regexp = re.compile(r'([\s]|^)' + query)
         try:
             result = self._currentSheet.find(regexp)
             return self._currentSheet.cell(result.row, 1)
@@ -96,26 +114,42 @@ class CubeInterface():
 
     def findincol(self, query, *columns):
         found_row = set()
-        for i in columns:  # columns = tuple
-            row_list = set([found.row for found in self._currentSheet.range("{0}1:{0}{1}".format(i, self._currentSheet.row_count)) if re.search(query, found.value)])  # r'([\s]|^)' + query
-            found_row |= row_list  # set 합집합연산자 |의 __iadd__
+        if query[0] == "!":  # Not 검색
+            query = query[1:]
+            for i in columns:  # columns = tuple
+                row_list = set([found.row for found
+                                in self._currentSheet.range("{0}1:{0}{1}".format(i, self._currentSheet.row_count))
+                                if not re.search(query, found.value)])  # r'([\s]|^)' + query
+                found_row = found_row & row_list if len(found_row) != 0 else row_list  # 논리적 교집합 구현
+        else:
+            for i in columns:  # columns = tuple
+                row_list = set([found.row for found
+                                in self._currentSheet.range("{0}1:{0}{1}".format(i, self._currentSheet.row_count))
+                                if re.search(query, found.value)])  # r'([\s]|^)' + query
+                found_row |= row_list  # set 합집합연산자 |의 __iadd__
 
+        print("found_row length: %d" % len(found_row))
         return sorted(list(found_row))
 
-    def copyrows(self, rows, mode="newfile"):  # rows = list of row values(=int).
-        rowlist = []
+    def copyrows(self, rows, sheetname, mode="newfile"):  # rows = list of row values(=int).
+        row_data = []
         for i in rows:
-            rowlist.append(self._currentSheet.row_values(i))
+            row_data.append(self._currentSheet.row_values(i))
 
-        print(rowlist)
 
         if mode == "newfile":
-            newsheet = self._currentFile.add_worksheet("asdfasdf", 20, 18)
+            if sheetname in [found.title for found in self._currentFile.worksheets()]:
+                newsheet = self._currentFile.worksheet(sheetname)
+            else:
+                newsheet = self._currentFile.add_worksheet(sheetname, 0, 0)
+                print(len(row_data))
 
-            for i in range(len(rowlist)):
-                for j in range(18):
-                    newsheet.update_cell(i+1, j+1, rowlist[i][j])  # 너무느림, 구글 Quota 넘김...
-        return rowlist
+            for i in range(len(row_data)):
+                print(row_data[i])
+                newsheet.insert_row(row_data[i], i+1)
+            newsheet.resize(len(row_data), len(row_data[0]))
+
+        return row_data
 
 
 
@@ -133,9 +167,9 @@ if __name__ == '__main__':
         searchquery = input("findcol: ")
         if searchquery == "quit":
             break
-        foundrow = MyCube.findincol(searchquery, "H", "K")
-        print(foundrow)
-        MyCube.copyrows(foundrow)
+        sheetname = input("sheetname: ")
+        foundrow = MyCube.findincol(searchquery, "G")
+        MyCube.copyrows(foundrow, sheetname)
 
     while True:
         searchquery = input("find: ")
