@@ -1,6 +1,7 @@
 import re
 import pprint
 
+import gspread
 import ScryfallIO
 from Card import Card
 from CubeInterface import CubeInterface
@@ -10,7 +11,7 @@ def printmenu():
     menu.append("1. Manage files and sheets.")
     menu.append("2. Search exact card from Scryfall.")
     menu.append("3. Search with Scryfall syntax.")
-    menu.append("4. Search card ")
+    menu.append("4. Read card data from sheet")
 
     print("Menu\n{0}\n{1}\n{2}\n{3}".format(menu[0], menu[1], menu[2], menu[3]))
     choice = input("Select: ")
@@ -43,7 +44,7 @@ def printlocation(cube):
     print('Current file: {0}\nCurrent sheet: {1}'.format(filename, sheetname))
 
 if __name__ == '__main__':
-    myCube = CubeInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1", "gattuk24@gmail.com")
+    myCube = CubeInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", "gattuk24@gmail.com")
     print("")
 
     while True:
@@ -61,7 +62,7 @@ if __name__ == '__main__':
 
                 while filechoice[0] == '1':
                     pprint.PrettyPrinter(2).pprint(myCube._currentClient.openall())
-                    query = input('Enter file name: ')
+                    query = input('Enter file name or ID: ')
                     if query[0:2] == "^q":
                         print("")
                         break
@@ -154,4 +155,21 @@ if __name__ == '__main__':
                     print("\nNo search result.\n")
 
         if choice[0] == '4':
-            pass
+            while True:
+                columninput = re.sub(r'[\W]+', r' ', input('\nEnter source column values: ')).split(" ")
+                print(columninput)
+
+                rowinput = re.sub(r'[\W]+', r' ', input('\nEnter source row range: ')).split(" ")
+                print(rowinput)
+
+                savedestine = input('Save to: ')
+
+                cardlist = myCube.importinsheet(rowinput[0], rowinput[1], *tuple(columninput))
+
+                tempsheet = myCube.currentSheet
+                myCube.currentSheet = savedestine
+                myCube.exportMass(cardlist)
+                myCube.currentSheet = tempsheet
+
+
+

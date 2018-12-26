@@ -1,4 +1,5 @@
 import re
+
 import GspreadIO
 import ScryfallIO
 from Card import Card
@@ -7,7 +8,7 @@ from Converter import prettify
 
 class CubeInterface:
     def __init__(self, credentials, filename=None, sheetname=None, email=None):
-        self.email = email if email is not None else input("Enter User's email address: ")
+        self._email = email if email is not None else input("Enter User's email address: ")
         self._currentClient = GspreadIO.openGsClient(credentials)
         if self._currentClient is None:
             raise ValueError
@@ -20,20 +21,24 @@ class CubeInterface:
         return self._currentFile
 
     @currentFile.setter
-    def currentFile(self, filename):
-        if filename is None:  # if type(A) is type(None) || if A is None 형식으로 써야
+    def currentFile(self, param):
+        if param is None:  # if type(A) is type(None) || if A is None 형식으로 써야
             self._currentFile = None
 
-        elif type(filename) is str:
-            if filename in [found.title for found in self._currentClient.openall()]:
-                self._currentFile = self._currentClient.open(filename)
+        elif type(param) is str:
+            if param in [found.title for found in self._currentClient.openall()]:  # param is file name
+                self._currentFile = self._currentClient.open(param)
                 self._currentSheet = self._currentFile.get_worksheet(0)
-                print("File '%s' is open" % filename)
+                print("File '%s' is open" % param)
+            elif param in [found.id for found in self._currentClient.openall()]:  # param is file ID
+                self._currentFile = self._currentClient.open_by_key(param)
+                self._currentSheet = self._currentFile.get_worksheet(0)
+                print("File '%s: %s' is open" % (self._currentFile.title, param))
             else:
-                self._currentFile = self._currentClient.create(filename)
+                self._currentFile = self._currentClient.create(param)
                 self._currentSheet = self._currentFile.get_worksheet(0)
-                self._currentFile.share(self.email, perm_type='user', role='writer')
-                print("File '%s' is created" % filename)
+                self._currentFile.share(self._email, perm_type='user', role='writer')
+                print("File '%s' is created" % param)
 
         else:
             print("inappropriate file name")
@@ -130,8 +135,10 @@ class CubeInterface:
         print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
 
     def exportMass(self, cardlist):
+        row_count = self._currentSheet.row_count
+        self._currentSheet.add_rows(1)
         for card in cardlist:
-            self._currentSheet.append_row(prettify(card.gsExport()))
+            self._currentSheet.insert_row(prettify(card.gsExport()), row_count+cardlist.index(card)+1)
             print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
 
     def searchExportMass(self, searchquery, sets='f', sort=None, order=None):
@@ -141,21 +148,38 @@ class CubeInterface:
             self._currentSheet.append_row(prettify(card.gsExport()))
             print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
 
+    def importinsheet(self, start=None, end=None, *columns):
+        """가공되지 않은 sheet에서 cardname을 받아 Card의 list로 return"""
+        cardnamelist = []
+        for col in columns:
+            for row in range(int(start), int(end)+1):
+                print("{0}{1}".format(col, row))
+                cardnamelist.append(self._currentSheet.acell("{0}{1}".format(col, row)).value)
+
+        cardlist = []
+        for cardname in cardnamelist:
+            cardlist.append(Card(ScryfallIO.getCard(cardname)))
+
+        return cardlist
+
     def importCard(self, row):
+        """가공된 row값을 받아 Card로 return"""
         card = Card(prettify(self._currentSheet.row_values(row), mode="reverse"))
         return card
 
     def importMass(self, start=1, end=None):  # spread sheet의 start는 0이 아님
+        """가공된 row들 값을 받아 Card의 list로 return"""
         if end is None:
             end = self._currentSheet.row_count
 
         cardlist = []
         for i in range(start, end+1):  # 1에서 'end'까지
-            cardlist.append(Card(prettify(self._currentSheet.row_values(i), mode="reverse")))
+            cardlist.append(self.importCard(i))
 
         return cardlist
 
     def findcell(self, query):
+        """query를 가지는 첫 cell을 찾아 cell instance를 return"""
         regexp = re.compile(r'([\s]|^)' + query)
         try:
             return self._currentSheet.find(regexp)
@@ -164,6 +188,7 @@ class CubeInterface:
             return None
 
     def findcardname(self, query):
+        """특정 query를 만족하는 cell이 위치하는 곳의 Card name을 return"""
         regexp = re.compile(r'([\s]|^)' + query)
         try:
             result = self._currentSheet.find(regexp)
@@ -173,6 +198,7 @@ class CubeInterface:
             return None
 
     def findincol(self, query, *columns):
+        """특정 column들 내에서 quert를 만족하는 card들의 row값들을 list로 return"""
         found_row = set()
         if query[0] == "!":  # Not 검색
             query = query[1:]
@@ -195,7 +221,6 @@ class CubeInterface:
         row_data = []
         for i in rows:
             row_data.append(self._currentSheet.row_values(i))
-
 
         if mode == "newfile":
             if sheetname in [found.title for found in self._currentFile.worksheets()]:
