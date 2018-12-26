@@ -2,20 +2,24 @@ import urllib.request
 import pprint
 import json
 import re
-import http
 
 
 
 def urlize(searchquery, sets="f", mode="exact", sort=None, order=None):
-    if mode == "exact":
-        url = "https://api.scryfall.com/cards/search?&q=%22{0}%22".format(re.sub(r' ', r'+', searchquery))  # ""없으면 "fire // ice"와 "Sword of Fire and Ice"이 같이 검색됨
-    elif mode == "query":
+
+    if mode == "exact" and (sets == "f" or sets == "l" or sets == "default") and searchquery.find("set:") == -1:
+        #  Scryfall api bug: exact mode + set검색 = 에러
+        url = "https://api.scryfall.com/cards/search?&q=%22{0}%22".format(re.sub(r' ', r'+', searchquery))
+        # ""없으면 "fire // ice"와 "Sword of Fire and Ice"이 같이 검색됨
+    else:
         url = "https://api.scryfall.com/cards/search?&q={0}".format(re.sub(r' ', r'+', searchquery))
 
-    if sets == "f":
+    if sets == "f" and searchquery.find("is:firstprint") == -1 and searchquery.find("set:") == -1:
+        #  searchquery에서 직접 set 정해줄때는 "is:firstprint"를 붙이지 않는다.
+        #  tescase: (oracle:pay oracle:2 oracle:life) type:land set:rtr
         url = url + "+is%3Afirstprint"
-    elif sets == "l":
-        pass
+    elif sets == "l" or sets == "default":
+        pass  # "lastprint"가 default임
     elif type(sets) == str:
         url = url + "+set%3A" + sets
 
@@ -25,6 +29,8 @@ def urlize(searchquery, sets="f", mode="exact", sort=None, order=None):
     if type(order) == str:
         url = url + "&dir=" + order
 
+    # debug - print("sets=%s, mode=%s, sort=%s, order=%s" % (sets, mode, sort, order) )
+    # debug - print(url)
     return url
 
 
@@ -67,7 +73,8 @@ def getCard(searchquery, sets="f", mode="exact"):
                 if datum['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
                     return datum
 
-            print('''"%s" has not unique search result: %d many cards are found''' % (searchquery, json_structure["total_cards"]))
+            print('''"%s" has not unique search result: %d many cards are found'''
+                  % (searchquery, json_structure["total_cards"]))
             return None
         else:  # (json_structure["total_cards"]==0)
             print("no such card: %s" % searchquery)
@@ -78,6 +85,8 @@ def getCard(searchquery, sets="f", mode="exact"):
 
 
 def getMass(searchquery, sets="f", sort=None, order=None):
+    #  sets = "l" if searchquery.find("is:firstprint") != -1 or searchquery.find("set:") != -1 else "f"
+    #  searchquery에서 직접 set 정해줄때 조건
 
     response = getResponse(urlize(searchquery, sets=sets, mode="query", sort=sort, order=order))
     if type(response) == str:

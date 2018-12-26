@@ -1,85 +1,157 @@
-import pprint
 import re
-
+import pprint
 
 import ScryfallIO
 from Card import Card
 from CubeInterface import CubeInterface
 
+def printmenu():
+    menu = []
+    menu.append("1. Manage files and sheets.")
+    menu.append("2. Search exact card from Scryfall.")
+    menu.append("3. Search with Scryfall syntax.")
+    menu.append("4. Search card ")
+
+    print("Menu\n{0}\n{1}\n{2}\n{3}".format(menu[0], menu[1], menu[2], menu[3]))
+    choice = input("Select: ")
+    try:
+        print(menu[int(choice[0])-1][3:])
+    except:
+        pass
+
+    return choice
+
+def printfilemenu():
+    menu = []
+    menu.append("1. Open or create file")
+    menu.append("2. Open or create sheet")
+    menu.append("3. Delete file")
+    menu.append("4. Delete Sheet")
+
+    print("{0}\n{1}\n{2}\n{3}".format(menu[0], menu[1], menu[2], menu[3]))
+    choice = input("Select: ")
+    try:
+        print(menu[int(choice[0])-1][3:])
+    except:
+        pass
+
+    return choice
+
+def printlocation(cube):
+    filename = cube.currentFile.title if cube.currentFile is not None else "None"
+    sheetname = cube.currentSheet.title if cube.currentSheet is not None else "None"
+    print('Current file: {0}\nCurrent sheet: {1}'.format(filename, sheetname))
 
 if __name__ == '__main__':
-    MyCube = CubeInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1")
+    myCube = CubeInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1", "gattuk24@gmail.com")
+    print("")
 
     while True:
-        print('''Current file: {0}
-Current sheet: {1}
-'''.format(MyCube.currentFile.title, MyCube.currentSheet.title))
-        print('''Menu
-0. Move to other file and sheet.
-1. Search exact card from Scryfall.
-2. Search with Scryfall syntax.
-3. Search card ''')
-        direction = input("Select: ")
+        choice = printmenu()
+        print("")
 
-        if direction[0] == '0':
-            query = input('\nEnter filename: ')
-            if query[0:2] == "\\q":
-                print("")
-            else:
-                MyCube.currentFile = query
-                print(MyCube._currentClient.openall())
-                print("Move to file: %s\n" % query)
-
-            query = input('Enter sheetname: ')
-            if query[0:2] == "\\q":
-                print("")
-            else:
-                MyCube.currentSheet = query
-                print("Move to Sheet: %s\n" % query)
-
-        if direction[0] == '1':
+        if choice[0] == '1':
             while True:
-                query = input('\nEnter cardname (and setcode) in "name @set" form: ')
-                if query[0:2] == "\\q":
+                filechoice = printfilemenu()
+                if filechoice[0:2] == "^q":
+                    print("")
+                    break
+                print("")
+                printlocation(myCube)
+
+                while filechoice[0] == '1':
+                    pprint.PrettyPrinter(2).pprint(myCube._currentClient.openall())
+                    query = input('Enter file name: ')
+                    if query[0:2] == "^q":
+                        print("")
+                        break
+                    myCube.currentFile = query
+                    print("")
+                    printlocation(myCube)
+
+                while filechoice[0] == '2':
+                    pprint.PrettyPrinter(2).pprint(myCube.currentFile.worksheets())
+                    query = input('Enter sheet name: ')
+                    if query[0:2] == "^q":
+                        print("")
+                        break
+                    myCube.currentSheet = query
+                    print("")
+                    printlocation(myCube)
+
+                while filechoice[0] == '3':
+                    pprint.PrettyPrinter(2).pprint(myCube._currentClient.openall())
+                    query = input('Enter file name or ID: ')
+                    if query[0:2] == "^q":
+                        print("")
+                        break
+                    myCube.deleteFile(query)
+                    print("")
+                    printlocation(myCube)
+
+                while filechoice[0] == '4':
+                    pprint.PrettyPrinter(2).pprint(myCube.currentFile.worksheets())
+                    query = input('Enter sheet name: ')
+                    if query[0:2] == "^q":
+                        print("")
+                        break
+                    myCube.deleteSheet(query)
+                    print("")
+                    printlocation(myCube)
+
+        if choice[0] == '2':
+            while True:
+                query = input('Enter cardname (and setcode) in "name @set" form: ')
+                if query[0:2] == "^q":
                     print("")
                     break
                 query = query.split("@", 1)
-
                 result = ScryfallIO.getCard(query[0],
-                                            sets=query[1] if len(query) > 1 else "f",
-                                            mode="query" if len(query) > 1 else "exact")
+                                            sets=query[1].upper().strip() if len(query) > 1 else "f")
 
                 if result is not None:
-                    card = Card(ScryfallIO.getCard(query[0], result))  # exact mode + set검색 = 에러
+                    card = Card(result)
                     print("")
                     card.showCard()
+                    print("")
 
-                    if input("\nExport this card to current sheet(Y/N): ")[0].lower() == "y":
-                        MyCube.exportCard(card)
+                    if input("Export this card to current sheet(Y/N): ")[0].lower() == "y":
+                        myCube.exportCard(card)
+                    print("")
+
                 else:
-                    print("\nNo search result.")
+                    print("No search result.")
 
-        if direction[0] == '2':
+        if choice[0] == '3':
             while True:
-                query = input('\nEnter search query with Scryfall syntax: ')
-                if query[0:2] == "\\q":
+                query = input('Enter search query with Scryfall syntax: ')
+                if query[0:2] == "^q":
                     print("")
                     break
 
-                result = ScryfallIO.getMass(query, sets="l" if query.find("is:firstprint") != -1
-                                                               or query.find("set:") != -1
-                                                            else "f")  # query에서 직접 set 정해줄때 조건,
-                                                            # tescase:(oracle:pay oracle:2 oracle:life) type:land set:rtr
+                result = ScryfallIO.getMass(query)
 
                 try:
                     cards = [Card(datum) for datum in result]
-                    for card in cards:
-                        print(card.name)
-                    if input("\nExport those card to current sheet(Y/N): ")[0].lower() == "y":
-                        for card in cards:
-                            MyCube.exportCard(card)
-                except TypeError:
-                    print("\nNo search result.")
+                    print("\ntotal %s cards are found." % len(result))
 
-        if direction[0] == '3':
+                    for card in cards:
+                        print("%2d. %s" % (cards.index(card)+1, card.name))
+
+                    selections = re.sub(r'[\W]+', r' ', input("\nEnter card indices to export OR press Y to export all: ") ).split(" ")
+                    if selections[0].lower() == "y":
+                        for card in cards:
+                            myCube.exportCard(card)
+                    if re.match(r'\d', selections[0]):
+                        try:
+                            for selection in selections:
+                                myCube.exportCard(cards[int(selection)-1])
+                        except TypeError:
+                            print("Inappropriate index input.")
+
+                    print("")
+                except TypeError:
+                    print("\nNo search result.\n")
+
+        if choice[0] == '4':
             pass

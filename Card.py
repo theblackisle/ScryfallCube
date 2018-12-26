@@ -54,7 +54,10 @@ class Card():
             self.color_identity = data['color_identity']
             self.set = data['set'].upper()
             self.rarity = data['rarity']
-            self.usd = float(data['usd'])
+            try:
+                self.usd = float(data['usd'])
+            except:
+                self.usd = float(0)
 
             self.layout = data['layout'].title()
             if self.layout == 'Transform':

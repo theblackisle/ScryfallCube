@@ -5,8 +5,9 @@ from Card import Card
 from Converter import prettify
 
 
-class CubeInterface():
-    def __init__(self, credentials, filename=None, sheetname=None):
+class CubeInterface:
+    def __init__(self, credentials, filename=None, sheetname=None, email=None):
+        self.email = email if email is not None else input("Enter User's email address: ")
         self._currentClient = GspreadIO.openGsClient(credentials)
         if self._currentClient is None:
             raise ValueError
@@ -26,9 +27,13 @@ class CubeInterface():
         elif type(filename) is str:
             if filename in [found.title for found in self._currentClient.openall()]:
                 self._currentFile = self._currentClient.open(filename)
+                self._currentSheet = self._currentFile.get_worksheet(0)
+                print("File '%s' is open" % filename)
             else:
                 self._currentFile = self._currentClient.create(filename)
-                print("file created")
+                self._currentSheet = self._currentFile.get_worksheet(0)
+                self._currentFile.share(self.email, perm_type='user', role='writer')
+                print("File '%s' is created" % filename)
 
         else:
             print("inappropriate file name")
@@ -37,6 +42,13 @@ class CubeInterface():
     def currentFile(self):
         return self._currentFile
 
+    @currentFile.deleter
+    def currentFile(self):
+        self._currentClient.del_spreadsheet(self._currentFile.id)
+        self._currentFile = None
+        self._currentSheet = None
+
+
     @property
     def currentSheet(self):
         return self._currentSheet
@@ -44,13 +56,15 @@ class CubeInterface():
     @currentSheet.setter
     def currentSheet(self, sheetname):
         if sheetname is None:
-            self._currentFile = None
+            self._currentSheet = None
 
         elif type(sheetname) is str:
             if sheetname in [found.title for found in self._currentFile.worksheets()]:
                 self._currentSheet = self._currentFile.worksheet(sheetname)
+                print("Sheet '%s' is open" % sheetname)
             else:
                 self._currentSheet = self._currentFile.add_worksheet(sheetname, 1, 18)
+                print("Sheet '%s' is created" % sheetname)
 
         else:
             print("inappropriate Sheet name")
@@ -58,6 +72,52 @@ class CubeInterface():
     @currentSheet.getter
     def currentSheet(self):
         return self._currentSheet
+
+    @currentSheet.deleter
+    def currentSheet(self):
+        self._currentFile.del_worksheet(self._currentSheet)
+        self._currentSheet = None
+
+
+    def deleteFile(self, query):
+        if type(query) is str:
+            if query in [found.id for found in self._currentClient.openall()]:  # query is an ID value
+                filename = self._currentClient.open_by_key(query).title
+                if (self._currentFile is not None) and (self._currentFile.id == query):
+                    del self.currentFile  # deleter 사용
+                else:
+                    self._currentClient.del_spreadsheet(query)
+                print("File '%s: %s' is deleted" % (filename, query))
+
+            elif query in [found.title for found in self._currentClient.openall()]:  # query is a name of file
+                if (self._currentFile is not None) and (self._currentFile.id == self._currentClient.open(query).id):
+                    del self.currentFile
+                else:
+                    self._currentClient.del_spreadsheet(self._currentClient.open(query).id)
+                print("File '%s' is deleted" % query)
+
+            else:
+                print("No such name to delete: %s" % query)
+
+        else:
+            print("Inappropriate file name")
+
+    def deleteSheet(self, query):
+        if type(query) is str:
+            if query in [found.title for found in self._currentFile.worksheets()]:  # query is a name of file
+                result = self._currentFile.worksheet(query)
+                if (self._currentSheet is not None) and (self._currentSheet.id == result.id):
+                    del self.currentSheet  # deleter 사용
+                else:
+                    self._currentFile.del_worksheet(result)
+                print("Sheet '%s' is deleted\n" % query)
+
+            else:
+                print("No such name to delete: %s" % query)
+
+        else:
+            print("Inappropriate sheet name")
+
 
     def exportCard(self, card):
         self._currentSheet.append_row(prettify(card.gsExport()))
