@@ -26,7 +26,7 @@ class GsClient:
     def __setattr__(self, attr, val):
         if attr == '_GsClient__gsclient':
             object.__setattr__(self, attr, val)
-        return setattr(self.__a, attr, val)
+        return setattr(self.__gsclient, attr, val)
 
     pass
 
