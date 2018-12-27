@@ -7,7 +7,7 @@ from Card import Card
 from Converter import prettify
 
 
-class GsClient(gspread.Client):
+class GsClient:
     """
     ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
     '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
@@ -16,6 +16,17 @@ class GsClient(gspread.Client):
     'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
+
+    def __init__(self, gsclient):
+        self.__gsclient = gsclient
+
+    def __getattr__(self, attr):
+        return getattr(self.__gsclient, attr)
+
+    def __setattr__(self, attr, val):
+        if attr == '_GsClient__gsclient':
+            object.__setattr__(self, attr, val)
+        return setattr(self.__a, attr, val)
 
     pass
 
