@@ -1,9 +1,49 @@
 import re
+import gspread
 
 import GspreadIO
 import ScryfallIO
 from Card import Card
 from Converter import prettify
+
+
+class GsClient(gspread.Client):
+    """
+    ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
+    '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
+    '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
+    '__subclasshook__', '__weakref__',
+    'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
+    """
+
+    pass
+
+
+class GsFile(gspread.models.Spreadsheet):
+    """
+    ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
+    '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
+    '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
+    '__subclasshook__', '__weakref__',
+    'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
+    """
+
+    pass
+
+
+class GsSheet(gspread.models.Worksheet):
+    """
+    ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
+    '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
+    '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
+    '__subclasshook__', '__weakref__',
+    'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
+    """
+
+    pass
 
 
 class CubeInterface:
