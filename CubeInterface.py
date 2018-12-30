@@ -17,6 +17,28 @@ class GsClient:
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
 
+    '''
+    class B:
+        def __init__(self, a):
+            self.__a = a
+            self.b = 20  # 새로 정의한 __setattr__ method에 의해 모든 것이 a에 저장됨. dir()해보면 b가 없음
+        
+        def __setattr__(self, attr, val):
+            #print("__setattt__ called in %s attr:%s, val:%s" % (self, attr, val)
+        
+            if attr == '_B__a':
+                print("attr:%s, val:%s is internally processed by %s" % (attr, val, self))
+                super().__setattr__(attr, val)
+        
+            else:
+                print("attr:%s, val:%s is externally processed by %s" % (attr, val, self))
+                setattr(self.__a, attr, val)
+                
+        def __getattr__(self, attr):
+            print("__getattr__ is called for: %s" % attr)
+            return getattr(self.__a, attr)
+    '''
+
     def __init__(self, gsclient):
         self.__gsclient = gsclient
 
@@ -25,13 +47,13 @@ class GsClient:
 
     def __setattr__(self, attr, val):
         if attr == '_GsClient__gsclient':
-            object.__setattr__(self, attr, val)
-        return setattr(self.__gsclient, attr, val)
+            super().__setattr__(attr, val)
+        else:
+            setattr(self.__gsclient, attr, val)
 
-    pass
 
 
-class GsFile(gspread.models.Spreadsheet):
+class GsFile():
     """
     ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
     '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
@@ -41,7 +63,17 @@ class GsFile(gspread.models.Spreadsheet):
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
 
-    pass
+    def __init__(self, gsspreadsheet):
+        self.__gsspreadsheet = gsspreadsheet
+
+    def __getattr__(self, attr):
+        return getattr(self.__gsspreadsheet, attr)
+
+    def __setattr__(self, attr, val):
+        if attr == '_GsFile__gsspreadsheet':
+            super().__setattr__(attr, val)
+        else:
+            setattr(self.__gsspreadsheet, attr, val)
 
 
 class GsSheet(gspread.models.Worksheet):
@@ -53,6 +85,19 @@ class GsSheet(gspread.models.Worksheet):
     'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
+
+    def __init__(self, gsworksheet):
+        self.__gsworksheet = gsworksheet
+
+    def __getattr__(self, attr):
+        return getattr(self.__gsworksheet, attr)
+
+    def __setattr__(self, attr, val):
+        if attr == '_GsSheet__gsworksheet':
+            super().__setattr__(attr, val)
+        else:
+            setattr(self.__gsworksheet, attr, val)
+
 
     pass
 
