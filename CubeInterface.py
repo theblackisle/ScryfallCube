@@ -7,7 +7,7 @@ from Card import Card
 from Converter import prettify
 
 
-class GsClient:
+class GsClient(gspread.Client):
     """
     ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
     '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
@@ -17,43 +17,56 @@ class GsClient:
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
 
-    '''
-    class B:
-        def __init__(self, a):
-            self.__a = a
-            self.b = 20  # 새로 정의한 __setattr__ method에 의해 모든 것이 a에 저장됨. dir()해보면 b가 없음
-        
-        def __setattr__(self, attr, val):
-            #print("__setattt__ called in %s attr:%s, val:%s" % (self, attr, val)
-        
-            if attr == '_B__a':
-                print("attr:%s, val:%s is internally processed by %s" % (attr, val, self))
-                super().__setattr__(attr, val)
-        
-            else:
-                print("attr:%s, val:%s is externally processed by %s" % (attr, val, self))
-                setattr(self.__a, attr, val)
-                
-        def __getattr__(self, attr):
-            print("__getattr__ is called for: %s" % attr)
-            return getattr(self.__a, attr)
-    '''
-
     def __init__(self, gsclient):
         self.__gsclient = gsclient
-
-    def __getattr__(self, attr):
-        return getattr(self.__gsclient, attr)
 
     def __setattr__(self, attr, val):
         if attr == '_GsClient__gsclient':
             super().__setattr__(attr, val)
+            # _GsClient__gsclient 만 예외적으로 자기 attr에 두기 위한 목적의 코드
+            # 그냥 __setattr__호출시 무한루프
+            # super().__setattr__(attr, val) 또는 object.__setattr__(attr, val)로 빠져나가야.
+
         else:
             setattr(self.__gsclient, attr, val)
+            # setattr(self.__a, attr, val)
+            # GsClient의 모든 attr을 '__gsclient'에 set하는 기능. GsClient는 깡통.
+            # 따라서 __getattr__도 '__gsclient'에서 꺼내오게 구현해야암
+            # is equivalent to self.'__gsclient'."attr" = val 그러나 불가능한 style.
+
+    def __getattr__(self, attr):
+        return getattr(self.__gsclient, attr)
+        # Remember that __getattr__ is only used for missing attribute lookup.
+        # 이경우 GsClient에 아무 attr이 없으므로 모든 attr은 __getattr__을 튱해 gspread.Client instance에서 꺼내온다.
+        # 따라서 만약 self.__gsclient가 없을 경우 이 코드는 getattr이 __getattr__을 부르고 __getattr__이 gatattr을 부르게 되어 무한루프
+        # 참고로 getattr(self.__gsclient, attr) is equivalent to self.__gsclient."attr" 그러나 불가능한 style.
+
+    def copy(self, file_id, title=None, copy_permissions=False):  # Spreadsheet을 return하는 모든 함수를 GsFile을 return하게끔 override
+        content = super().copy(file_id, title=title, copy_permissions=copy_permissions)
+        return GsFile(content)
+
+    def create(self, title):
+        content = super().create(title)
+        return GsFile(content)
+
+    def open(self, title):
+        content = super().open(title)
+        return GsFile(content)
+
+    def open_by_key(self, key):
+        content = super().open_by_key(key)
+        return GsFile(content)
+
+    def open_by_url(self, url):
+        content = super().open_by_url(url)
+        return GsFile(content)
+
+    def openall(self, title=None):
+        contents = super().openall(title)
+        return [GsFile(content) for content in contents]
 
 
-
-class GsFile():
+class GsFile(gspread.models.Spreadsheet):
     """
     ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
     '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
@@ -66,14 +79,26 @@ class GsFile():
     def __init__(self, gsspreadsheet):
         self.__gsspreadsheet = gsspreadsheet
 
-    def __getattr__(self, attr):
-        return getattr(self.__gsspreadsheet, attr)
-
     def __setattr__(self, attr, val):
         if attr == '_GsFile__gsspreadsheet':
             super().__setattr__(attr, val)
         else:
             setattr(self.__gsspreadsheet, attr, val)
+
+    def __getattr__(self, attr):
+        return getattr(self.__gsspreadsheet, attr)
+
+    def get_worksheet(self, index):
+        content = super().get_worksheet(index)
+        return GsSheet(content)
+
+    def worksheet(self, title):
+        content = super().worksheet(title)
+        return GsSheet(content)
+
+    def worksheets(self):
+        contents = super().worksheets()
+        return [GsSheet(content) for content in contents]
 
 
 class GsSheet(gspread.models.Worksheet):
@@ -89,17 +114,14 @@ class GsSheet(gspread.models.Worksheet):
     def __init__(self, gsworksheet):
         self.__gsworksheet = gsworksheet
 
-    def __getattr__(self, attr):
-        return getattr(self.__gsworksheet, attr)
-
     def __setattr__(self, attr, val):
         if attr == '_GsSheet__gsworksheet':
             super().__setattr__(attr, val)
         else:
             setattr(self.__gsworksheet, attr, val)
 
-
-    pass
+    def __getattr__(self, attr):
+        return getattr(self.__gsworksheet, attr)
 
 
 class CubeInterface:
