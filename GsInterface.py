@@ -123,148 +123,33 @@ class GsSheet(gspread.models.Worksheet):
     def __getattr__(self, attr):
         return getattr(self.__gsworksheet, attr)
 
-
-class CubeInterface:
-    def __init__(self, credentials, filename=None, sheetname=None, email=None):
-        self._email = email if email is not None else input("Enter User's email address: ")
-        self._currentClient = GspreadIO.openGsClient(credentials)
-        if self._currentClient is None:
-            raise ValueError
-
-        self.currentFile = filename
-        self.currentSheet = sheetname  # setter 사용
-
-    @property
-    def currentFile(self):
-        return self._currentFile
-
-    @currentFile.setter
-    def currentFile(self, param):
-        if param is None:  # if type(A) is type(None) || if A is None 형식으로 써야
-            self._currentFile = None
-
-        elif type(param) is str:
-            if param in [found.title for found in self._currentClient.openall()]:  # param is file name
-                self._currentFile = self._currentClient.open(param)
-                self._currentSheet = self._currentFile.get_worksheet(0)
-                print("File '%s' is open" % param)
-            elif param in [found.id for found in self._currentClient.openall()]:  # param is file ID
-                self._currentFile = self._currentClient.open_by_key(param)
-                self._currentSheet = self._currentFile.get_worksheet(0)
-                print("File '%s: %s' is open" % (self._currentFile.title, param))
-            else:
-                self._currentFile = self._currentClient.create(param)
-                self._currentSheet = self._currentFile.get_worksheet(0)
-                self._currentFile.share(self._email, perm_type='user', role='writer')
-                print("File '%s' is created" % param)
-
-        else:
-            print("inappropriate file name")
-
-    @currentFile.getter
-    def currentFile(self):
-        return self._currentFile
-
-    @currentFile.deleter
-    def currentFile(self):
-        self._currentClient.del_spreadsheet(self._currentFile.id)
-        self._currentFile = None
-        self._currentSheet = None
-
-
-    @property
-    def currentSheet(self):
-        return self._currentSheet
-
-    @currentSheet.setter
-    def currentSheet(self, sheetname):
-        if sheetname is None:
-            self._currentSheet = None
-
-        elif type(sheetname) is str:
-            if sheetname in [found.title for found in self._currentFile.worksheets()]:
-                self._currentSheet = self._currentFile.worksheet(sheetname)
-                print("Sheet '%s' is open" % sheetname)
-            else:
-                self._currentSheet = self._currentFile.add_worksheet(sheetname, 1, 18)
-                print("Sheet '%s' is created" % sheetname)
-
-        else:
-            print("inappropriate Sheet name")
-
-    @currentSheet.getter
-    def currentSheet(self):
-        return self._currentSheet
-
-    @currentSheet.deleter
-    def currentSheet(self):
-        self._currentFile.del_worksheet(self._currentSheet)
-        self._currentSheet = None
-
-
-    def deleteFile(self, query):
-        if type(query) is str:
-            if query in [found.id for found in self._currentClient.openall()]:  # query is an ID value
-                filename = self._currentClient.open_by_key(query).title
-                if (self._currentFile is not None) and (self._currentFile.id == query):
-                    del self.currentFile  # deleter 사용
-                else:
-                    self._currentClient.del_spreadsheet(query)
-                print("File '%s: %s' is deleted" % (filename, query))
-
-            elif query in [found.title for found in self._currentClient.openall()]:  # query is a name of file
-                if (self._currentFile is not None) and (self._currentFile.id == self._currentClient.open(query).id):
-                    del self.currentFile
-                else:
-                    self._currentClient.del_spreadsheet(self._currentClient.open(query).id)
-                print("File '%s' is deleted" % query)
-
-            else:
-                print("No such name to delete: %s" % query)
-
-        else:
-            print("Inappropriate file name")
-
-    def deleteSheet(self, query):
-        if type(query) is str:
-            if query in [found.title for found in self._currentFile.worksheets()]:  # query is a name of file
-                result = self._currentFile.worksheet(query)
-                if (self._currentSheet is not None) and (self._currentSheet.id == result.id):
-                    del self.currentSheet  # deleter 사용
-                else:
-                    self._currentFile.del_worksheet(result)
-                print("Sheet '%s' is deleted\n" % query)
-
-            else:
-                print("No such name to delete: %s" % query)
-
-        else:
-            print("Inappropriate sheet name")
-
-
     def exportCard(self, card):
-        self._currentSheet.append_row(prettify(card.gsExport()))
-        print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
-
+        self.append_row(prettify(card.gsExport()))
+        print("{0} is recorded in {1}".format(card.name, self.title))
 
     def searchExportCard(self, cardname, sets='f'):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
-        self._currentSheet.append_row(prettify(card.gsExport()))
-        print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
+        self.append_row(prettify(card.gsExport()))
+        print("{0} is recorded in {1}".format(card.name, self.title))
 
     def exportMass(self, cardlist):
-        row_count = self._currentSheet.row_count
-        self._currentSheet.add_rows(1)
+        row_count = self.row_count
+        self.add_rows(1)
         for card in cardlist:
-            self._currentSheet.insert_row(prettify(card.gsExport()), row_count+cardlist.index(card)+1)
-            print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
+            self.insert_row(prettify(card.gsExport()), row_count + cardlist.index(card) + 1)
+            print("{0} is recorded in {1}".format(card.name, self.title))
 
     def searchExportMass(self, searchquery, sets='f', sort=None, order=None):
         cardlist = ScryfallIO.getMass(searchquery, sets=sets, sort=sort, order=order)
         for datum in cardlist:
             card = Card(datum)
-            self._currentSheet.append_row(prettify(card.gsExport()))
-            print("{0} is recorded in {1}".format(card.name, self._currentSheet.title))
+            self.append_row(prettify(card.gsExport()))
+            print("{0} is recorded in {1}".format(card.name, self.title))
+
+    def importCard(self, row):
+        """가공된 row값을 받아 Card로 return"""
+        card = Card(prettify(self.row_values(row), mode="reverse"))
+        return card
 
     def importinsheet(self, start=None, end=None, *columns):
         """가공되지 않은 sheet에서 cardname을 받아 Card의 list로 return"""
@@ -272,7 +157,7 @@ class CubeInterface:
         for col in columns:
             for row in range(int(start), int(end)+1):
                 print("{0}{1}".format(col, row))
-                cardnamelist.append(self._currentSheet.acell("{0}{1}".format(col, row)).value)
+                cardnamelist.append(self.acell("{0}{1}".format(col, row)).value)
 
         cardlist = []
         for cardname in cardnamelist:
@@ -280,87 +165,134 @@ class CubeInterface:
 
         return cardlist
 
-    def importCard(self, row):
-        """가공된 row값을 받아 Card로 return"""
-        card = Card(prettify(self._currentSheet.row_values(row), mode="reverse"))
-        return card
-
-    def importMass(self, start=1, end=None):  # spread sheet의 start는 0이 아님
-        """가공된 row들 값을 받아 Card의 list로 return"""
-        if end is None:
-            end = self._currentSheet.row_count
-
-        cardlist = []
-        for i in range(start, end+1):  # 1에서 'end'까지
-            cardlist.append(self.importCard(i))
-
-        return cardlist
-
-    def findcell(self, query):
-        """query를 가지는 첫 cell을 찾아 cell instance를 return"""
+    def findcell(self, query, mode="cell"):
+        """
+        mode == cell: 특정 query를 만족하는 첫 cell을 찾아 cell instance를 return
+        mode == name: 특정 query를 만족하는 첫 cell이 위치하는 곳의 Card name을 return
+        mode == row: 특정 query를 만족하는 첫 cell이 위치하는 곳의 row 값을 return
+        """
         regexp = re.compile(r'([\s]|^)' + query)
         try:
-            return self._currentSheet.find(regexp)
+            result = self.find(regexp)
+            if mode == "cell":
+                return result
+            if mode == "name":
+                return self.cell(result.row, 1).value
+            if mode == "row":
+                return result.row
         except GspreadIO.gspread.exceptions.CellNotFound:  # gspread는 GspreadIO에 import되어있음
-            print('Cannot find "%s" in %s' % (query, self._currentSheet.title))
-            return None
-
-    def findcardname(self, query):
-        """특정 query를 만족하는 cell이 위치하는 곳의 Card name을 return"""
-        regexp = re.compile(r'([\s]|^)' + query)
-        try:
-            result = self._currentSheet.find(regexp)
-            return self._currentSheet.cell(result.row, 1)
-        except GspreadIO.gspread.exceptions.CellNotFound:  # gspread는 GspreadIO에 import되어있음
-            print('Cannot find "%s" in %s' % (query, self._currentSheet.title))
+            print('Cannot find "%s" in %s' % (query, self.title))
             return None
 
     def findincol(self, query, *columns):
-        """특정 column들 내에서 quert를 만족하는 card들의 row값들을 list로 return"""
+        """특정 column들 내에서 query를 만족하는 card들의 row값들을 list로 return"""
         found_row = set()
         if query[0] == "!":  # Not 검색
             query = query[1:]
             for i in columns:  # columns = tuple
                 row_list = set([found.row for found
-                                in self._currentSheet.range("{0}1:{0}{1}".format(i, self._currentSheet.row_count))
+                                in self.range("{0}1:{0}{1}".format(i, self.row_count))
                                 if not re.search(query, found.value)])  # r'([\s]|^)' + query
                 found_row = found_row & row_list if len(found_row) != 0 else row_list  # 논리적 교집합 구현
         else:
             for i in columns:  # columns = tuple
                 row_list = set([found.row for found
-                                in self._currentSheet.range("{0}1:{0}{1}".format(i, self._currentSheet.row_count))
+                                in self.range("{0}1:{0}{1}".format(i, self.row_count))
                                 if re.search(query, found.value)])  # r'([\s]|^)' + query
                 found_row |= row_list  # set 합집합연산자 |의 __iadd__
 
         print("found_row length: %d" % len(found_row))
         return sorted(list(found_row))
 
-    def copyrows(self, rows, sheetname, mode="newfile"):  # rows = list of row values(=int).
+    def copyrows(self, rows):  # rows = list of row values(=int).
         row_data = []
         for i in rows:
-            row_data.append(self._currentSheet.row_values(i))
-
-        if mode == "newfile":
-            if sheetname in [found.title for found in self._currentFile.worksheets()]:
-                newsheet = self._currentFile.worksheet(sheetname)
-            else:
-                newsheet = self._currentFile.add_worksheet(sheetname, 0, 0)
-                print(len(row_data))
-
-            for i in range(len(row_data)):
-                print(row_data[i])
-                newsheet.insert_row(row_data[i], i+1)
-            newsheet.resize(len(row_data), len(row_data[0]))
+            row_data.append(self.row_values(i))
 
         return row_data
 
+    def pasterows(self, row_data):  # row_data = list of row data(=list).
+        for i in range(len(row_data)):
+            print(row_data[i])
+            self.insert_row(row_data[i], i + 1)
+        self.resize(len(row_data), len(row_data[0]))
 
+
+class GsInterface:
+    def __init__(self, credentials, filename=None, sheetname=None, email=None):
+        self._email = email if email is not None else input("Enter User's email address: ")
+        gspread = GspreadIO.openGsClient(credentials)
+        if gspread is None:
+            raise ValueError
+        self._client = GsClient(GspreadIO.openGsClient(credentials))
+
+        self.file = filename
+        self.sheet = sheetname  # setter 사용
+
+    @property
+    def file(self):
+        return self._file
+
+    @file.setter
+    def file(self, param):
+        if param is None:  # if type(A) is type(None) || if A is None 형식으로 써야
+            self._file = None
+
+        else:
+            if param in [found.title for found in self._client.openall()]:  # param is file name
+                self._file = self._client.open(param)
+                self._sheet = self._file.get_worksheet(0)
+                print("File '%s' is open" % param)
+            elif param in [found.id for found in self._client.openall()]:  # param is file ID
+                self._file = self._client.open_by_key(param)
+                self._sheet = self._file.get_worksheet(0)
+                print("File '%s: %s' is open" % (self._file.title, param))
+            else:
+                self._file = self._client.create(param)
+                self._sheet = self._file.get_worksheet(0)
+                self._file.share(self._email, perm_type='user', role='writer')
+                print("File '%s' is created" % param)
+
+    @file.getter
+    def file(self):
+        return self._file
+
+    @file.deleter
+    def file(self):
+        self._client.del_spreadsheet(self._file.id)
+        self._file = None
+        self._sheet = None
+
+    @property
+    def sheet(self):
+        return self._sheet
+
+    @sheet.setter
+    def sheet(self, sheetname):
+        if sheetname is None:
+            self._sheet = None
+        else:
+            if sheetname in [found.title for found in self._file.worksheets()]:
+                self._sheet = self._file.worksheet(sheetname)
+                print("Sheet '%s' is open" % sheetname)
+            else:
+                self._sheet = self._file.add_worksheet(sheetname, 1, 18)
+                print("Sheet '%s' is created" % sheetname)
+
+    @sheet.getter
+    def sheet(self):
+        return self._sheet
+
+    @sheet.deleter
+    def sheet(self):
+        self._file.del_worksheet(self._sheet)
+        self._sheet = None
 
 
 if __name__ == '__main__':
-    MyCube = CubeInterface('ScryfallCube-80b58226a864.json')
-    MyCube.currentFile = 'ScryfallCubeIO'
-    MyCube.currentSheet = "시트1"
+    MyCube = GsInterface('ScryfallCube-80b58226a864.json')
+    MyCube.file = 'ScryfallCubeIO'
+    MyCube.sheet = "시트1"
     # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음!
 
     # print(MyCube.importCard(12).showCard())

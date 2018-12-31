@@ -4,7 +4,7 @@ import pprint
 import gspread
 import ScryfallIO
 from Card import Card
-from CubeInterface import CubeInterface
+from GsInterface import GsInterface
 
 def printmenu():
     menu = []
@@ -39,12 +39,12 @@ def printfilemenu():
     return choice
 
 def printlocation(cube):
-    filename = cube.currentFile.title if cube.currentFile is not None else "None"
-    sheetname = cube.currentSheet.title if cube.currentSheet is not None else "None"
+    filename = cube.file.title if cube.file is not None else "None"
+    sheetname = cube.sheet.title if cube.sheet is not None else "None"
     print('Current file: {0}\nCurrent sheet: {1}'.format(filename, sheetname))
 
 if __name__ == '__main__':
-    myCube = CubeInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", "gattuk24@gmail.com")
+    myCube = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", "gattuk24@gmail.com")
     print("")
 
     while True:
@@ -66,17 +66,17 @@ if __name__ == '__main__':
                     if query[0:2] == "^q":
                         print("")
                         break
-                    myCube.currentFile = query
+                    myCube.file = query
                     print("")
                     printlocation(myCube)
 
                 while filechoice[0] == '2':
-                    pprint.PrettyPrinter(2).pprint(myCube.currentFile.worksheets())
+                    pprint.PrettyPrinter(2).pprint(myCube.file.worksheets())
                     query = input('Enter sheet name: ')
                     if query[0:2] == "^q":
                         print("")
                         break
-                    myCube.currentSheet = query
+                    myCube.sheet = query
                     print("")
                     printlocation(myCube)
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
                     printlocation(myCube)
 
                 while filechoice[0] == '4':
-                    pprint.PrettyPrinter(2).pprint(myCube.currentFile.worksheets())
+                    pprint.PrettyPrinter(2).pprint(myCube.file.worksheets())
                     query = input('Enter sheet name: ')
                     if query[0:2] == "^q":
                         print("")
@@ -166,10 +166,10 @@ if __name__ == '__main__':
 
                 cardlist = myCube.importinsheet(rowinput[0], rowinput[1], *tuple(columninput))
 
-                tempsheet = myCube.currentSheet
-                myCube.currentSheet = savedestine
+                tempsheet = myCube.sheet
+                myCube.sheet = savedestine
                 myCube.exportMass(cardlist)
-                myCube.currentSheet = tempsheet
+                myCube.sheet = tempsheet
 
 
 
