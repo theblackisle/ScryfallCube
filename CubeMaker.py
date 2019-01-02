@@ -1,6 +1,8 @@
 import re
 import pprint
 
+
+
 import ScryfallIO
 from Card import Card
 from GsInterface import GsInterface
@@ -43,7 +45,7 @@ def printFileMenu():
 def printLocation(pointer):
     filename = pointer.file.title if pointer.file is not None else "None"
     sheetname = pointer.sheet.title if pointer.sheet is not None else "None"
-    print('Opened file: {0}\nOpened sheet: {1}'.format(filename, sheetname))
+    print('Open file: {0}\nOpen sheet: {1}'.format(filename, sheetname))
 
 
 def selectFile(client):
@@ -81,23 +83,21 @@ def parseIndex(inputs):
     for item in indexlist:
         if re.match(r'^[\d]+$', item):  # item이 정수
             intlist.add(int(item))
-        elif re.match(r'^[\d]-[\d]', item):  # item이 범위 지정
+        elif re.match(r'^[\d]+-[\d]+$', item):  # item이 범위 지정
             item = list(map(int, item.split("-")))
             for i in range(min(item), max(item) + 1):
                 intlist.add(i)
-        elif re.match(r'^-[\d]', item):  # item이 예외 지정
+        elif re.match(r'^-[\d]+$', item):  # item이 예외 지정
             exceptlist.add(int(item.replace("-", "")))
         else:  # item이 숫자가 아님
             charlist.append(item)
 
-    totallist = charlist + list(intlist - exceptlist)
-    print(totallist)
-
-    return totallist # 문자가 앞에 오게 조정
+    return charlist + list(intlist - exceptlist)  # 문자가 앞에 오게 조정
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1", email="gattuk24@gmail.com")#'ScryfallCubeIO', "2C",
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "news", email="gattuk24@gmail.com")
+    target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
     while True:
@@ -134,22 +134,35 @@ if __name__ == '__main__':
                     printLocation(pointer)
 
                 while filechoice[0] == '3':  # 3. Delete file
-                    pprint.PrettyPrinter(2).pprint(pointer._client.openall())
-                    query = input('Enter file name or ID: ')
+                    query = selectFile(pointer._client)
                     if query[0:2] == "^q":
                         print("")
                         break
-                    pointer._client.del_spreadsheet(pointer._client.open(query).id)
+                    if pointer.file.title == query:
+                        pointer.mode = "deletion"
+                        del pointer.file
+                        pointer.mode = "default"
+                    else:
+                        target.mode = "deletion"
+                        target.file = query
+                        del target.file
                     print("")
                     printLocation(pointer)
 
                 while filechoice[0] == '4':  # 4. Delete Sheet
-                    pprint.PrettyPrinter(2).pprint(pointer.file.worksheets())
-                    query = input('Enter sheet name: ')
+                    query = selectSheet(pointer.file)
                     if query[0:2] == "^q":
                         print("")
                         break
-                    pointer.file.del_worksheet(pointer.file.worksheet(query))
+                    if pointer.sheet.title == query:
+                        pointer.mode = "deletion"
+                        del pointer.sheet
+                        pointer.mode = "default"
+                    else:
+                        target.mode = "deletion"
+                        target.file = pointer.file
+                        target.sheet = query
+                        del target.sheet
                     print("")
                     printLocation(pointer)
 
@@ -170,7 +183,7 @@ if __name__ == '__main__':
                     print("")
 
                     if input("Export this card to current sheet(Y/N): ")[0].lower() == "y":
-                        pointer.sheet.exportCard(card)
+                        pointer.sheet.importCard(card)
                     print("")
 
                 else:
@@ -192,16 +205,15 @@ if __name__ == '__main__':
                     for card in cards:
                         print("%2d. %s" % (cards.index(card)+1, card.name))
 
-                    selections = parseIndex(input("\nEnter card indices to export OR press Y to export all: "))
+                    selections = parseIndex(input("\nEnter card indices to import OR press Y to import all: "))
 
                     if type(selections[0]) is int:
-                        try:
-                            for selection in selections:
-                                pointer.sheet.exportCard(cards[int(selection) - 1])
-                        except TypeError:
-                            print("Inappropriate index input.")
+                        for selection in selections:
+                            pointer.sheet.importCard(cards[int(selection) - 1])
                     elif selections[0].lower() == "y":
-                        pointer.sheet.exportMass(cards)
+                        pointer.sheet.importMass(cards)
+                    else:
+                        print("Import process aborted")
 
                     print("")
                 except TypeError:

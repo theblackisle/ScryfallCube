@@ -9,11 +9,7 @@ from Converter import prettify
 
 class GsClient(gspread.Client):
     """
-    ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
-    '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
-    '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
-    '__subclasshook__', '__weakref__',
-    'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    ['copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
 
@@ -68,11 +64,7 @@ class GsClient(gspread.Client):
 
 class GsFile(gspread.models.Spreadsheet):
     """
-    ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
-    '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
-    '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
-    '__subclasshook__', '__weakref__',
-    'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    ['copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
 
@@ -103,11 +95,7 @@ class GsFile(gspread.models.Spreadsheet):
 
 class GsSheet(gspread.models.Worksheet):
     """
-    ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
-    '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
-    '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
-    '__subclasshook__', '__weakref__',
-    'copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    ['copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
     'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
     """
 
@@ -123,35 +111,48 @@ class GsSheet(gspread.models.Worksheet):
     def __getattr__(self, attr):
         return getattr(self.__gsworksheet, attr)
 
-    def exportCard(self, card):
+    def append_row(self, values, value_input_option='RAW'):
+        """gsspread의 원본 method가 append를 이상하게 하는 것을 개선한 버전"""
+        params = {
+            'valueInputOption': value_input_option
+        }
+
+        body = {
+            'values': [values]
+        }
+        title_range = self.title + '!A1:A%s' % self.row_count
+        return self.spreadsheet.values_append(title_range, params, body)
+
+    def importCard(self, card):
         self.append_row(prettify(card.gsExport()))
         print("{:22} is recorded in {}".format(card.name, self.title))
 
-    def searchExportCard(self, cardname, sets='f'):
+    def searchImportCard(self, cardname, sets='f'):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
         self.append_row(prettify(card.gsExport()))
         print("{:22} is recorded in {}".format(card.name, self.title))
 
-    def exportMass(self, cardlist):
+    def importMass(self, cardlist):
         row_count = self.row_count
         self.add_rows(1)
         for card in cardlist:
-            self.insert_row(prettify(card.gsExport()), row_count + cardlist.index(card) + 1)
+            self.append_row(prettify(card.gsExport()))
+            #self.insert_row(prettify(card.gsExport()), row_count + cardlist.index(card) + 1)
             print("{:22} is recorded in {}".format(card.name, self.title))
 
-    def searchExportMass(self, searchquery, sets='f', sort=None, order=None):
+    def searchImportMass(self, searchquery, sets='f', sort=None, order=None):
         cardlist = ScryfallIO.getMass(searchquery, sets=sets, sort=sort, order=order)
         for datum in cardlist:
             card = Card(datum)
             self.append_row(prettify(card.gsExport()))
             print("{:22} is recorded in {}".format(card.name, self.title))
 
-    def importCard(self, row):
+    def exportCard(self, row):
         """가공된 row값을 받아 Card로 return"""
         card = Card(prettify(self.row_values(row), mode="reverse"))
         return card
 
-    def importinsheet(self, start=None, end=None, *columns):
+    def exportinsheet(self, start=None, end=None, *columns):
         """가공되지 않은 sheet에서 cardname을 받아 Card의 list로 return"""
         cardnamelist = []
         for col in columns:
@@ -165,11 +166,12 @@ class GsSheet(gspread.models.Worksheet):
 
         return cardlist
 
+
     def findcell(self, query, mode="cell"):
         """
         mode == cell: 특정 query를 만족하는 첫 cell을 찾아 cell instance를 return
         mode == name: 특정 query를 만족하는 첫 cell이 위치하는 곳의 Card name을 return
-        mode == row: 특정 query를 만족하는 첫 cell이 위치하는 곳의 row 값을 return
+        mode == row: 특정 query를 만족하는 첫 cell이 위치하는 곳의 row 값(int)을 return
         """
         regexp = re.compile(r'([\s]|^)' + query)
         try:
@@ -185,7 +187,7 @@ class GsSheet(gspread.models.Worksheet):
             return None
 
     def findincol(self, query, *columns):
-        """특정 column들 내에서 query를 만족하는 card들의 row값들을 list로 return"""
+        """특정 column들 내에서 query를 만족하는 card들의 row값(int)들을 list로 return"""
         found_row = set()
         if query[0] == "!":  # Not 검색
             query = query[1:]
@@ -219,15 +221,27 @@ class GsSheet(gspread.models.Worksheet):
 
 
 class GsInterface:
-    def __init__(self, credentials, filename=None, sheetname=None, email=None):
+    def __init__(self, credentials, filename=None, sheetname=None, email=None, mode='default'):
         self._email = email if email is not None else input("Enter User's email address: ")
         gspread = GspreadIO.openGsClient(credentials)
         if gspread is None:
             raise ValueError
+        self._mode = mode
         self._client = GsClient(GspreadIO.openGsClient(credentials))
 
         self.file = filename
         self.sheet = sheetname  # setter 사용
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, param):
+        if type(param) is str:
+            self._mode = param
+        else:
+            print("Not appropriate variable for mode.")
 
     @property
     def file(self):
@@ -238,13 +252,19 @@ class GsInterface:
         if param is None:  # if type(A) is type(None) || if A is None 형식으로 써야
             self._file = None
 
-        elif re.match(r'[\d]+$', param):
+        elif type(param) is GsFile:  # param is Gsfile itself
+            self._file = param
+            if self._mode is "default":
+                print("File is synced to '%s'" % param.title)
+
+        elif re.match(r'[\d]+$', param):  # param is file index
             param = int(param)
             filelist = self._client.openall()
-            if 0 < param <= len(filelist):  # param is file index
+            if 0 < param <= len(filelist):
                 self._file = filelist[param-1]
                 self._sheet = self._file.get_worksheet(0)
-                print("File '%d. %s' is open" % (param, self._file.title))
+                if self._mode is "default":
+                    print("File '%d. %s' is open" % (param, self._file.title))
             else:
                 print("%s is out of index range" % param)
 
@@ -252,11 +272,13 @@ class GsInterface:
             if param in [found.title for found in self._client.openall()]:  # param is file name
                 self._file = self._client.open(param)
                 self._sheet = self._file.get_worksheet(0)
-                print("File '%s' is open" % param)
+                if self._mode is "default":
+                    print("File '%s' is open" % param)
             elif param in [found.id for found in self._client.openall()]:  # param is file ID
                 self._file = self._client.open_by_key(param)
                 self._sheet = self._file.get_worksheet(0)
-                print("File '%s: %s' is open" % (self._file.title, param))
+                if self._mode is "default":
+                    print("File '%s: %s' is open" % (self._file.title, param))
             else:
                 if input("No such file found. Will you create one?(Y/N): ")[0].lower() == "y":
                     self._file = self._client.create(param)
@@ -270,9 +292,14 @@ class GsInterface:
 
     @file.deleter
     def file(self):
-        self._client.del_spreadsheet(self._file.id)
-        self._file = None
-        self._sheet = None
+        try:
+            if self._mode is not "silent":
+                print("File '%s' is deleted" % self._file.title)
+            self._client.del_spreadsheet(self._file.id)
+            self._file = None
+            self._sheet = None
+        except AttributeError:
+            print("Deletion process cannot be completed")
 
     @property
     def sheet(self):
@@ -288,14 +315,16 @@ class GsInterface:
             sheetlist = self._file.worksheets()
             if 0 < param <= len(sheetlist):
                 self._sheet = sheetlist[param-1]
-                print("Sheet '%s. %s' is open" % (param, self._sheet.title))
+                if self._mode is "default":
+                    print("Sheet '%s. %s' is open" % (param, self._sheet.title))
             else:
                 print("%s is out of index range" % param)
 
         else:  # param is sheet name
             if param in [found.title for found in self._file.worksheets()]:
                 self._sheet = self._file.worksheet(param)
-                print("Sheet '%s' is open" % param)
+                if self._mode is "default":
+                   print("Sheet '%s' is open" % param)
             else:
                 if input("No such sheet found. Will you create one?(Y/N): ")[0].lower() == "y":
                     self._sheet = self._file.add_worksheet(param, 1, 18)
@@ -307,50 +336,24 @@ class GsInterface:
 
     @sheet.deleter
     def sheet(self):
-        self._file.del_worksheet(self._sheet)
-        self._sheet = None
+        try:
+            if self._mode is not "silent":
+                print("Sheet '%s' is deleted" % self._sheet.title)
+            self._file.del_worksheet(self._sheet)
+            self._sheet = None
+        except gspread.exceptions.APIError:
+            print("You can't remove all the sheets in a document.")
+        except AttributeError:
+            print("Deletion process cannot be completed")
+
 
 
 if __name__ == '__main__':
-    MyCube = GsInterface('ScryfallCube-80b58226a864.json')
-    MyCube.file = 'ScryfallCubeIO'
-    MyCube.sheet = "시트1"
+    myCube = GsInterface('ScryfallCube-80b58226a864.json')
+    myCube.file = 'ScryfallCubeIO'
+    myCube.sheet = "시트1"
     # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음!
 
-    # print(MyCube.importCard(12).showCard())
-    # MyCube.importMass()
-
-    while True:
-        searchquery = input("findcol: ")
-        if searchquery == "quit":
-            break
-        sheetname = input("sheetname: ")
-        foundrow = MyCube.findincol(searchquery, "G")
-        MyCube.copyrows(foundrow, sheetname)
-
-    while True:
-        searchquery = input("find: ")
-        if searchquery == "quit":
-            break
-        print("%s is in %s" % (searchquery, MyCube.findthatcard(searchquery).value))
-
-    while True:
-        searchquery = input("find: ")
-        if searchquery == "quit":
-            break
-        MyCube.findcell(searchquery)
-        print("%s is in (%s, %s)" % (searchquery, MyCube.findcell(searchquery).row, MyCube.findcell(searchquery).col))
-
-    while True:
-        searchquery = input("put query: ")
-        if searchquery == "quit":
-            break
-        MyCube.searchExportMass(searchquery, sort="released", order="asc")
-
-    while True:
-        searchquery = input("put card: ")
-        if searchquery == "quit":
-            break
-        MyCube.searchExportCard(searchquery)
-
+    print(dir(myCube.file))
+    print(myCube.file.__dict__.keys())
     # print(MyCube.currentSheet.get_all_records())
