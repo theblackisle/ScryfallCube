@@ -1,12 +1,12 @@
 import re
 import pprint
 
-import gspread
 import ScryfallIO
 from Card import Card
 from GsInterface import GsInterface
 
-def printmenu():
+
+def printMenu():
     menu = []
     menu.append("1. Manage files and sheets.")
     menu.append("2. Search exact card from Scryfall.")
@@ -17,12 +17,13 @@ def printmenu():
     choice = input("Select: ")
     try:
         print(menu[int(choice[0])-1][3:])
-    except:
+    except IndexError and ValueError:
         pass
 
     return choice
 
-def printfilemenu():
+
+def printFileMenu():
     menu = []
     menu.append("1. Open or create file")
     menu.append("2. Open or create sheet")
@@ -33,74 +34,126 @@ def printfilemenu():
     choice = input("Select: ")
     try:
         print(menu[int(choice[0])-1][3:])
-    except:
+    except IndexError and ValueError:
         pass
 
     return choice
 
-def printlocation(cube):
-    filename = cube.file.title if cube.file is not None else "None"
-    sheetname = cube.sheet.title if cube.sheet is not None else "None"
-    print('Current file: {0}\nCurrent sheet: {1}'.format(filename, sheetname))
+
+def printLocation(pointer):
+    filename = pointer.file.title if pointer.file is not None else "None"
+    sheetname = pointer.sheet.title if pointer.sheet is not None else "None"
+    print('Opened file: {0}\nOpened sheet: {1}'.format(filename, sheetname))
+
+
+def selectFile(client):
+    try:
+        files = client.openall()
+        for file in files:
+            print("%2d. %-18s id:%s" % (files.index(file)+1, file.title, file.id))
+
+        return input('Enter file index, name or ID: ')
+
+    except:
+        print("Unable to open Google Spreadsheet")
+        return None
+
+
+def selectSheet(file):
+    try:
+        sheets = file.worksheets()
+        for sheet in sheets:
+            print("%2d. %s, id:%s" % (sheets.index(sheet)+1, sheet.title, sheet.id))
+
+        return input('Enter sheet index or name: ')
+
+    except:
+        print("Unable to open spreadsheet file")
+        return None
+
+
+def parseIndex(inputs):
+    indexlist = re.sub(r'[^\w-]+', r' ', inputs).split(" ")
+
+    charlist = []
+    intlist = set()
+    exceptlist = set()
+    for item in indexlist:
+        if re.match(r'^[\d]+$', item):  # item이 정수
+            intlist.add(int(item))
+        elif re.match(r'^[\d]-[\d]', item):  # item이 범위 지정
+            item = list(map(int, item.split("-")))
+            for i in range(min(item), max(item) + 1):
+                intlist.add(i)
+        elif re.match(r'^-[\d]', item):  # item이 예외 지정
+            exceptlist.add(int(item.replace("-", "")))
+        else:  # item이 숫자가 아님
+            charlist.append(item)
+
+    totallist = charlist + list(intlist - exceptlist)
+    print(totallist)
+
+    return totallist # 문자가 앞에 오게 조정
+
 
 if __name__ == '__main__':
-    myCube = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", "gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1", email="gattuk24@gmail.com")#'ScryfallCubeIO', "2C",
     print("")
 
     while True:
-        choice = printmenu()
+        choice = printMenu()
+        if choice[0:2] == "^q":
+            break
         print("")
 
-        if choice[0] == '1':
+        if choice[0] == '1':  # 1. Manage files and sheets.
             while True:
-                filechoice = printfilemenu()
+                filechoice = printFileMenu()
                 if filechoice[0:2] == "^q":
                     print("")
                     break
                 print("")
-                printlocation(myCube)
+                printLocation(pointer)
 
-                while filechoice[0] == '1':
-                    pprint.PrettyPrinter(2).pprint(myCube._currentClient.openall())
+                while filechoice[0] == '1':  # 1. Open or create file
+                    query = selectFile(pointer._client)
+                    if query[0:2] == "^q":
+                        print("")
+                        break
+                    pointer.file = query
+                    print("")
+                    printLocation(pointer)
+
+                while filechoice[0] == '2':  # 2. Open or create sheet
+                    query = selectSheet(pointer.file)
+                    if query[0:2] == "^q":
+                        print("")
+                        break
+                    pointer.sheet = query
+                    print("")
+                    printLocation(pointer)
+
+                while filechoice[0] == '3':  # 3. Delete file
+                    pprint.PrettyPrinter(2).pprint(pointer._client.openall())
                     query = input('Enter file name or ID: ')
                     if query[0:2] == "^q":
                         print("")
                         break
-                    myCube.file = query
+                    pointer._client.del_spreadsheet(pointer._client.open(query).id)
                     print("")
-                    printlocation(myCube)
+                    printLocation(pointer)
 
-                while filechoice[0] == '2':
-                    pprint.PrettyPrinter(2).pprint(myCube.file.worksheets())
+                while filechoice[0] == '4':  # 4. Delete Sheet
+                    pprint.PrettyPrinter(2).pprint(pointer.file.worksheets())
                     query = input('Enter sheet name: ')
                     if query[0:2] == "^q":
                         print("")
                         break
-                    myCube.sheet = query
+                    pointer.file.del_worksheet(pointer.file.worksheet(query))
                     print("")
-                    printlocation(myCube)
+                    printLocation(pointer)
 
-                while filechoice[0] == '3':
-                    pprint.PrettyPrinter(2).pprint(myCube._currentClient.openall())
-                    query = input('Enter file name or ID: ')
-                    if query[0:2] == "^q":
-                        print("")
-                        break
-                    myCube.deleteFile(query)
-                    print("")
-                    printlocation(myCube)
-
-                while filechoice[0] == '4':
-                    pprint.PrettyPrinter(2).pprint(myCube.file.worksheets())
-                    query = input('Enter sheet name: ')
-                    if query[0:2] == "^q":
-                        print("")
-                        break
-                    myCube.deleteSheet(query)
-                    print("")
-                    printlocation(myCube)
-
-        if choice[0] == '2':
+        if choice[0] == '2':  # 2. Search exact card from Scryfall.
             while True:
                 query = input('Enter cardname (and setcode) in "name @set" form: ')
                 if query[0:2] == "^q":
@@ -117,13 +170,13 @@ if __name__ == '__main__':
                     print("")
 
                     if input("Export this card to current sheet(Y/N): ")[0].lower() == "y":
-                        myCube.exportCard(card)
+                        pointer.sheet.exportCard(card)
                     print("")
 
                 else:
                     print("No search result.")
 
-        if choice[0] == '3':
+        if choice[0] == '3':  # 3. Search with Scryfall syntax.
             while True:
                 query = input('Enter search query with Scryfall syntax: ')
                 if query[0:2] == "^q":
@@ -134,27 +187,27 @@ if __name__ == '__main__':
 
                 try:
                     cards = [Card(datum) for datum in result]
-                    print("\ntotal %s cards are found." % len(result))
+                    print("\nTotal %s cards are found." % len(result))
 
                     for card in cards:
                         print("%2d. %s" % (cards.index(card)+1, card.name))
 
-                    selections = re.sub(r'[\W]+', r' ', input("\nEnter card indices to export OR press Y to export all: ") ).split(" ")
-                    if selections[0].lower() == "y":
-                        for card in cards:
-                            myCube.exportCard(card)
-                    if re.match(r'\d', selections[0]):
+                    selections = parseIndex(input("\nEnter card indices to export OR press Y to export all: "))
+
+                    if type(selections[0]) is int:
                         try:
                             for selection in selections:
-                                myCube.exportCard(cards[int(selection)-1])
+                                pointer.sheet.exportCard(cards[int(selection) - 1])
                         except TypeError:
                             print("Inappropriate index input.")
+                    elif selections[0].lower() == "y":
+                        pointer.sheet.exportMass(cards)
 
                     print("")
                 except TypeError:
                     print("\nNo search result.\n")
 
-        if choice[0] == '4':
+        if choice[0] == '4':  # 4. Read card data from sheet
             while True:
                 columninput = re.sub(r'[\W]+', r' ', input('\nEnter source column values: ')).split(" ")
                 print(columninput)
@@ -164,12 +217,12 @@ if __name__ == '__main__':
 
                 savedestine = input('Save to: ')
 
-                cardlist = myCube.importinsheet(rowinput[0], rowinput[1], *tuple(columninput))
+                cardlist = pointer.importinsheet(rowinput[0], rowinput[1], *tuple(columninput))
 
-                tempsheet = myCube.sheet
-                myCube.sheet = savedestine
-                myCube.exportMass(cardlist)
-                myCube.sheet = tempsheet
+                tempsheet = pointer.sheet
+                pointer.sheet = savedestine
+                pointer.exportMass(cardlist)
+                pointer.sheet = tempsheet
 
 
 

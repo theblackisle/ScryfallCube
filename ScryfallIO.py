@@ -16,7 +16,7 @@ def urlize(searchquery, sets="f", mode="exact", sort=None, order=None):
 
     if sets == "f" and searchquery.find("is:firstprint") == -1 and searchquery.find("set:") == -1:
         #  searchquery에서 직접 set 정해줄때는 "is:firstprint"를 붙이지 않는다.
-        #  tescase: (oracle:pay oracle:2 oracle:life) type:land set:rtr
+        #  testcase: (oracle:pay oracle:2 oracle:life) type:land set:rtr
         url = url + "+is%3Afirstprint"
     elif sets == "l" or sets == "default":
         pass  # "lastprint"가 default임

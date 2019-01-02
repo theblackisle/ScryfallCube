@@ -125,26 +125,26 @@ class GsSheet(gspread.models.Worksheet):
 
     def exportCard(self, card):
         self.append_row(prettify(card.gsExport()))
-        print("{0} is recorded in {1}".format(card.name, self.title))
+        print("{:22} is recorded in {}".format(card.name, self.title))
 
     def searchExportCard(self, cardname, sets='f'):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
         self.append_row(prettify(card.gsExport()))
-        print("{0} is recorded in {1}".format(card.name, self.title))
+        print("{:22} is recorded in {}".format(card.name, self.title))
 
     def exportMass(self, cardlist):
         row_count = self.row_count
         self.add_rows(1)
         for card in cardlist:
             self.insert_row(prettify(card.gsExport()), row_count + cardlist.index(card) + 1)
-            print("{0} is recorded in {1}".format(card.name, self.title))
+            print("{:22} is recorded in {}".format(card.name, self.title))
 
     def searchExportMass(self, searchquery, sets='f', sort=None, order=None):
         cardlist = ScryfallIO.getMass(searchquery, sets=sets, sort=sort, order=order)
         for datum in cardlist:
             card = Card(datum)
             self.append_row(prettify(card.gsExport()))
-            print("{0} is recorded in {1}".format(card.name, self.title))
+            print("{:22} is recorded in {}".format(card.name, self.title))
 
     def importCard(self, row):
         """가공된 row값을 받아 Card로 return"""
@@ -238,6 +238,16 @@ class GsInterface:
         if param is None:  # if type(A) is type(None) || if A is None 형식으로 써야
             self._file = None
 
+        elif re.match(r'[\d]+$', param):
+            param = int(param)
+            filelist = self._client.openall()
+            if 0 < param <= len(filelist):  # param is file index
+                self._file = filelist[param-1]
+                self._sheet = self._file.get_worksheet(0)
+                print("File '%d. %s' is open" % (param, self._file.title))
+            else:
+                print("%s is out of index range" % param)
+
         else:
             if param in [found.title for found in self._client.openall()]:  # param is file name
                 self._file = self._client.open(param)
@@ -248,10 +258,11 @@ class GsInterface:
                 self._sheet = self._file.get_worksheet(0)
                 print("File '%s: %s' is open" % (self._file.title, param))
             else:
-                self._file = self._client.create(param)
-                self._sheet = self._file.get_worksheet(0)
-                self._file.share(self._email, perm_type='user', role='writer')
-                print("File '%s' is created" % param)
+                if input("No such file found. Will you create one?(Y/N): ")[0].lower() == "y":
+                    self._file = self._client.create(param)
+                    self._sheet = self._file.get_worksheet(0)
+                    self._file.share(self._email, perm_type='user', role='writer')
+                    print("File '%s' is created" % param)
 
     @file.getter
     def file(self):
@@ -268,16 +279,27 @@ class GsInterface:
         return self._sheet
 
     @sheet.setter
-    def sheet(self, sheetname):
-        if sheetname is None:
+    def sheet(self, param):
+        if param is None:
             self._sheet = None
-        else:
-            if sheetname in [found.title for found in self._file.worksheets()]:
-                self._sheet = self._file.worksheet(sheetname)
-                print("Sheet '%s' is open" % sheetname)
+
+        elif re.match(r'[\d]+$', param):  # param is sheet index
+            param = int(param)
+            sheetlist = self._file.worksheets()
+            if 0 < param <= len(sheetlist):
+                self._sheet = sheetlist[param-1]
+                print("Sheet '%s. %s' is open" % (param, self._sheet.title))
             else:
-                self._sheet = self._file.add_worksheet(sheetname, 1, 18)
-                print("Sheet '%s' is created" % sheetname)
+                print("%s is out of index range" % param)
+
+        else:  # param is sheet name
+            if param in [found.title for found in self._file.worksheets()]:
+                self._sheet = self._file.worksheet(param)
+                print("Sheet '%s' is open" % param)
+            else:
+                if input("No such sheet found. Will you create one?(Y/N): ")[0].lower() == "y":
+                    self._sheet = self._file.add_worksheet(param, 1, 18)
+                    print("Sheet '%s' is created" % param)
 
     @sheet.getter
     def sheet(self):
