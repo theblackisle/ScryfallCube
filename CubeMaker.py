@@ -11,11 +11,14 @@ from GsInterface import GsInterface
 def printMenu():
     menu = []
     menu.append("1. Manage files and sheets.")
-    menu.append("2. Search exact card from Scryfall.")
-    menu.append("3. Search with Scryfall syntax.")
-    menu.append("4. Read card data from sheet")
+    menu.append("2. Search from Scryfall for exact card.")
+    menu.append("3. Search from Scryfall with query.")
+    menu.append("4. Prepare card data from unprepared sheet")
+    menu.append("5. Match card for query from prepared sheet")
 
-    print("Menu\n{0}\n{1}\n{2}\n{3}".format(menu[0], menu[1], menu[2], menu[3]))
+    for item in menu:
+        print(item)
+
     choice = input("Select: ")
     try:
         print(menu[int(choice[0])-1][3:])
@@ -32,7 +35,9 @@ def printFileMenu():
     menu.append("3. Delete file")
     menu.append("4. Delete Sheet")
 
-    print("{0}\n{1}\n{2}\n{3}".format(menu[0], menu[1], menu[2], menu[3]))
+    for item in menu:
+        print(item)
+
     choice = input("Select: ")
     try:
         print(menu[int(choice[0])-1][3:])
@@ -46,25 +51,25 @@ def printLocation(pointer):
     sheetname = pointer.sheet.title if pointer.sheet is not None else "None"
     print('Open file: {0}\nOpen sheet: {1}'.format(filename, sheetname))
 
-def selectFile(client):
+def selectFile(client, prompt):
     try:
         files = client.openall()
         for file in files:
             print("%2d. %-18s id:%s" % (files.index(file)+1, file.title, file.id))
 
-        return input('Enter file index, name or ID: ')
+        return input(prompt)
 
     except:
         print("Unable to open Google Spreadsheet")
         return None
 
-def selectSheet(file):
+def selectSheet(file, prompt):
     try:
         sheets = file.worksheets()
         for sheet in sheets:
             print("%2d. %s, id:%s" % (sheets.index(sheet)+1, sheet.title, sheet.id))
 
-        return input('Enter sheet index or name: ')
+        return input(prompt)
 
     except:
         print("Unable to open spreadsheet file")
@@ -92,7 +97,6 @@ def parseIndex(inputs):
 
 def parsecolumn(inputs):
     columnlist = re.sub(r'[^\w-]+', r' ', inputs).split(" ")
-    print(columnlist)
 
     elselist = []
     charlist = set()
@@ -115,7 +119,6 @@ def parsecolumn(inputs):
                 charlist.add(number_to_colchar(i))
         elif re.match(r'^-[a-zA-Z]+$', item):  # item이 A1 notation으로 예외 지정
             exceptlist.add((item.replace("-", "")).upper())
-            print(exceptlist)
 
         else:  # item이 다른 어떤 것
             elselist.append(item)
@@ -149,7 +152,7 @@ def colchar_to_number(value):
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "news", email="gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", email="gattuk24@gmail.com")
     target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
@@ -158,6 +161,7 @@ if __name__ == '__main__':
         if choice[0:2] == "^q":
             break
         print("")
+
 
         if choice[0] == '1':  # 1. Manage files and sheets.
             while True:
@@ -169,7 +173,7 @@ if __name__ == '__main__':
                 printLocation(pointer)
 
                 while filechoice[0] == '1':  # 1. Open or create file
-                    query = selectFile(pointer._client)
+                    query = selectFile(pointer._client, 'Enter file index, name or ID: ')
                     if query[0:2] == "^q":
                         print("")
                         break
@@ -178,7 +182,7 @@ if __name__ == '__main__':
                     printLocation(pointer)
 
                 while filechoice[0] == '2':  # 2. Open or create sheet
-                    query = selectSheet(pointer.file)
+                    query = selectSheet(pointer.file, "Enter sheet index or name: ")
                     if query[0:2] == "^q":
                         print("")
                         break
@@ -187,7 +191,7 @@ if __name__ == '__main__':
                     printLocation(pointer)
 
                 while filechoice[0] == '3':  # 3. Delete file
-                    query = selectFile(pointer._client)
+                    query = selectFile(pointer._client, 'Enter file index, name or ID to delete: ')
                     if query[0:2] == "^q":
                         print("")
                         break
@@ -203,7 +207,7 @@ if __name__ == '__main__':
                     printLocation(pointer)
 
                 while filechoice[0] == '4':  # 4. Delete Sheet
-                    query = selectSheet(pointer.file)
+                    query = selectSheet(pointer.file, "Enter sheet index or name to delete: ")
                     if query[0:2] == "^q":
                         print("")
                         break
@@ -218,6 +222,7 @@ if __name__ == '__main__':
                         del target.sheet
                     print("")
                     printLocation(pointer)
+
 
         if choice[0] == '2':  # 2. Search exact card from Scryfall.
             while True:
@@ -242,6 +247,7 @@ if __name__ == '__main__':
                 else:
                     print("No search result.")
 
+
         if choice[0] == '3':  # 3. Search with Scryfall syntax.
             while True:
                 query = input('Enter search query with Scryfall syntax: ')
@@ -249,7 +255,7 @@ if __name__ == '__main__':
                     print("")
                     break
 
-                result = ScryfallIO.getMass(query)
+                result = ScryfallIO.get_from_query(query)
 
                 try:
                     cards = [Card(datum) for datum in result]
@@ -272,22 +278,20 @@ if __name__ == '__main__':
                 except TypeError:
                     print("\nNo search result.\n")
 
+
         if choice[0] == '4':  # 4. Read card data from sheet
             while True:
+                printLocation(pointer)
                 columninput = parsecolumn(input('Enter source column values: '))
-                print(columninput)
-
                 rowinput = parseIndex(input("Enter source row index or range: "))
-                print(rowinput)
 
-                savedestine = input('Save to: ')
+                query = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                target.file = pointer.file
+                target.sheet = query
 
-                cardlist = pointer.importinsheet(rowinput[0], rowinput[1], *tuple(columninput))
-
-                tempsheet = pointer.sheet
-                pointer.sheet = savedestine
-                pointer.exportMass(cardlist)
-                pointer.sheet = tempsheet
-
-
-
+                print("")
+                namelist = pointer.sheet.export_in_sheet(rowinput, columninput)
+                datalist = ScryfallIO.getMass(namelist)
+                cardlist = ScryfallIO.massive_data_to_Card(datalist)
+                print("")
+                target.sheet.importMass(cardlist)

@@ -3,6 +3,7 @@ import pprint
 import json
 import re
 
+from Card import Card
 
 
 def urlize(searchquery, sets="f", mode="exact", sort=None, order=None):
@@ -69,9 +70,9 @@ def getCard(searchquery, sets="f", mode="exact"):
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
             return json_structure["data"][0]
         elif json_structure["total_cards"] > 1:
-            for datum in json_structure["data"]:  # query에 xxxquery, queryxxx가 반환된 경우
-                if datum['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
-                    return datum
+            for single_json in json_structure["data"]:  # query에 xxxquery, queryxxx가 반환된 경우
+                if single_json['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
+                    return single_json
 
             print('''"%s" has not unique search result: %d many cards are found'''
                   % (searchquery, json_structure["total_cards"]))
@@ -83,8 +84,21 @@ def getCard(searchquery, sets="f", mode="exact"):
         print("getCard: HTTP %d error" % response.getcode())
         return None
 
+def getMass(namelist, sets="f", mode="exact"):
+    jsons = []
+    for name in namelist:
+        jsons.append(getCard(name, sets=sets, mode=mode))
 
-def getMass(searchquery, sets="f", sort=None, order=None):
+    return jsons
+
+def massive_data_to_Card(jsons):
+    cardlist = []
+    for single_json in jsons:
+        cardlist.append(Card(single_json))
+    return cardlist
+
+
+def get_from_query(searchquery, sets="f", sort=None, order=None):
     #  sets = "l" if searchquery.find("is:firstprint") != -1 or searchquery.find("set:") != -1 else "f"
     #  searchquery에서 직접 set 정해줄때 조건
 
@@ -105,6 +119,10 @@ def getMass(searchquery, sets="f", sort=None, order=None):
         print("getCard: HTTP %d error" % response.getcode())
         return None
 
+def row_to_card():
+    pass
+
+
 
 def prettyprint(data, indent=2, mode="pprint"):
     if type(data) is dict:
@@ -123,7 +141,7 @@ while __name__ == '__main__':
     searchquery = input("search for: ")
     if searchquery == "quit":
         break
-    for card in getMass(searchquery):
+    for card in get_from_query(searchquery):
         prettyprint(card, 4)
 
 

@@ -125,50 +125,52 @@ class GsSheet(gspread.models.Worksheet):
 
     def importCard(self, card):
         self.append_row(prettify(card.gsExport()))
-        print("{:22} is recorded in {}".format(card.name, self.title))
+        print("{:25} is recorded in {}".format(card.name, self.title))
 
     def searchImportCard(self, cardname, sets='f'):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
         self.append_row(prettify(card.gsExport()))
-        print("{:22} is recorded in {}".format(card.name, self.title))
+        print("{:25} is recorded in {}".format(card.name, self.title))
 
     def importMass(self, cardlist):
-        row_count = self.row_count
-        self.add_rows(1)
         for card in cardlist:
             self.append_row(prettify(card.gsExport()))
-            #self.insert_row(prettify(card.gsExport()), row_count + cardlist.index(card) + 1)
-            print("{:22} is recorded in {}".format(card.name, self.title))
+            print("{:25} is recorded in {}".format(card.name, self.title))
 
     def searchImportMass(self, searchquery, sets='f', sort=None, order=None):
-        cardlist = ScryfallIO.getMass(searchquery, sets=sets, sort=sort, order=order)
+        cardlist = ScryfallIO.get_from_query(searchquery, sets=sets, sort=sort, order=order)
         for datum in cardlist:
             card = Card(datum)
             self.append_row(prettify(card.gsExport()))
-            print("{:22} is recorded in {}".format(card.name, self.title))
+            print("{:25} is recorded in {}".format(card.name, self.title))
 
-    def exportCard(self, row):
+    def export_to_card(self, row):
         """가공된 row값을 받아 Card로 return"""
         card = Card(prettify(self.row_values(row), mode="reverse"))
         return card
 
-    def exportinsheet(self, start=None, end=None, *columns):
-        """가공되지 않은 sheet에서 cardname을 받아 Card의 list로 return"""
-        cardnamelist = []
+    def export_in_sheet(self, rows, columns):
+        """
+        가공되지 않은 sheet에서 사용
+        cardname을 받아 list로 return
+        """
+        namelist = []
         for col in columns:
-            for row in range(int(start), int(end)+1):
-                print("{0}{1}".format(col, row))
-                cardnamelist.append(self.acell("{0}{1}".format(col, row)).value)
+            for row in rows:
+                location = "{0}{1}".format(col, row)
+                content = self.acell(location).value
+                if content is not "":
+                    namelist.append(content)
+                    print("{:25} at {:2} is exported".format(content, location))
+                else:
+                    print(" "*29 + "{:2} is an empty cell".format(location))
 
-        cardlist = []
-        for cardname in cardnamelist:
-            cardlist.append(Card(ScryfallIO.getCard(cardname)))
-
-        return cardlist
+        return namelist
 
 
     def findcell(self, query, mode="cell"):
         """
+        가공된 sheet에서 사용
         mode == cell: 특정 query를 만족하는 첫 cell을 찾아 cell instance를 return
         mode == name: 특정 query를 만족하는 첫 cell이 위치하는 곳의 Card name을 return
         mode == row: 특정 query를 만족하는 첫 cell이 위치하는 곳의 row 값(int)을 return
@@ -187,7 +189,10 @@ class GsSheet(gspread.models.Worksheet):
             return None
 
     def findincol(self, query, *columns):
-        """특정 column들 내에서 query를 만족하는 card들의 row값(int)들을 list로 return"""
+        """
+        가공된 sheet에서 사용
+        특정 column들 내에서 query를 만족하는 card들의 row값(int)들을 list로 return
+        """
         found_row = set()
         if query[0] == "!":  # Not 검색
             query = query[1:]
@@ -207,6 +212,10 @@ class GsSheet(gspread.models.Worksheet):
         return sorted(list(found_row))
 
     def copyrows(self, rows):  # rows = list of row values(=int).
+        """
+        가공된 sheet에서 사용
+        특정 column들 내에서 query를 만족하는 card들의 row값(int)들을 list로 return
+        """
         row_data = []
         for i in rows:
             row_data.append(self.row_values(i))
@@ -214,9 +223,10 @@ class GsSheet(gspread.models.Worksheet):
         return row_data
 
     def pasterows(self, row_data):  # row_data = list of row data(=list).
+        """가공된 row값들을 받아 sheet에 붙여넣기"""
         for i in range(len(row_data)):
             print(row_data[i])
-            self.insert_row(row_data[i], i + 1)
+            self.append_row(row_data[i], i + 1)
         self.resize(len(row_data), len(row_data[0]))
 
 
