@@ -285,9 +285,12 @@ if __name__ == '__main__':
                 columninput = parsecolumn(input('Enter source column values: '))
                 rowinput = parseIndex(input("Enter source row index or range: "))
 
-                query = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                if sheetname[0:2] == "^q":
+                    print("")
+                    break
                 target.file = pointer.file
-                target.sheet = query
+                target.sheet = sheetname
 
                 print("")
                 namelist = pointer.sheet.export_in_sheet(rowinput, columninput)
@@ -295,3 +298,48 @@ if __name__ == '__main__':
                 cardlist = ScryfallIO.massive_data_to_Card(datalist)
                 print("")
                 target.sheet.importMass(cardlist)
+
+
+        if choice[0] == '5':  # 5. Match card for query from prepared sheet
+            while True:
+                printLocation(pointer)
+
+                query = input("Enter query to search: ")
+                while query[0:2] == "^h":
+                    print("")
+                    print("prepend ! for negative search.      e.g) !Goblin")
+                    print("add ^c for case-sensitive search. e.g) First strike ^c")
+                    query = input("Enter query to search: ")
+
+                columninput = parsecolumn(input('Enter column values to search in: '))
+
+                mode = "default"
+                case = "insensitive"
+                if query[0] == "!":
+                    mode = "negative"
+                    query = query[1:]
+                if re.search(r'\^c', query):
+                    case = "sensitive"
+                    query = re.sub(r'\^c', '', query)
+
+                rowlist = pointer.sheet.findincol(query, columninput, mode=mode, case=case)
+
+                print("\nSearch result:")
+                for i in rowlist:
+                    print(pointer.sheet.cell(i, 1).value)
+                print("")
+
+                sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                if sheetname[0:2] == "^q":
+                    print("")
+                    break
+
+                target.file = pointer.file
+                target.sheet = sheetname
+                print("")
+
+                dataline = pointer.sheet.copyrows(rowlist)
+                print("")
+                target.sheet.pasterows(dataline)
+                print("")
+

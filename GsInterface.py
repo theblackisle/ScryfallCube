@@ -188,25 +188,28 @@ class GsSheet(gspread.models.Worksheet):
             print('Cannot find "%s" in %s' % (query, self.title))
             return None
 
-    def findincol(self, query, *columns):
+    def findincol(self, query, columns, mode="default", case="insensitive"):
         """
         가공된 sheet에서 사용
         특정 column들 내에서 query를 만족하는 card들의 row값(int)들을 list로 return
         """
         found_row = set()
-        if query[0] == "!":  # Not 검색
-            query = query[1:]
-            for i in columns:  # columns = tuple
-                row_list = set([found.row for found
-                                in self.range("{0}1:{0}{1}".format(i, self.row_count))
-                                if not re.search(query, found.value)])  # r'([\s]|^)' + query
-                found_row = found_row & row_list if len(found_row) != 0 else row_list  # 논리적 교집합 구현
-        else:
-            for i in columns:  # columns = tuple
-                row_list = set([found.row for found
-                                in self.range("{0}1:{0}{1}".format(i, self.row_count))
-                                if re.search(query, found.value)])  # r'([\s]|^)' + query
+
+        if mode == "default":
+            for i in columns:
+                row_list = set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if re.search(query, found.value, re.IGNORECASE)]) \
+                           if case == "insensitive" \
+                           else set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if re.search(query, found.value)])  # r'([\s]|^)' + query
+
                 found_row |= row_list  # set 합집합연산자 |의 __iadd__
+
+        if mode == "negative":
+            for i in columns:
+                row_list = set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if not re.search(query, found.value, re.IGNORECASE)]) \
+                           if case == "insensitive" \
+                           else set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if not re.search(query, found.value)])  # r'([\s]|^)' + query
+
+                found_row = found_row & row_list if len(found_row) != 0 else row_list  # 논리적 교집합 구현
 
         print("found_row length: %d" % len(found_row))
         return sorted(list(found_row))
@@ -214,20 +217,22 @@ class GsSheet(gspread.models.Worksheet):
     def copyrows(self, rows):  # rows = list of row values(=int).
         """
         가공된 sheet에서 사용
-        특정 column들 내에서 query를 만족하는 card들의 row값(int)들을 list로 return
+        입력받은 row상의 data를 list로 return
         """
         row_data = []
         for i in rows:
-            row_data.append(self.row_values(i))
+            gsdata = self.row_values(i)
+            row_data.append(gsdata)
+            print("{:25} is copied from {}".format(gsdata[0], self.title))
 
         return row_data
 
     def pasterows(self, row_data):  # row_data = list of row data(=list).
         """가공된 row값들을 받아 sheet에 붙여넣기"""
         for i in range(len(row_data)):
-            print(row_data[i])
-            self.append_row(row_data[i], i + 1)
-        self.resize(len(row_data), len(row_data[0]))
+            self.append_row(row_data[i])
+            print("{:25} is recorded in {}".format(row_data[i][0], self.title))
+
 
 
 class GsInterface:
