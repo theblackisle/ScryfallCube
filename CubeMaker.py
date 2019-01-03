@@ -41,12 +41,10 @@ def printFileMenu():
 
     return choice
 
-
 def printLocation(pointer):
     filename = pointer.file.title if pointer.file is not None else "None"
     sheetname = pointer.sheet.title if pointer.sheet is not None else "None"
     print('Open file: {0}\nOpen sheet: {1}'.format(filename, sheetname))
-
 
 def selectFile(client):
     try:
@@ -60,7 +58,6 @@ def selectFile(client):
         print("Unable to open Google Spreadsheet")
         return None
 
-
 def selectSheet(file):
     try:
         sheets = file.worksheets()
@@ -73,11 +70,10 @@ def selectSheet(file):
         print("Unable to open spreadsheet file")
         return None
 
-
 def parseIndex(inputs):
     indexlist = re.sub(r'[^\w-]+', r' ', inputs).split(" ")
 
-    charlist = []
+    elselist = []
     intlist = set()
     exceptlist = set()
     for item in indexlist:
@@ -90,9 +86,66 @@ def parseIndex(inputs):
         elif re.match(r'^-[\d]+$', item):  # item이 예외 지정
             exceptlist.add(int(item.replace("-", "")))
         else:  # item이 숫자가 아님
-            charlist.append(item)
+            elselist.append(item)
 
-    return charlist + list(intlist - exceptlist)  # 문자가 앞에 오게 조정
+    return elselist + list(intlist - exceptlist)  # 예외문자가 앞에 오게 조정
+
+def parsecolumn(inputs):
+    columnlist = re.sub(r'[^\w-]+', r' ', inputs).split(" ")
+    print(columnlist)
+
+    elselist = []
+    charlist = set()
+    exceptlist = set()
+    for item in columnlist:
+        if re.match(r'^[\d]+$', item):  # item이 정수
+            charlist.add(number_to_colchar(item))
+        elif re.match(r'^[\d]+-[\d]+$', item):  # item이 범위 지정
+            item = list(map(int, item.split("-")))
+            for i in range(min(item), max(item) + 1):
+                charlist.add(number_to_colchar(i))
+        elif re.match(r'^-[\d]+$', item):  # item이 예외 지정
+            exceptlist.add(number_to_colchar(int(item.replace("-", ""))))
+
+        elif re.match(r'^[a-zA-Z]+$', item):  # item이 A1 notation
+            charlist.add(item.upper())
+        elif re.match(r'^[a-zA-Z]+-[a-zA-Z]+$', item):  # item이 A1 notation으로 범위 지정
+            item = [colchar_to_number(component.upper()) for component in item.split("-")]
+            for i in range(min(item), max(item) + 1):
+                charlist.add(number_to_colchar(i))
+        elif re.match(r'^-[a-zA-Z]+$', item):  # item이 A1 notation으로 예외 지정
+            exceptlist.add((item.replace("-", "")).upper())
+            print(exceptlist)
+
+        else:  # item이 다른 어떤 것
+            elselist.append(item)
+
+    return elselist + sorted(list(charlist - exceptlist), key=lambda x: (len(x), x))  # sort 후 예외문자가 앞에 오게 조정
+
+def number_to_colchar(value):
+
+    div = int(value)
+    column_label = ''
+
+    while div:
+        (div, mod) = divmod(div, 26)
+        if mod == 0:
+            mod = 26
+            div -= 1
+        column_label += chr(mod + 64)
+
+    return column_label[::-1]
+
+def colchar_to_number(value):
+
+    col = 0
+    for index, item in enumerate(value[::-1]):
+        col += (ord(item) - 64) * (26 ** index)
+
+    return col
+
+
+
 
 
 if __name__ == '__main__':
@@ -205,7 +258,7 @@ if __name__ == '__main__':
                     for card in cards:
                         print("%2d. %s" % (cards.index(card)+1, card.name))
 
-                    selections = parseIndex(input("\nEnter card indices to import OR press Y to import all: "))
+                    selections = parseIndex(input("\nEnter card indices to import or range. Press Y to import all: "))
 
                     if type(selections[0]) is int:
                         for selection in selections:
@@ -221,10 +274,10 @@ if __name__ == '__main__':
 
         if choice[0] == '4':  # 4. Read card data from sheet
             while True:
-                columninput = re.sub(r'[\W]+', r' ', input('\nEnter source column values: ')).split(" ")
+                columninput = parsecolumn(input('Enter source column values: '))
                 print(columninput)
 
-                rowinput = re.sub(r'[\W]+', r' ', input('\nEnter source row range: ')).split(" ")
+                rowinput = parseIndex(input("Enter source row index or range: "))
                 print(rowinput)
 
                 savedestine = input('Save to: ')
