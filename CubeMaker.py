@@ -1,11 +1,10 @@
 import re
 import pprint
 
-
-
 import ScryfallIO
 from Card import Card
 from GsInterface import GsInterface
+from Converter import number_to_colchar, colchar_to_number
 
 
 def printMenu():
@@ -125,34 +124,14 @@ def parsecolumn(inputs):
 
     return elselist + sorted(list(charlist - exceptlist), key=lambda x: (len(x), x))  # sort 후 예외문자가 앞에 오게 조정
 
-def number_to_colchar(value):
 
-    div = int(value)
-    column_label = ''
-
-    while div:
-        (div, mod) = divmod(div, 26)
-        if mod == 0:
-            mod = 26
-            div -= 1
-        column_label += chr(mod + 64)
-
-    return column_label[::-1]
-
-def colchar_to_number(value):
-
-    col = 0
-    for index, item in enumerate(value[::-1]):
-        col += (ord(item) - 64) * (26 ** index)
-
-    return col
 
 
 
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", email="gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "Cubetutor", email="gattuk24@gmail.com")
     target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
@@ -284,20 +263,20 @@ if __name__ == '__main__':
                 printLocation(pointer)
                 columninput = parsecolumn(input('Enter source column values: '))
                 rowinput = parseIndex(input("Enter source row index or range: "))
-
+                print("")
                 sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
                 if sheetname[0:2] == "^q":
                     print("")
                     break
                 target.file = pointer.file
                 target.sheet = sheetname
-
                 print("")
                 namelist = pointer.sheet.export_in_sheet(rowinput, columninput)
+                print("")
                 datalist = ScryfallIO.getMass(namelist)
                 cardlist = ScryfallIO.massive_data_to_Card(datalist)
                 print("")
-                target.sheet.importMass(cardlist)
+                target.sheet.importMass(cardlist)  # gspread.exceptions.APIError
 
 
         if choice[0] == '5':  # 5. Match card for query from prepared sheet

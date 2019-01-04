@@ -1,10 +1,11 @@
 import re
 import gspread
+import time
 
 import GspreadIO
 import ScryfallIO
 from Card import Card
-from Converter import prettify
+from Converter import prettify, number_to_colchar, colchar_to_number
 
 
 class GsClient(gspread.Client):
@@ -112,7 +113,7 @@ class GsSheet(gspread.models.Worksheet):
         return getattr(self.__gsworksheet, attr)
 
     def append_row(self, values, value_input_option='RAW'):
-        """gsspread의 원본 method가 append를 이상하게 하는 것을 개선한 버전"""
+        """gsspread의 원본 method와 달리 무조건 column A부터 append하도록 개조"""
         params = {
             'valueInputOption': value_input_option
         }
@@ -134,15 +135,19 @@ class GsSheet(gspread.models.Worksheet):
 
     def importMass(self, cardlist):
         for card in cardlist:
-            self.append_row(prettify(card.gsExport()))
-            print("{:25} is recorded in {}".format(card.name, self.title))
+            try:
+                self.append_row(prettify(card.gsExport()))
+                print("{:3}. {:25} is recorded in {}".format(cardlist.index(card), card.name, self.title))
+            except gspread.exceptions.APIError:
+                sleeper = 110
+                print("Quota limit reached. Program paused for %d seconds" % sleeper)
+                time.sleep(sleeper)
+                self.append_row(prettify(card.gsExport()))
+                print("{:3}. {:25} is recorded in {}".format(cardlist.index(card), card.name, self.title))
 
     def searchImportMass(self, searchquery, sets='f', sort=None, order=None):
         cardlist = ScryfallIO.get_from_query(searchquery, sets=sets, sort=sort, order=order)
-        for datum in cardlist:
-            card = Card(datum)
-            self.append_row(prettify(card.gsExport()))
-            print("{:25} is recorded in {}".format(card.name, self.title))
+        self.ImportMass(cardlist)
 
     def export_to_card(self, row):
         """가공된 row값을 받아 Card로 return"""
@@ -156,14 +161,18 @@ class GsSheet(gspread.models.Worksheet):
         """
         namelist = []
         for col in columns:
+            coldata = self.col_values(colchar_to_number(col))
+            rows = [row for row in rows if row <= len(coldata)]
+            colindex = columns.index(col)
             for row in rows:
+                content = coldata[row-1]
                 location = "{0}{1}".format(col, row)
-                content = self.acell(location).value
                 if content is not "":
                     namelist.append(content)
-                    print("{:25} at {:2} is exported".format(content, location))
+                    print("{:3}. {:25} at {:3} is exported.".format(colindex+rows.index(row), content, location))
                 else:
-                    print(" "*29 + "{:2} is an empty cell".format(location))
+                    pass
+                    #print(" "*29 + "{:3} is an empty cell".format(location))
 
         return namelist
 

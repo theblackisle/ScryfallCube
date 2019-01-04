@@ -68,10 +68,13 @@ def getCard(searchquery, sets="f", mode="exact"):
         json_structure = json.loads(s=response.read().decode('utf-8'))
         # 둘다 str이지만 인자로 response.read()를 넣어야지 json_dump를 넣으면 pretty printing 안됨.
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
+            print("{:25} is found from Scryfall".format(json_structure["data"][0]['name']))
             return json_structure["data"][0]
+
         elif json_structure["total_cards"] > 1:
             for single_json in json_structure["data"]:  # query에 xxxquery, queryxxx가 반환된 경우
                 if single_json['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
+                    print("{:25} is found from Scryfall".format(single_json['name']))
                     return single_json
 
             print('''"%s" has not unique search result: %d many cards are found'''
@@ -81,12 +84,13 @@ def getCard(searchquery, sets="f", mode="exact"):
             print("no such card: %s" % searchquery)
             return None
     else:
-        print("getCard: HTTP %d error" % response.getcode())
+        print("getCard for %s: HTTP %d error" % (searchquery, response.getcode()))
         return None
 
 def getMass(namelist, sets="f", mode="exact"):
     jsons = []
     for name in namelist:
+        print("{:3}. ".format(namelist.index(name)), end='')
         jsons.append(getCard(name, sets=sets, mode=mode))
 
     return jsons
@@ -116,7 +120,7 @@ def get_from_query(searchquery, sets="f", sort=None, order=None):
             print("no such card: %s" % searchquery)
             return None
     else:
-        print("getCard: HTTP %d error" % response.getcode())
+        print("getCard for %s: HTTP %d error" % response.getcode())
         return None
 
 def row_to_card():
