@@ -128,24 +128,42 @@ class GsSheet(gspread.models.Worksheet):
         self.append_row(prettify(card.gsExport()))
         print("{:25} is recorded in {}".format(card.name, self.title))
 
-    def searchImportCard(self, cardname, sets='f'):
-        card = Card(ScryfallIO.getCard(cardname, sets=sets))
-        self.append_row(prettify(card.gsExport()))
-        print("{:25} is recorded in {}".format(card.name, self.title))
-
     def importMass(self, cardlist):
         for card in cardlist:
-            try:
-                self.append_row(prettify(card.gsExport()))
-                print("{:3}. {:25} is recorded in {}".format(cardlist.index(card), card.name, self.title))
-            except gspread.exceptions.APIError:
-                sleeper = 110
-                print("Quota limit reached. Program paused for %d seconds" % sleeper)
-                time.sleep(sleeper)
-                self.append_row(prettify(card.gsExport()))
-                print("{:3}. {:25} is recorded in {}".format(cardlist.index(card), card.name, self.title))
+            while True:
+                try:
+                    print("{:3}. ".format(cardlist.index(card) + 1), end='')
+                    self.importCard(card)
+                    break
+                except gspread.exceptions.APIError:
+                    # "code": 429,
+                    # "status": "RESOURCE_EXHAUSTED",
+                    # "message": "Quota exceeded for quota group 'WriteGroup' and limit 'USER-100s'
+                    print("{:25} failed to record in {} due to quota limit ".format(card.name, self.title))
+                    sleeper = 20
+                    print("Program paused for %s seconds." % sleeper)
+                    time.sleep(sleeper)
 
-    def searchImportMass(self, searchquery, sets='f', sort=None, order=None):
+    def searchImportCard(self, cardname, sets='f', indent=0):
+        card = Card(ScryfallIO.getCard(cardname, sets=sets))
+        self.append_row(prettify(card.gsExport()))
+        print(" "*indent + "{:25} is recorded in {}".format(card.name, self.title))
+
+    def searchImportMass(self, namelist, sets='f'):
+        for cardname in namelist:
+            while True:
+                try:
+                    print("{:3}. ".format(namelist.index(cardname) + 1), end='')
+                    self.searchImportCard(cardname, indent=5)
+                    break
+                except gspread.exceptions.APIError:
+                    print(" "*5 + "{:25} failed to record in {} due to quota limit ".format(cardname, self.title))
+                    sleeper = 20
+                    print("Program paused for %s seconds." % sleeper)
+                    time.sleep(sleeper)
+
+
+    def importFromQuery(self, searchquery, sets='f', sort=None, order=None):
         cardlist = ScryfallIO.get_from_query(searchquery, sets=sets, sort=sort, order=order)
         self.ImportMass(cardlist)
 
@@ -163,13 +181,12 @@ class GsSheet(gspread.models.Worksheet):
         for col in columns:
             coldata = self.col_values(colchar_to_number(col))
             rows = [row for row in rows if row <= len(coldata)]
-            colindex = columns.index(col)
             for row in rows:
                 content = coldata[row-1]
                 location = "{0}{1}".format(col, row)
                 if content is not "":
                     namelist.append(content)
-                    print("{:3}. {:25} at {:3} is exported.".format(colindex+rows.index(row), content, location))
+                    print("{:3}. {:25} at {:3} is exported.".format(len(namelist), content, location))
                 else:
                     pass
                     #print(" "*29 + "{:3} is an empty cell".format(location))
@@ -197,31 +214,98 @@ class GsSheet(gspread.models.Worksheet):
             print('Cannot find "%s" in %s' % (query, self.title))
             return None
 
-    def findincol(self, query, columns, mode="default", case="insensitive"):
+
+    def queries_in_cols(self, queries, columns):
         """
         가공된 sheet에서 사용
-        특정 column들 내에서 query를 만족하는 card들의 row값(int)들을 list로 return
+        특정 column들 내에서 query들을 만족하는 card들의 row값(int)들을 list로 return
+
+        Args:
+            query (str): goblin OR elf - line of string with capital case operator
+            column (list): [A, C, AA, AC, ...] a list of column char values
+
+        Returns:
+            found_row: (list): list of (int)
         """
-        found_row = set()
 
-        if mode == "default":
-            for i in columns:
-                row_list = set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if re.search(query, found.value, re.IGNORECASE)]) \
-                           if case == "insensitive" \
-                           else set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if re.search(query, found.value)])  # r'([\s]|^)' + query
+        query_list = re.split(r'[\s]+', queries)
 
-                found_row |= row_list  # set 합집합연산자 |의 __iadd__
+        result = set()
+        for column in columns:
+            col_values = self.col_values(colchar_to_number(column))
+            result |= self.queries_in_col(query_list, col_values)
 
-        if mode == "negative":
-            for i in columns:
-                row_list = set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if not re.search(query, found.value, re.IGNORECASE)]) \
-                           if case == "insensitive" \
-                           else set([found.row for found in self.range("{0}1:{0}{1}".format(i, self.row_count)) if not re.search(query, found.value)])  # r'([\s]|^)' + query
+        return list(result).sort
 
-                found_row = found_row & row_list if len(found_row) != 0 else row_list  # 논리적 교집합 구현
 
-        print("found_row length: %d" % len(found_row))
-        return sorted(list(found_row))
+    def queries_in_col(self, query_list, col_values):
+        """
+        queries_in_cols이 사용하는 내부 함수
+        특정 column 내에서 query들을 만족하는 card들의 row값(int)들을 list로 return
+
+        Args:
+            query_list (list): [golbin, OR, elf] - list of a split string by blank
+            col_values (str): list of all values of a column
+
+        Returns:
+            found_row: (set): set of (int)
+        """
+
+        flag = "AND"
+        result = set()
+
+        for query in query_list:
+            if query == "OR" or "AND" or "EXCEPT":
+                flag = query
+
+            else:
+                row_list = self.query_in_col(query, col_values)
+                if flag == "AND":
+                    result = result & row_list if len(result) != 0 else row_list
+                if flag == "OR":
+                    result |= row_list
+                if flag == "EXCEPT":
+                    result -= row_list
+                flag = "AND"
+
+        return result
+
+
+    def query_in_col(self, query, col_values, offset = 2):
+        """
+        queries_in_cols이 사용하는 내부 함수
+        특정 column 내에서 틀정 searchword를 만족하는 card들의 row값(int)들을 list로 return
+
+        Args:
+            query (str): -goblin, elf, discard ... a single word
+            col_values (str): list of all values of a column
+
+        Returns:
+            found_row: (set): set of (int)
+        """
+        is_negative = False
+        is_case_sensitive = 0
+
+        if re.match(r'^(-|!)', query):  # negative search
+            is_negative = True
+            query = query[1:]
+
+        if re.search(r'\^', query):  # case sensitive search
+            is_case_sensitive = re.IGNORECASE
+            query = query.replace("^", "")
+
+        if re.search(r'#', query):  # exact search
+            query = query.replace("#", "")
+            query = r'^|\s' + query + r'\s|$'
+
+        found_row = set([col_values.index(value)+1 for value in col_values if re.search(query, value,
+                                                                                        flags=is_case_sensitive)])
+
+        if is_negative:
+            total = set(range(offset+1, len(col_values)+1))
+            return total - found_row
+        else:  # positive(=normal) search
+            return found_row
 
     def copyrows(self, rows):  # rows = list of row values(=int).
         """

@@ -131,7 +131,7 @@ def parsecolumn(inputs):
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "Cubetutor", email="gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", email="gattuk24@gmail.com")
     target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
@@ -273,10 +273,7 @@ if __name__ == '__main__':
                 print("")
                 namelist = pointer.sheet.export_in_sheet(rowinput, columninput)
                 print("")
-                datalist = ScryfallIO.getMass(namelist)
-                cardlist = ScryfallIO.massive_data_to_Card(datalist)
-                print("")
-                target.sheet.importMass(cardlist)  # gspread.exceptions.APIError
+                target.sheet.searchImportMass(namelist)
 
 
         if choice[0] == '5':  # 5. Match card for query from prepared sheet
@@ -284,24 +281,18 @@ if __name__ == '__main__':
                 printLocation(pointer)
 
                 query = input("Enter query to search: ")
+                if sheetname[0:2] == "^q":
+                    print("")
+                    break
                 while query[0:2] == "^h":
                     print("")
                     print("prepend ! for negative search.      e.g) !Goblin")
-                    print("add ^c for case-sensitive search. e.g) First strike ^c")
+                    print("prepend ^ for case-sensitive search. e.g) First strike ^")
                     query = input("Enter query to search: ")
 
                 columninput = parsecolumn(input('Enter column values to search in: '))
 
-                mode = "default"
-                case = "insensitive"
-                if query[0] == "!":
-                    mode = "negative"
-                    query = query[1:]
-                if re.search(r'\^c', query):
-                    case = "sensitive"
-                    query = re.sub(r'\^c', '', query)
-
-                rowlist = pointer.sheet.findincol(query, columninput, mode=mode, case=case)
+                rowlist = pointer.sheet.queries_in_cols(query, columninput)
 
                 print("\nSearch result:")
                 for i in rowlist:

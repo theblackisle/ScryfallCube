@@ -90,7 +90,7 @@ def getCard(searchquery, sets="f", mode="exact"):
 def getMass(namelist, sets="f", mode="exact"):
     jsons = []
     for name in namelist:
-        print("{:3}. ".format(namelist.index(name)), end='')
+        print("{:3}. ".format(namelist.index(name)+1), end='')
         jsons.append(getCard(name, sets=sets, mode=mode))
 
     return jsons
