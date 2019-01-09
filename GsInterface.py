@@ -295,7 +295,6 @@ class GsSheet(gspread.models.Worksheet):
         Returns:
             found_row: (set): set of (int)
         """
-        print("query_list = %s" % query_list)
 
         flag = "init"
         result = set()
@@ -305,7 +304,6 @@ class GsSheet(gspread.models.Worksheet):
 
         elif type(query_list) is list:
             for query in query_list:
-                print("query is: %s" % query)
 
                 if query in ("OR", "AND", "EXCEPT"):
                     flag = query
@@ -314,7 +312,6 @@ class GsSheet(gspread.models.Worksheet):
                     if type(query) is list:  # nested query
                         row_list = self.queries_in_col(query, col_values)
                     else:
-                        print("query is str")
                         row_list = self.query_in_col(query, col_values)
                     if flag == "init":
                         result = row_list
@@ -355,8 +352,6 @@ class GsSheet(gspread.models.Worksheet):
         if re.search(r'#', query):  # exact search
             query = query.replace("#", "")
             query = r'(^|[\s]+)' + query + r'([\s]+|$)'
-
-        print("query_in_col: search for %s" % query)
 
         found_row = set([index for index, value in enumerate(col_values, 1) if re.search(query, value,
                                                                                       flags=is_case_sensitive)])
