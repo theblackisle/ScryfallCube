@@ -81,6 +81,10 @@ class GsFile(gspread.models.Spreadsheet):
     def __getattr__(self, attr):
         return getattr(self.__gsspreadsheet, attr)
 
+    def add_worksheet(self, title, rows, cols):
+        content = super().add_worksheet(title, rows, cols)
+        return GsSheet(content)
+
     def get_worksheet(self, index):
         content = super().get_worksheet(index)
         return GsSheet(content)
@@ -128,11 +132,26 @@ class GsSheet(gspread.models.Worksheet):
         self.append_row(prettify(card.gsExport()))
         print("{:25} is recorded in {}".format(card.name, self.title))
 
-    def importMass(self, cardlist):
-        for card in cardlist:
+    def import_rows(self, row_data):  # row_data = list of row data(=list).
+        """가공된 row값들을 받아 sheet에 붙여넣기"""
+        for i in range(len(row_data)):
             while True:
                 try:
-                    print("{:3}. ".format(cardlist.index(card) + 1), end='')
+                    self.append_row(row_data[i])
+                    print("{:25} is recorded in {}".format(row_data[i][0], self.title))
+                    break
+                except gspread.exceptions.APIError:
+                    print("{:25} failed to record in {} due to quota limit ".format(row_data[i][0], self.title))
+                    sleeper = 20
+                    print("Program paused for %s seconds." % sleeper)
+                    time.sleep(sleeper)
+
+
+    def importMass(self, cardlist):
+        for index, card in enumerate(cardlist, 1):
+            while True:
+                try:
+                    print("{:3}. ".format(index), end='')
                     self.importCard(card)
                     break
                 except gspread.exceptions.APIError:
@@ -150,10 +169,10 @@ class GsSheet(gspread.models.Worksheet):
         print(" "*indent + "{:25} is recorded in {}".format(card.name, self.title))
 
     def searchImportMass(self, namelist, sets='f'):
-        for cardname in namelist:
+        for index, cardname in enumerate(namelist, 1):
             while True:
                 try:
-                    print("{:3}. ".format(namelist.index(cardname) + 1), end='')
+                    print("{:3}. ".format(index), end='')
                     self.searchImportCard(cardname, indent=5)
                     break
                 except gspread.exceptions.APIError:
@@ -172,7 +191,28 @@ class GsSheet(gspread.models.Worksheet):
         card = Card(prettify(self.row_values(row), mode="reverse"))
         return card
 
-    def export_in_sheet(self, rows, columns):
+    def export_rows(self, rows):  # rows = list of row values(=int).
+        """
+        가공된 sheet에서 사용
+        입력받은 row상의 data를 list로 return
+        """
+        row_data = []
+        for i in rows:
+            while True:
+                try:
+                    gsdata = self.row_values(i)
+                    row_data.append(gsdata)
+                    print("{:25} is copied from {}".format(gsdata[0], self.title))
+                    break
+                except gspread.exceptions.APIError:
+                    print("Failed to copy data from row '{}' due to quota limit ".format(i, self.title))
+                    sleeper = 20
+                    print("Program paused for %s seconds." % sleeper)
+                    time.sleep(sleeper)
+
+        return row_data
+
+    def export_from_sheet(self, rows, columns):
         """
         가공되지 않은 sheet에서 사용
         cardname을 받아 list로 return
@@ -215,27 +255,32 @@ class GsSheet(gspread.models.Worksheet):
             return None
 
 
-    def queries_in_cols(self, queries, columns):
+    def queries_in_cols(self, searchset):
         """
         가공된 sheet에서 사용
         특정 column들 내에서 query들을 만족하는 card들의 row값(int)들을 list로 return
 
         Args:
-            query (str): goblin OR elf - line of string with capital case operator
-            column (list): [A, C, AA, AC, ...] a list of column char values
+            searchset (list): list of (tuple)s, each of which has 2 elements,
+                The first element represents column name. Single character(str) or (list) of characters(str)
+                The second element represents query to search. A single word(str) or (list) of words(str).
+                    The list may contain other (list)s of words as an element for nested query.
 
         Returns:
             found_row: (list): list of (int)
         """
 
-        query_list = re.split(r'[\s]+', queries)
-
         result = set()
-        for column in columns:
-            col_values = self.col_values(colchar_to_number(column))
-            result |= self.queries_in_col(query_list, col_values)
+        for column, query in searchset:
+            if type(column) is list:
+                for i in column:
+                    col_values = self.col_values(colchar_to_number(i))
+                    result |= self.queries_in_col(query, col_values)
+            else:  # if column is single char.
+                col_values = self.col_values(colchar_to_number(column))
+                result |= self.queries_in_col(query, col_values)
 
-        return list(result).sort
+        return sorted(list(result))
 
 
     def queries_in_col(self, query_list, col_values):
@@ -244,29 +289,42 @@ class GsSheet(gspread.models.Worksheet):
         특정 column 내에서 query들을 만족하는 card들의 row값(int)들을 list로 return
 
         Args:
-            query_list (list): [golbin, OR, elf] - list of a split string by blank
-            col_values (str): list of all values of a column
+            query_list (str / list): [golbin, OR, elf] - list of a split string by blank
+            col_values (str): list of all values of a single column
 
         Returns:
             found_row: (set): set of (int)
         """
+        print("query_list = %s" % query_list)
 
-        flag = "AND"
+        flag = "init"
         result = set()
 
-        for query in query_list:
-            if query == "OR" or "AND" or "EXCEPT":
-                flag = query
+        if type(query_list) is str:
+            result = self.query_in_col(query_list, col_values)
 
-            else:
-                row_list = self.query_in_col(query, col_values)
-                if flag == "AND":
-                    result = result & row_list if len(result) != 0 else row_list
-                if flag == "OR":
-                    result |= row_list
-                if flag == "EXCEPT":
-                    result -= row_list
-                flag = "AND"
+        elif type(query_list) is list:
+            for query in query_list:
+                print("query is: %s" % query)
+
+                if query in ("OR", "AND", "EXCEPT"):
+                    flag = query
+
+                else:
+                    if type(query) is list:  # nested query
+                        row_list = self.queries_in_col(query, col_values)
+                    else:
+                        print("query is str")
+                        row_list = self.query_in_col(query, col_values)
+                    if flag == "init":
+                        result = row_list
+                    if flag == "AND":
+                        result = result & row_list
+                    if flag == "OR":
+                        result |= row_list
+                    if flag == "EXCEPT":
+                        result -= row_list
+                    flag = "AND"
 
         return result
 
@@ -284,48 +342,30 @@ class GsSheet(gspread.models.Worksheet):
             found_row: (set): set of (int)
         """
         is_negative = False
-        is_case_sensitive = 0
+        is_case_sensitive = re.IGNORECASE  # case insensitive by default
 
         if re.match(r'^(-|!)', query):  # negative search
             is_negative = True
             query = query[1:]
 
         if re.search(r'\^', query):  # case sensitive search
-            is_case_sensitive = re.IGNORECASE
+            is_case_sensitive = 0
             query = query.replace("^", "")
 
         if re.search(r'#', query):  # exact search
             query = query.replace("#", "")
-            query = r'^|\s' + query + r'\s|$'
+            query = r'(^|[\s]+)' + query + r'([\s]+|$)'
 
-        found_row = set([col_values.index(value)+1 for value in col_values if re.search(query, value,
-                                                                                        flags=is_case_sensitive)])
+        print("query_in_col: search for %s" % query)
+
+        found_row = set([index for index, value in enumerate(col_values, 1) if re.search(query, value,
+                                                                                      flags=is_case_sensitive)])
 
         if is_negative:
             total = set(range(offset+1, len(col_values)+1))
             return total - found_row
         else:  # positive(=normal) search
             return found_row
-
-    def copyrows(self, rows):  # rows = list of row values(=int).
-        """
-        가공된 sheet에서 사용
-        입력받은 row상의 data를 list로 return
-        """
-        row_data = []
-        for i in rows:
-            gsdata = self.row_values(i)
-            row_data.append(gsdata)
-            print("{:25} is copied from {}".format(gsdata[0], self.title))
-
-        return row_data
-
-    def pasterows(self, row_data):  # row_data = list of row data(=list).
-        """가공된 row값들을 받아 sheet에 붙여넣기"""
-        for i in range(len(row_data)):
-            self.append_row(row_data[i])
-            print("{:25} is recorded in {}".format(row_data[i][0], self.title))
-
 
 
 class GsInterface:
@@ -375,6 +415,7 @@ class GsInterface:
                     print("File '%d. %s' is open" % (param, self._file.title))
             else:
                 print("%s is out of index range" % param)
+                raise IndexError
 
         else:
             if param in [found.title for found in self._client.openall()]:  # param is file name
@@ -427,6 +468,7 @@ class GsInterface:
                     print("Sheet '%s. %s' is open" % (param, self._sheet.title))
             else:
                 print("%s is out of index range" % param)
+                raise IndexError
 
         else:  # param is sheet name
             if param in [found.title for found in self._file.worksheets()]:

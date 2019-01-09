@@ -1,5 +1,5 @@
 import re
-import pprint
+import pyparsing
 
 import ScryfallIO
 from Card import Card
@@ -125,88 +125,113 @@ def parsecolumn(inputs):
     return elselist + sorted(list(charlist - exceptlist), key=lambda x: (len(x), x))  # sort 후 예외문자가 앞에 오게 조정
 
 
+def parsequery(inputs):
 
+    found_expr = re.findall(r'(?:(?:[a-zA-Z]+-[a-zA-Z]+)|(?:[a-zA-Z]+)):(?:(?:\([^:]+\))|(?:[\S]+))', inputs)
+    # A OR A-BB : word OR (spaced query with parentheses)
 
+    parser = pyparsing.nestedExpr(opener="(", closer=")")
+    expr_set = []
+    searchset = []
+    for item in found_expr:
+        splitted = item.split(":")
+        col = parsecolumn(splitted[0])
+        if len(col) == 1:
+            col = splitted[0]
 
+        if splitted[1][0] == "(":  # query is a nested query
+            parsed_query = parser.parseString(splitted[1]).asList()[0]
+        else:  # query is a single word
+            parsed_query = splitted[1]
+
+        expr_set.append((col, parsed_query))
+
+    for index, (col, parsed_query) in enumerate(expr_set):
+        if type(col) == list:
+            for i in col:
+                searchset.append((i, parsed_query))
+        else:
+            searchset.append((col, parsed_query))
+
+    return searchset
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "2C", email="gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "Azorius", email="gattuk24@gmail.com")
     target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
     while True:
         choice = printMenu()
-        if choice[0:2] == "^q":
+        if choice[0:2].lower() == "^q":
             break
         print("")
-
 
         if choice[0] == '1':  # 1. Manage files and sheets.
             while True:
                 filechoice = printFileMenu()
-                if filechoice[0:2] == "^q":
+                if filechoice[0:2].lower() == "^q":
                     print("")
                     break
                 print("")
                 printLocation(pointer)
 
-                while filechoice[0] == '1':  # 1. Open or create file
+                if filechoice[0] == '1':  # 1. Open or create file
                     query = selectFile(pointer._client, 'Enter file index, name or ID: ')
-                    if query[0:2] == "^q":
+                    if query[0:2].lower() == "^q":
                         print("")
-                        break
-                    pointer.file = query
-                    print("")
-                    printLocation(pointer)
+                    else:
+                        pointer.file = query
+                        print("")
+                        printLocation(pointer)
 
-                while filechoice[0] == '2':  # 2. Open or create sheet
+                if filechoice[0] == '2':  # 2. Open or create sheet
                     query = selectSheet(pointer.file, "Enter sheet index or name: ")
-                    if query[0:2] == "^q":
+                    if query[0:2].lower() == "^q":
                         print("")
-                        break
-                    pointer.sheet = query
-                    print("")
-                    printLocation(pointer)
+                    else:
+                        pointer.sheet = query
+                        print("")
+                        printLocation(pointer)
 
-                while filechoice[0] == '3':  # 3. Delete file
+                if filechoice[0] == '3':  # 3. Delete file
                     query = selectFile(pointer._client, 'Enter file index, name or ID to delete: ')
-                    if query[0:2] == "^q":
+                    if query[0:2].lower() == "^q":
                         print("")
-                        break
-                    if pointer.file.title == query:
-                        pointer.mode = "deletion"
-                        del pointer.file
-                        pointer.mode = "default"
                     else:
-                        target.mode = "deletion"
-                        target.file = query
-                        del target.file
-                    print("")
-                    printLocation(pointer)
+                        if pointer.file.title == query:
+                            pointer.mode = "deletion"
+                            del pointer.file
+                            pointer.mode = "default"
+                        else:
+                            target.mode = "deletion"
+                            target.file = query
+                            del target.file
+                        print("")
+                        printLocation(pointer)
 
-                while filechoice[0] == '4':  # 4. Delete Sheet
+                if filechoice[0] == '4':  # 4. Delete Sheet
                     query = selectSheet(pointer.file, "Enter sheet index or name to delete: ")
-                    if query[0:2] == "^q":
+                    if query[0:2].lower() == "^q":
                         print("")
-                        break
-                    if pointer.sheet.title == query:
-                        pointer.mode = "deletion"
-                        del pointer.sheet
-                        pointer.mode = "default"
                     else:
-                        target.mode = "deletion"
-                        target.file = pointer.file
-                        target.sheet = query
-                        del target.sheet
-                    print("")
-                    printLocation(pointer)
+                        if pointer.sheet.title == query:
+                            pointer.mode = "deletion"
+                            del pointer.sheet
+                            pointer.mode = "default"
+                        else:
+                            target.mode = "deletion"
+                            target.file = pointer.file
+                            target.sheet = query
+                            del target.sheet
+                        print("")
+                        printLocation(pointer)
 
 
         if choice[0] == '2':  # 2. Search exact card from Scryfall.
             while True:
                 query = input('Enter cardname (and setcode) in "name @set" form: ')
-                if query[0:2] == "^q":
+                if query[0:2].lower() == "^q":
                     print("")
                     break
                 query = query.split("@", 1)
@@ -230,7 +255,7 @@ if __name__ == '__main__':
         if choice[0] == '3':  # 3. Search with Scryfall syntax.
             while True:
                 query = input('Enter search query with Scryfall syntax: ')
-                if query[0:2] == "^q":
+                if query[0:2].lower() == "^q":
                     print("")
                     break
 
@@ -265,13 +290,13 @@ if __name__ == '__main__':
                 rowinput = parseIndex(input("Enter source row index or range: "))
                 print("")
                 sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
-                if sheetname[0:2] == "^q":
+                if sheetname[0:2].lower() == "^q":
                     print("")
                     break
                 target.file = pointer.file
                 target.sheet = sheetname
                 print("")
-                namelist = pointer.sheet.export_in_sheet(rowinput, columninput)
+                namelist = pointer.sheet.export_from_sheet(rowinput, columninput)
                 print("")
                 target.sheet.searchImportMass(namelist)
 
@@ -280,36 +305,38 @@ if __name__ == '__main__':
             while True:
                 printLocation(pointer)
 
-                query = input("Enter query to search: ")
-                if sheetname[0:2] == "^q":
+                query = input("Enter column and query to search in C:query manner: ")
+                if query[0:2].lower() == "^q":
                     print("")
                     break
-                while query[0:2] == "^h":
+                while query[0:2].lower() == "^h":
                     print("")
-                    print("prepend ! for negative search.      e.g) !Goblin")
-                    print("prepend ^ for case-sensitive search. e.g) First strike ^")
+                    print("Column can be range.                      e.g) A-C:Goblin")
+                    print("Nested query and operators are possible.  e.g) A:(Goblin OR Elf)")
+                    print("Prepend ! for negative search.            e.g) A:!Goblin")
+                    print("Prepend ^ for case-sensitive search.      e.g) A:^First strike")
+                    print("Prepend # for exact match.                e.g) A:#kin will not matches Kithkin")
                     query = input("Enter query to search: ")
 
-                columninput = parsecolumn(input('Enter column values to search in: '))
+                searchset = parsequery(query)
+                rowlist = pointer.sheet.queries_in_cols(searchset)
 
-                rowlist = pointer.sheet.queries_in_cols(query, columninput)
-
-                print("\nSearch result:")
-                for i in rowlist:
-                    print(pointer.sheet.cell(i, 1).value)
-                print("")
-
-                sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
-                if sheetname[0:2] == "^q":
+                print("\nTotal %s cards are found." % len(rowlist))
+                if len(rowlist) is not 0:
+                    print(rowlist)
                     print("")
-                    break
 
-                target.file = pointer.file
-                target.sheet = sheetname
-                print("")
+                    sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                    if sheetname[0:2].lower() == "^q":
+                        print("")
+                        break
 
-                dataline = pointer.sheet.copyrows(rowlist)
-                print("")
-                target.sheet.pasterows(dataline)
+                    target.file = pointer.file
+                    target.sheet = sheetname
+                    print("")
+
+                    dataline = pointer.sheet.export_rows(rowlist)
+                    print("")
+                    target.sheet.import_rows(dataline)
                 print("")
 
