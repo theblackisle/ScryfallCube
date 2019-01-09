@@ -270,18 +270,33 @@ class GsSheet(gspread.models.Worksheet):
             found_row: (list): list of (int)
         """
 
+        flag = "init"
         result = set()
         for column, query in searchset:
-            if type(column) is list:
-                for i in column:
-                    col_values = self.col_values(colchar_to_number(i))
-                    result |= self.queries_in_col(query, col_values)
-            else:  # if column is single char.
-                col_values = self.col_values(colchar_to_number(column))
-                result |= self.queries_in_col(query, col_values)
+
+            if query in ("OR", "AND", "EXCEPT"):
+                flag = query
+
+            else:
+                if type(column) is list:
+                    row_list = []
+                    for i in column:
+                        col_values = self.col_values(colchar_to_number(i))
+                        row_list |= self.queries_in_col(query, col_values)
+                else:  # if column is single char.
+                    col_values = self.col_values(colchar_to_number(column))
+                    row_list = self.queries_in_col(query, col_values)
+                if flag == "init":
+                    result = row_list
+                if flag == "AND":
+                    result &= row_list
+                if flag == "OR":
+                    result |= row_list
+                if flag == "EXCEPT":
+                    result -= row_list
+                flag = "AND"
 
         return sorted(list(result))
-
 
     def queries_in_col(self, query_list, col_values):
         """
@@ -311,12 +326,12 @@ class GsSheet(gspread.models.Worksheet):
                 else:
                     if type(query) is list:  # nested query
                         row_list = self.queries_in_col(query, col_values)
-                    else:
+                    else:  # if query is a single word
                         row_list = self.query_in_col(query, col_values)
                     if flag == "init":
                         result = row_list
                     if flag == "AND":
-                        result = result & row_list
+                        result &= row_list
                     if flag == "OR":
                         result |= row_list
                     if flag == "EXCEPT":
@@ -324,7 +339,6 @@ class GsSheet(gspread.models.Worksheet):
                     flag = "AND"
 
         return result
-
 
     def query_in_col(self, query, col_values, offset = 2):
         """
@@ -340,6 +354,8 @@ class GsSheet(gspread.models.Worksheet):
         """
         is_negative = False
         is_case_sensitive = re.IGNORECASE  # case insensitive by default
+
+        query = query.replace("_", " ")  # First_strike -> First strike
 
         if re.match(r'^(-|!)', query):  # negative search
             is_negative = True

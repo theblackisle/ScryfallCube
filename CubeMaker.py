@@ -127,24 +127,27 @@ def parsecolumn(inputs):
 
 def parsequery(inputs):
 
-    found_expr = re.findall(r'(?:(?:[a-zA-Z]+-[a-zA-Z]+)|(?:[a-zA-Z]+)):(?:(?:\([^:]+\))|(?:[\S]+))', inputs)
+    found_expr = re.findall(r'(?:(?:(?:[a-zA-Z]+-[a-zA-Z]+)|(?:[a-zA-Z]+)):(?:(?:\([^:]+\))|(?:[\S]+)))|(?:AND|OR|EXCEPT)', inputs)
     # A OR A-BB : word OR (spaced query with parentheses)
 
     parser = pyparsing.nestedExpr(opener="(", closer=")")
     expr_set = []
     searchset = []
+
     for item in found_expr:
-        splitted = item.split(":")
-        col = parsecolumn(splitted[0])
-        if len(col) == 1:
-            col = splitted[0]
+        if item in ("OR", "AND", "EXCEPT"):
+            expr_set.append(("", item))
 
-        if splitted[1][0] == "(":  # query is a nested query
-            parsed_query = parser.parseString(splitted[1]).asList()[0]
-        else:  # query is a single word
-            parsed_query = splitted[1]
-
-        expr_set.append((col, parsed_query))
+        else:
+            splitted = item.split(":")
+            col = parsecolumn(splitted[0])
+            if len(col) == 1:
+                col = splitted[0]
+            if splitted[1][0] == "(":  # query is a nested query
+                parsed_query = parser.parseString(splitted[1]).asList()[0]
+            else:  # query is a single word
+                parsed_query = splitted[1]
+            expr_set.append((col, parsed_query))
 
     for index, (col, parsed_query) in enumerate(expr_set):
         if type(col) == list:
@@ -154,6 +157,7 @@ def parsequery(inputs):
             searchset.append((col, parsed_query))
 
     return searchset
+
 
 
 if __name__ == '__main__':
@@ -305,17 +309,20 @@ if __name__ == '__main__':
             while True:
                 printLocation(pointer)
 
-                query = input("Enter column and query to search in C:query manner: ")
+                query = input('Enter column and query to search in "C:query" manner: ')
                 if query[0:2].lower() == "^q":
                     print("")
                     break
                 while query[0:2].lower() == "^h":
                     print("")
-                    print("Column can be range.                      e.g) A-C:Goblin")
-                    print("Nested query and operators are possible.  e.g) A:(Goblin OR Elf)")
-                    print("Prepend ! for negative search.            e.g) A:!Goblin")
-                    print("Prepend ^ for case-sensitive search.      e.g) A:^First strike")
-                    print("Prepend # for exact match.                e.g) A:#kin will not matches Kithkin")
+                    print("Column can be range.                               e.g) A-C:Goblin")
+                    print("Operators(AND, OR, EXCEPT) are possible.           e.g) A:Goblin OR B:Elf")
+                    print("Nested query and operators in query are possible.  e.g) A:(Goblin OR Elf)")
+                    print("Use _ for spacing.                                 e.g) A:First_strike")
+                    print("Prepend ! or - for negative search.                e.g) A:!Goblin, A:-Goblin")
+                    print("Prepend ^ for case-sensitive search.               e.g) A:^Flying")
+                    print("Prepend # for exact match.                         e.g) A:#kin - that will not matches Kithkin")
+                    print("")
                     query = input("Enter query to search: ")
 
                 searchset = parsequery(query)
