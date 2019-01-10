@@ -14,6 +14,7 @@ def printMenu():
     menu.append("3. Search from Scryfall with query.")
     menu.append("4. Prepare card data from unprepared sheet")
     menu.append("5. Match card for query from prepared sheet")
+    menu.append("6. Edit and trim sheets")
 
     for item in menu:
         print(item)
@@ -33,6 +34,24 @@ def printFileMenu():
     menu.append("2. Open or create sheet")
     menu.append("3. Delete file")
     menu.append("4. Delete Sheet")
+
+    for item in menu:
+        print(item)
+
+    choice = input("Select: ")
+    try:
+        print(menu[int(choice[0])-1][3:])
+    except IndexError and ValueError:
+        pass
+
+    return choice
+
+def printEditMenu():
+    menu = []
+    menu.append("1. Save to other sheet")
+    menu.append("2. Delete from the sheet")
+    menu.append("3. Add properties")
+    menu.append("4. Remove properties")
 
     for item in menu:
         print(item)
@@ -161,7 +180,7 @@ def parsequery(inputs):
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "Azorius", email="gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트6", email="gattuk24@gmail.com")
     target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
@@ -239,7 +258,7 @@ if __name__ == '__main__':
                     print("")
                     break
                 query = query.split("@", 1)
-                result = ScryfallIO.getCard(query[0],
+                result = ScryfallIO.getCard(query[0].strip(),
                                             sets=query[1].upper().strip() if len(query) > 1 else "f")
 
                 if result is not None:
@@ -273,12 +292,23 @@ if __name__ == '__main__':
                         print("%2d. %s" % (cards.index(card)+1, card.name))
 
                     selections = parseIndex(input("\nEnter card indices to import or range. Press Y to import all: "))
+                    if selections[0:2].lower() == "^q":
+                        print("")
+                        break
+
+                    sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                    if sheetname[0:2].lower() == "^q":
+                        print("")
+                        break
+
+                    target.file = pointer.file
+                    target.sheet = sheetname
 
                     if type(selections[0]) is int:
                         for selection in selections:
-                            pointer.sheet.importCard(cards[int(selection) - 1])
+                            target.sheet.importCard(cards[int(selection) - 1])
                     elif selections[0].lower() == "y":
-                        pointer.sheet.importMass(cards)
+                        target.sheet.importMass(cards)
                     else:
                         print("Import process aborted")
 
@@ -287,7 +317,7 @@ if __name__ == '__main__':
                     print("\nNo search result.\n")
 
 
-        if choice[0] == '4':  # 4. Read card data from sheet
+        if choice[0] == '4':  # 4. Prepare card data from unprepared sheet
             while True:
                 printLocation(pointer)
                 columninput = parsecolumn(input('Enter source column values: '))
@@ -333,17 +363,30 @@ if __name__ == '__main__':
                     print(rowlist)
                     print("")
 
-                    sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
-                    if sheetname[0:2].lower() == "^q":
+                    matchselection = printEditMenu()
+                    if matchselection[0:2].lower() == "^q":
                         print("")
                         break
+                    if matchselection[0] == "1":  # 1. Save to other sheet
+                        sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                        if sheetname[0:2].lower() == "^q":
+                            print("")
+                            break
 
-                    target.file = pointer.file
-                    target.sheet = sheetname
-                    print("")
+                        target.file = pointer.file
+                        target.sheet = sheetname
+                        print("")
 
-                    dataline = pointer.sheet.export_rows(rowlist)
-                    print("")
-                    target.sheet.import_rows(dataline)
-                print("")
+                        dataline = pointer.sheet.export_rows(rowlist)
+                        print("")
+                        target.sheet.import_rows(dataline)
+
+                    if matchselection[0] == "2":  # Delete from the sheet
+                        pointer.sheet.delete_rows(rowlist)
+
+                    if matchselection[0] == "3":  # Add properties
+                        pass
+
+                    if matchselection[0] == "4":  # 4Remove properties
+                        pass
 

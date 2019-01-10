@@ -130,7 +130,7 @@ class GsSheet(gspread.models.Worksheet):
 
     def importCard(self, card):
         self.append_row(prettify(card.gsExport()))
-        print("{:25} is recorded in {}".format(card.name, self.title))
+        print("{:25} is recorded in '{}'".format(card.name, self.title))
 
     def import_rows(self, row_data):  # row_data = list of row data(=list).
         """가공된 row값들을 받아 sheet에 붙여넣기"""
@@ -138,10 +138,10 @@ class GsSheet(gspread.models.Worksheet):
             while True:
                 try:
                     self.append_row(row_data[i])
-                    print("{:25} is recorded in {}".format(row_data[i][0], self.title))
+                    print("{:25} is recorded in '{}'".format(row_data[i][0], self.title))
                     break
                 except gspread.exceptions.APIError:
-                    print("{:25} failed to record in {} due to quota limit ".format(row_data[i][0], self.title))
+                    print("{:25} failed to record in '{}' due to quota limit ".format(row_data[i][0], self.title))
                     sleeper = 20
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
@@ -158,7 +158,7 @@ class GsSheet(gspread.models.Worksheet):
                     # "code": 429,
                     # "status": "RESOURCE_EXHAUSTED",
                     # "message": "Quota exceeded for quota group 'WriteGroup' and limit 'USER-100s'
-                    print("{:25} failed to record in {} due to quota limit ".format(card.name, self.title))
+                    print("{:25} failed to record in '{}' due to quota limit ".format(card.name, self.title))
                     sleeper = 20
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
@@ -166,7 +166,7 @@ class GsSheet(gspread.models.Worksheet):
     def searchImportCard(self, cardname, sets='f', indent=0):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
         self.append_row(prettify(card.gsExport()))
-        print(" "*indent + "{:25} is recorded in {}".format(card.name, self.title))
+        print(" "*indent + "{:25} is recorded in '{}'".format(card.name, self.title))
 
     def searchImportMass(self, namelist, sets='f'):
         for index, cardname in enumerate(namelist, 1):
@@ -176,11 +176,10 @@ class GsSheet(gspread.models.Worksheet):
                     self.searchImportCard(cardname, indent=5)
                     break
                 except gspread.exceptions.APIError:
-                    print(" "*5 + "{:25} failed to record in {} due to quota limit ".format(cardname, self.title))
+                    print(" "*5 + "{:25} failed to record in '{}' due to quota limit ".format(cardname, self.title))
                     sleeper = 20
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
-
 
     def importFromQuery(self, searchquery, sets='f', sort=None, order=None):
         cardlist = ScryfallIO.get_from_query(searchquery, sets=sets, sort=sort, order=order)
@@ -202,7 +201,7 @@ class GsSheet(gspread.models.Worksheet):
                 try:
                     gsdata = self.row_values(i)
                     row_data.append(gsdata)
-                    print("{:25} is copied from {}".format(gsdata[0], self.title))
+                    print("{:25} is copied from '{}'".format(gsdata[0], self.title))
                     break
                 except gspread.exceptions.APIError:
                     print("Failed to copy data from row '{}' due to quota limit ".format(i, self.title))
@@ -233,6 +232,22 @@ class GsSheet(gspread.models.Worksheet):
 
         return namelist
 
+    def delete_rows(self, rows):
+        """
+        Args:
+            rows (list): ist of row numbers
+
+        Returns:
+            None
+        """
+        reversed_rows = sorted(rows, reverse=True)
+
+        for row in reversed_rows:
+            self.delete_row(row)
+            print("row {:3} in sheet '{}' is deleted".format(row, self.title))
+
+    def find_duplicated(self, *columns):
+        pass
 
     def findcell(self, query, mode="cell"):
         """
@@ -253,7 +268,6 @@ class GsSheet(gspread.models.Worksheet):
         except GspreadIO.gspread.exceptions.CellNotFound:  # gspread는 GspreadIO에 import되어있음
             print('Cannot find "%s" in %s' % (query, self.title))
             return None
-
 
     def queries_in_cols(self, searchset):
         """
@@ -367,7 +381,7 @@ class GsSheet(gspread.models.Worksheet):
 
         if re.search(r'#', query):  # exact search
             query = query.replace("#", "")
-            query = r'(^|[\s]+)' + query + r'([\s]+|$)'
+            query = r'(^|[\W]|[\s]+)' + query + r'([\s]+|[\W]|$)'
 
         found_row = set([index for index, value in enumerate(col_values, 1) if re.search(query, value,
                                                                                       flags=is_case_sensitive)])
