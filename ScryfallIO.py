@@ -3,6 +3,7 @@ import pprint
 import json
 import re
 
+from Card import Card
 
 
 def urlize(searchquery, sets="f", mode="exact", sort=None, order=None):
@@ -16,7 +17,7 @@ def urlize(searchquery, sets="f", mode="exact", sort=None, order=None):
 
     if sets == "f" and searchquery.find("is:firstprint") == -1 and searchquery.find("set:") == -1:
         #  searchquery에서 직접 set 정해줄때는 "is:firstprint"를 붙이지 않는다.
-        #  tescase: (oracle:pay oracle:2 oracle:life) type:land set:rtr
+        #  testcase: (oracle:pay oracle:2 oracle:life) type:land set:rtr
         url = url + "+is%3Afirstprint"
     elif sets == "l" or sets == "default":
         pass  # "lastprint"가 default임
@@ -67,11 +68,14 @@ def getCard(searchquery, sets="f", mode="exact"):
         json_structure = json.loads(s=response.read().decode('utf-8'))
         # 둘다 str이지만 인자로 response.read()를 넣어야지 json_dump를 넣으면 pretty printing 안됨.
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
+            print("{:25} is found from Scryfall".format(json_structure["data"][0]['name']))
             return json_structure["data"][0]
+
         elif json_structure["total_cards"] > 1:
-            for datum in json_structure["data"]:  # query에 xxxquery, queryxxx가 반환된 경우
-                if datum['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
-                    return datum
+            for single_json in json_structure["data"]:  # query에 xxxquery, queryxxx가 반환된 경우
+                if single_json['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
+                    print("{:25} is found from Scryfall".format(single_json['name']))
+                    return single_json
 
             print('''"%s" has not unique search result: %d many cards are found'''
                   % (searchquery, json_structure["total_cards"]))
@@ -80,11 +84,25 @@ def getCard(searchquery, sets="f", mode="exact"):
             print("no such card: %s" % searchquery)
             return None
     else:
-        print("getCard: HTTP %d error" % response.getcode())
+        print("getCard for %s: HTTP %d error" % (searchquery, response.getcode()))
         return None
 
+def getMass(namelist, sets="f", mode="exact"):
+    jsons = []
+    for name in namelist:
+        print("{:3}. ".format(namelist.index(name)+1), end='')
+        jsons.append(getCard(name, sets=sets, mode=mode))
 
-def getMass(searchquery, sets="f", sort=None, order=None):
+    return jsons
+
+def massive_data_to_Card(jsons):
+    cardlist = []
+    for single_json in jsons:
+        cardlist.append(Card(single_json))
+    return cardlist
+
+
+def get_from_query(searchquery, sets="f", sort=None, order=None):
     #  sets = "l" if searchquery.find("is:firstprint") != -1 or searchquery.find("set:") != -1 else "f"
     #  searchquery에서 직접 set 정해줄때 조건
 
@@ -102,8 +120,12 @@ def getMass(searchquery, sets="f", sort=None, order=None):
             print("no such card: %s" % searchquery)
             return None
     else:
-        print("getCard: HTTP %d error" % response.getcode())
+        print("getCard for %s: HTTP %d error" % response.getcode())
         return None
+
+def row_to_card():
+    pass
+
 
 
 def prettyprint(data, indent=2, mode="pprint"):
@@ -123,7 +145,7 @@ while __name__ == '__main__':
     searchquery = input("search for: ")
     if searchquery == "quit":
         break
-    for card in getMass(searchquery):
+    for card in get_from_query(searchquery):
         prettyprint(card, 4)
 
 
