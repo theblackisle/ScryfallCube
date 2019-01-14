@@ -1,7 +1,5 @@
 import ScryfallIO
-from Converter import typesort, colorsort, subtypeSort
-import pprint
-
+from Converter import typesort, colorsort, subtypeSort, tolerInt
 
 class Card():
     def __init__(self, data=None):
@@ -16,6 +14,9 @@ class Card():
             self.subtype = []
             self.set = ""
             self.rarity = ""
+            self.power = ""
+            self.toughness = ""
+            self.loyalty = ""
             self.oracle = ""
             self.layout = ""
             self.hate = []
@@ -54,10 +55,7 @@ class Card():
             self.color_identity = data['color_identity']
             self.set = data['set'].upper()
             self.rarity = data['rarity']
-            try:
-                self.usd = float(data['usd'])
-            except:
-                self.usd = float(0)
+            self.usd = float(data.get('usd', 0))
 
             self.layout = data['layout'].title()
             if self.layout == 'Transform':
@@ -74,6 +72,9 @@ class Card():
                 back_subtypes = back_types[1].split() if len(back_types) > 1 else []
                 self.supertype = list(set(front_supertypes) | set(back_supertypes))
                 self.subtype = list(set(front_subtypes) | set(back_subtypes))
+                self.power = tolerInt(data['card_faces'][0].get('power', ""))
+                self.toughness = tolerInt(data['card_faces'][0].get('toughness', ""))
+                self.loyalty = tolerInt(data['card_faces'][0].get('loyalty', data['card_faces'][1].get('loyalty', "")))
                 self.oracle = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
 
             elif self.layout == 'Split':
@@ -90,6 +91,9 @@ class Card():
                 back_subtypes = back_types[1].split() if len(back_types) > 1 else []
                 self.supertype = list(set(front_supertypes) | set(back_supertypes))
                 self.subtype = list(set(front_subtypes) | set(back_subtypes))
+                self.power = ""
+                self.toughness = ""
+                self.loyalty = ""  # No split creature nor planeswalker
                 self.oracle = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
 
             elif self.layout == 'Flip':
@@ -106,6 +110,9 @@ class Card():
                 back_subtypes = back_types[1].split() if len(back_types) > 1 else []
                 self.supertype = list(set(front_supertypes) | set(back_supertypes))
                 self.subtype = list(set(front_subtypes) | set(back_subtypes))
+                self.power = tolerInt(data['card_faces'][0].get('power', ""))
+                self.toughness = tolerInt(data['card_faces'][0].get('toughness', ""))
+                self.loyalty = ""  # no flip planeswalker
                 self.oracle = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
 
             else:  # normal, meld, saga, token, double_faced_token, emblem, planar, scheme, vanguard, augment, host
@@ -117,6 +124,9 @@ class Card():
                 types = data['type_line'].split("—")
                 self.supertype = types[0].split()
                 self.subtype = types[1].split() if len(types) > 1 else []
+                self.power = tolerInt(data.get('power', ""))
+                self.toughness = tolerInt(data.get('toughness', ""))
+                self.loyalty = tolerInt(data.get('loyalty', ""))
                 self.oracle = data['oracle_text']
 
             self.color = colorsort(self.color)
@@ -176,14 +186,12 @@ class Card():
             print("no such elements")
 
     def gsExport(self):
-        cardlist = [self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.supertype, self.subtype, self.set, self.rarity, self.oracle, self.layout, self.hate, self.buff, self.nerf, self.tags, self.usd, self.crop_image]
+        cardlist = [self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.supertype, self.subtype, self.set, self.rarity, self.power, self.toughness, self.loyalty, self.oracle, self.layout, self.hate, self.buff, self.nerf, self.tags, self.usd, self.crop_image]
         return cardlist
 
     def showCard(self):
-        print("Name: {0}\nMana cost: {1}\nCMC: {2}\nColor: {3}\nColor_identity: {4}\nType: {5}\nSet: {6}\nRarity: {7}\nPrice: {8}\noracle: {9}".
-              format(self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.set, self.rarity, self.usd, self.oracle)
-              )
-
+        print("Name: {0}\nMana cost: {1}\nCMC: {2}\nColor: {3}\nColor_identity: {4}\nType: {5}\nSet: {6}\nRarity: {7}\nPower: {8}\nToughness: {9}\nLoyalty: {10}\nPrice: {11}\noracle: {12}".
+              format(self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.set, self.rarity, self.power, self.toughness, self.loyalty, self.usd, self.oracle))
 
 while __name__ == '__main__':
     searchquery = input("search for: ")

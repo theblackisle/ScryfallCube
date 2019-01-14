@@ -124,7 +124,7 @@ def get_from_query(searchquery, sets="f", sort=None, order=None):
         return None
 
 def row_to_card():
-    pass
+    raise NotImplementedError
 
 
 

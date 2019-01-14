@@ -231,7 +231,7 @@ def symbolprettify(string, mode=None):
 def prettify(cardlist, mode=None):
 
     prettylist = []
-    if mode != "reverse":
+    if mode != "reverse":  # Json cardlist to gspread row
         prettylist.append(cardlist[0])  # name
         prettylist.append(symbolprettify(cardlist[1]))  # mana_cost
         prettylist.append(cardlist[2])  # CMC(=float)
@@ -242,17 +242,20 @@ def prettify(cardlist, mode=None):
         prettylist.append('\n'.join(cardlist[7]))  # subtype(=list)
         prettylist.append(cardlist[8].upper())  # set
         prettylist.append(cardlist[9].title())  # rarity
-        prettylist.append(cardlist[10])  # oracle
-        prettylist.append(cardlist[11])  # layout
-        prettylist.append('\n'.join(cardlist[12]))  # hate(=list)
-        prettylist.append('\n'.join(cardlist[13]))  # buff(=list)
-        prettylist.append('\n'.join(cardlist[14]))  # nerf(=list)
-        prettylist.append('\n'.join(cardlist[15]))  # tags(=list)
-        prettylist.append("{:.2f}".format(cardlist[16]))  # usd(=float)
-        prettylist.append(cardlist[17])  # crop_image
+        prettylist.append(cardlist[10])  # power
+        prettylist.append(cardlist[11])  # toughness
+        prettylist.append(cardlist[12])  # loyalty
+        prettylist.append(cardlist[13])  # oracle
+        prettylist.append(cardlist[14])  # layout
+        prettylist.append('\n'.join(cardlist[15]))  # hate(=list)
+        prettylist.append('\n'.join(cardlist[16]))  # buff(=list)
+        prettylist.append('\n'.join(cardlist[17]))  # nerf(=list)
+        prettylist.append('\n'.join(cardlist[18]))  # tags(=list)
+        prettylist.append("{:.2f}".format(cardlist[19]))  # usd(=float)
+        prettylist.append(cardlist[20])  # crop_image
 
 
-    if mode == "reverse":
+    if mode == "reverse":  #  gspread row to Json cardlist
         prettylist.append(cardlist[0])  # name
         prettylist.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
         prettylist.append(float(cardlist[2]))  # CMC
@@ -263,16 +266,26 @@ def prettify(cardlist, mode=None):
         prettylist.append(cardlist[7].split("\n"))  # subtype(=list)
         prettylist.append(cardlist[8].lower())  # set
         prettylist.append(cardlist[9].lower())  # rarity
-        prettylist.append(cardlist[10])  # oracle
-        prettylist.append(cardlist[11])  # layout
-        prettylist.append(cardlist[12].split("\n"))  # hate(=list)
-        prettylist.append(cardlist[13].split("\n"))  # buff(=list)
-        prettylist.append(cardlist[14].split("\n"))  # nerf(=list)
-        prettylist.append(cardlist[15].split("\n"))  # tags(=list)
-        prettylist.append(float(cardlist[16]))  # usd(=float)
-        prettylist.append(cardlist[17])  # crop_image
+        prettylist.append(tolerInt(cardlist[10]))  # power
+        prettylist.append(tolerInt(cardlist[11]))  # toughness
+        prettylist.append(tolerInt(cardlist[12]))  # loyalty
+        prettylist.append(cardlist[13])  # oracle
+        prettylist.append(cardlist[14])  # layout
+        prettylist.append(cardlist[15].split("\n"))  # hate(=list)
+        prettylist.append(cardlist[16].split("\n"))  # buff(=list)
+        prettylist.append(cardlist[17].split("\n"))  # nerf(=list)
+        prettylist.append(cardlist[18].split("\n"))  # tags(=list)
+        prettylist.append(float(cardlist[19]))  # usd(=float)
+        prettylist.append(cardlist[20])  # crop_image
 
     return prettylist
+
+
+def tolerInt(string):
+    if string.isdigit():
+        return int(string)
+    else:
+        return string
 
 
 if __name__ == '__main__':

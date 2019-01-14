@@ -246,8 +246,32 @@ class GsSheet(gspread.models.Worksheet):
             self.delete_row(row)
             print("row {:3} in sheet '{}' is deleted".format(row, self.title))
 
-    def find_duplicated(self, *columns):
-        pass
+    def find_duplicated(self, *cols):
+        vals_in_col = []
+        for col in cols:
+            vals_in_col.append(self.col_values(colchar_to_number(col)))
+
+        vals_in_row = []
+        for i in range(len(vals_in_col[0])):  # rows
+            col_val_set = []
+            for j in range(len(cols)):  # columns
+                col_val_set.append(vals_in_col[j][i])
+            vals_in_row.append(tuple(col_val_set))
+
+        seen = set()
+        duplicated = set()
+        for i, x in enumerate(vals_in_row):
+            if x not in seen:
+                seen.add(x)
+            else:  # x in seen:
+                duplicated.add((x, i+1))
+                duplicated.add((x, vals_in_row.index(x)+1))
+
+        dupl_list = {}
+        for value_set, index in sorted(list(duplicated)):
+            dupl_list.setdefault(value_set[0], []).append(index)
+
+        return dupl_list
 
     def findcell(self, query, mode="cell"):
         """
@@ -502,7 +526,7 @@ class GsInterface:
                    print("Sheet '%s' is open" % param)
             else:
                 if input("No such sheet found. Will you create one?(Y/N): ")[0].lower() == "y":
-                    self._sheet = self._file.add_worksheet(param, 1, 18)
+                    self._sheet = self._file.add_worksheet(param, 1, 21)
                     print("Sheet '%s' is created" % param)
 
     @sheet.getter

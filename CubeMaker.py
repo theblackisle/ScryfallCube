@@ -1,5 +1,6 @@
 import re
 import pyparsing
+import pprint
 
 import ScryfallIO
 from Card import Card
@@ -180,7 +181,7 @@ def parsequery(inputs):
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트6", email="gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1", email="gattuk24@gmail.com")
     target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
@@ -292,9 +293,6 @@ if __name__ == '__main__':
                         print("%2d. %s" % (cards.index(card)+1, card.name))
 
                     selections = parseIndex(input("\nEnter card indices to import or range. Press Y to import all: "))
-                    if selections[0:2].lower() == "^q":
-                        print("")
-                        break
 
                     sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
                     if sheetname[0:2].lower() == "^q":
@@ -320,15 +318,23 @@ if __name__ == '__main__':
         if choice[0] == '4':  # 4. Prepare card data from unprepared sheet
             while True:
                 printLocation(pointer)
-                columninput = parsecolumn(input('Enter source column values: '))
-                rowinput = parseIndex(input("Enter source row index or range: "))
+                inputs = input('Enter source column values: ')
+                if inputs[0:2].lower() == "^q":
+                    print("")
+                    break
+                columninput = parsecolumn(inputs)
+                inputs = input('Enter source column values: ')
+                if inputs[0:2].lower() == "^q":
+                    print("")
+                    break
+                rowinput = parseIndex(inputs)
                 print("")
-                sheetname = selectSheet(pointer.file, "Enter sheet index or name to save: ")
-                if sheetname[0:2].lower() == "^q":
+                inputs = selectSheet(pointer.file, "Enter sheet index or name to save: ")
+                if inputs[0:2].lower() == "^q":
                     print("")
                     break
                 target.file = pointer.file
-                target.sheet = sheetname
+                target.sheet = inputs
                 print("")
                 namelist = pointer.sheet.export_from_sheet(rowinput, columninput)
                 print("")
@@ -351,7 +357,7 @@ if __name__ == '__main__':
                     print("Use _ for spacing.                                 e.g) A:First_strike")
                     print("Prepend ! or - for negative search.                e.g) A:!Goblin, A:-Goblin")
                     print("Prepend ^ for case-sensitive search.               e.g) A:^Flying")
-                    print("Prepend # for exact match.                         e.g) A:#kin - that will not matches Kithkin")
+                    print("Prepend # for exact match.                         e.g) A:#angel - that will not matches 'evangel'")
                     print("")
                     query = input("Enter query to search: ")
 
@@ -387,6 +393,34 @@ if __name__ == '__main__':
                     if matchselection[0] == "3":  # Add properties
                         pass
 
-                    if matchselection[0] == "4":  # 4Remove properties
+                    if matchselection[0] == "4":  # Remove properties
                         pass
 
+        if choice[0] == '6':  # 5. Match card for query from prepared sheet
+            #while True:
+
+            printLocation(pointer)
+
+            print("find duplicated")
+            dupl_dict = pointer.sheet.find_duplicated("A", "F", "I")
+            if len(dupl_dict) == 0:
+                print("All items in sheet '%s' are unique." % pointer.sheet.title)
+            else:
+                pprint.pprint(dupl_dict)
+
+                mode = input("Press F to leave the first item, L for the last, A for deleting all: ")
+
+                dupl_row_list = set()
+                for key in dupl_dict:
+                    if mode.lower() == "f":
+                        row_to_delete = dupl_dict[key][1:]
+                    if mode.lower() == "l":
+                        row_to_delete = dupl_dict[key][:-1]
+                    if mode.lower() == "a":
+                        row_to_delete = dupl_dict[key]
+
+                    for row in row_to_delete:
+                        dupl_row_list.add(row)
+
+                pointer.sheet.delete_rows(sorted(list(dupl_row_list)))
+            print("")
