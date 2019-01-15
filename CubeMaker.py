@@ -292,7 +292,7 @@ if __name__ == '__main__':
                     print("\nTotal %s cards are found." % len(result))
 
                     for card in cards:
-                        print("%2d. %s" % (cards.index(card)+1, card.name))
+                        print("%2d. %s" % (cards.index(card)+1, card.properties["name"]))
 
                     selections = parseIndex(input("\nEnter card indices to import or range. Press Y to import all: "))
 

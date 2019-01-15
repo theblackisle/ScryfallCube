@@ -228,57 +228,61 @@ def symbolprettify(string, mode=None):
     return string
 
 
-def prettify(cardlist, mode=None):
+def prettify(carddict):
+    """Json cardlist to displable gspread row"""
 
     prettylist = []
-    if mode != "reverse":  # Json cardlist to gspread row
-        prettylist.append(cardlist[0])  # name
-        prettylist.append(symbolprettify(cardlist[1]))  # mana_cost
-        prettylist.append(cardlist[2])  # CMC(=float)
-        prettylist.append(''.join(cardlist[3]))  # color(=list)
-        prettylist.append(''.join(cardlist[4]))  # color_identity(=list)
-        prettylist.append(cardlist[5])  # type_line
-        prettylist.append('\n'.join(cardlist[6]))  # supertype(=list)
-        prettylist.append('\n'.join(cardlist[7]))  # subtype(=list)
-        prettylist.append(cardlist[8].upper())  # set
-        prettylist.append(cardlist[9].title())  # rarity
-        prettylist.append(cardlist[10])  # power
-        prettylist.append(cardlist[11])  # toughness
-        prettylist.append(cardlist[12])  # loyalty
-        prettylist.append(cardlist[13])  # oracle
-        prettylist.append(cardlist[14])  # layout
-        prettylist.append('\n'.join(cardlist[15]))  # hate(=list)
-        prettylist.append('\n'.join(cardlist[16]))  # buff(=list)
-        prettylist.append('\n'.join(cardlist[17]))  # nerf(=list)
-        prettylist.append('\n'.join(cardlist[18]))  # tags(=list)
-        prettylist.append("{:.2f}".format(cardlist[19]))  # usd(=float)
-        prettylist.append(cardlist[20])  # crop_image
-
-    if mode == "reverse":  # gspread row to Card.Card eatable data
-        prettylist.append(cardlist[0])  # name
-        prettylist.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
-        prettylist.append(float(cardlist[2]))  # CMC
-        prettylist.append(list(cardlist[3]) if cardlist[3] != "Colorless" else [])  # color(=list)
-        prettylist.append(list(cardlist[4]) if cardlist[4] != "Colorless" else [])  # color_identity(=list)
-        prettylist.append(cardlist[5])  # type_line
-        prettylist.append(cardlist[6].split("\n"))  # supertype(=list)
-        prettylist.append(cardlist[7].split("\n"))  # subtype(=list)
-        prettylist.append(cardlist[8].lower())  # set
-        prettylist.append(cardlist[9].lower())  # rarity
-        prettylist.append(tolerInt(cardlist[10]))  # power
-        prettylist.append(tolerInt(cardlist[11]))  # toughness
-        prettylist.append(tolerInt(cardlist[12]))  # loyalty
-        prettylist.append(cardlist[13])  # oracle
-        prettylist.append(cardlist[14])  # layout
-        prettylist.append(cardlist[15].split("\n"))  # hate(=list)
-        prettylist.append(cardlist[16].split("\n"))  # buff(=list)
-        prettylist.append(cardlist[17].split("\n"))  # nerf(=list)
-        prettylist.append(cardlist[18].split("\n"))  # tags(=list)
-        prettylist.append(float(cardlist[19]))  # usd(=float)
-        prettylist.append(cardlist[20])  # crop_image
-
+    prettylist.append(carddict["name"])
+    prettylist.append(symbolprettify(carddict["mana_cost"]))
+    prettylist.append(carddict["cmc"])
+    prettylist.append(''.join(carddict["color"]))
+    prettylist.append(''.join(carddict["color_identity"]))
+    prettylist.append(carddict["type_line"])
+    prettylist.append('\n'.join(carddict["supertype"]))
+    prettylist.append('\n'.join(carddict['subtype']))
+    prettylist.append(carddict["set"].upper())
+    prettylist.append(carddict["rarity"].title())
+    prettylist.append(carddict["power"])
+    prettylist.append(carddict["toughness"])
+    prettylist.append(carddict["loyalty"])
+    prettylist.append(carddict["oracle"])
+    prettylist.append(carddict["layout"])
+    prettylist.append('\n'.join(carddict["hate"]))
+    prettylist.append('\n'.join(carddict["buff"]))
+    prettylist.append('\n'.join(carddict["nerf"]))
+    prettylist.append('\n'.join(carddict["tags"]))
+    prettylist.append("{:.2f}".format(carddict["usd"]))
+    prettylist.append(carddict["crop_image"])
     return prettylist
 
+
+def uglify(cardlist):
+    """gspread row to internal Card.Card eatable data"""
+
+    uglylist = []
+    uglylist.append(cardlist[0])  # name
+    uglylist.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
+    uglylist.append(float(cardlist[2]))  # CMC(=float)
+    uglylist.append(list(cardlist[3]) if cardlist[3] != "Colorless" else [])  # color(=list)
+    uglylist.append(list(cardlist[4]) if cardlist[4] != "Colorless" else [])  # color_identity(=list)
+    uglylist.append(cardlist[5])  # type_line
+    uglylist.append(cardlist[6].split("\n"))  # supertype(=list)
+    uglylist.append(cardlist[7].split("\n"))  # subtype(=list)
+    uglylist.append(cardlist[8].lower())  # set
+    uglylist.append(cardlist[9].lower())  # rarity
+    uglylist.append(tolerInt(cardlist[10]))  # power
+    uglylist.append(tolerInt(cardlist[11]))  # toughness
+    uglylist.append(tolerInt(cardlist[12]))  # loyalty
+    uglylist.append(cardlist[13])  # oracle
+    uglylist.append(cardlist[14])  # layout
+    uglylist.append(cardlist[15].split("\n"))  # hate(=list)
+    uglylist.append(cardlist[16].split("\n"))  # buff(=list)
+    uglylist.append(cardlist[17].split("\n"))  # nerf(=list)
+    uglylist.append(cardlist[18].split("\n"))  # tags(=list)
+    uglylist.append(float(cardlist[19]))  # usd(=float)
+    uglylist.append(cardlist[20])  # crop_image
+
+    return uglylist
 
 def tolerInt(string):
     if string.isdigit():

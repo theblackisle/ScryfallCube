@@ -5,7 +5,7 @@ import time
 import GspreadIO
 import ScryfallIO
 from Card import Card
-from Converter import prettify, number_to_colchar, colchar_to_number
+from Converter import prettify, uglify, number_to_colchar, colchar_to_number
 
 
 class GsClient(gspread.Client):
@@ -129,8 +129,8 @@ class GsSheet(gspread.models.Worksheet):
         return self.spreadsheet.values_append(title_range, params, body)
 
     def importCard(self, card):
-        self.append_row(prettify(card.gsExport()))
-        print("{:25} is recorded in '{}'".format(card.name, self.title))
+        self.append_row(prettify(card.properties))
+        print("{:25} is recorded in '{}'".format(card.properties["name"], self.title))
 
     def import_rows(self, row_data):  # row_data = list of row data(=list).
         """가공된 row값들을 받아 sheet에 붙여넣기"""
@@ -158,15 +158,15 @@ class GsSheet(gspread.models.Worksheet):
                     # "code": 429,
                     # "status": "RESOURCE_EXHAUSTED",
                     # "message": "Quota exceeded for quota group 'WriteGroup' and limit 'USER-100s'
-                    print("{:25} failed to record in '{}' due to quota limit ".format(card.name, self.title))
+                    print("{:25} failed to record in '{}' due to quota limit ".format(card.properties["name"], self.title))
                     sleeper = 20
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
 
     def searchImportCard(self, cardname, sets='f', indent=0):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
-        self.append_row(prettify(card.gsExport()))
-        print(" "*indent + "{:25} is recorded in '{}'".format(card.name, self.title))
+        self.append_row(prettify(card.properties))
+        print(" "*indent + "{:25} is recorded in '{}'".format(card.properties["name"], self.title))
 
     def searchImportMass(self, namelist, sets='f'):
         for index, cardname in enumerate(namelist, 1):
@@ -187,7 +187,7 @@ class GsSheet(gspread.models.Worksheet):
 
     def export_to_card(self, row):
         """가공된 row값을 받아 Card로 return"""
-        card = Card(prettify(self.row_values(row), mode="reverse"))
+        card = Card(uglify(self.row_values(row)))
         return card
 
     def export_rows(self, rows):  # rows = list of row values(=int).
@@ -238,7 +238,7 @@ class GsSheet(gspread.models.Worksheet):
         sheet_list = self.get_all_values()[offset-1:]
         cardlist = []
         for row_value in sheet_list:
-            cardlist.append(Card(prettify(row_value, mode="reverse")))
+            cardlist.append(Card(uglify(row_value)))
         return cardlist
 
 
