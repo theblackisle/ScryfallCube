@@ -226,11 +226,21 @@ class GsSheet(gspread.models.Worksheet):
                 if content is not "":
                     namelist.append(content)
                     print("{:3}. {:25} at {:3} is exported.".format(len(namelist), content, location))
-                else:
-                    pass
-                    #print(" "*29 + "{:3} is an empty cell".format(location))
+                # else print(" "*29 + "{:3} is an empty cell".format(location))
 
         return namelist
+
+    def export_sheet_to_card(self, offset):
+        """
+        가공된 sheet에서 사용
+        offset부터 sheet의 모든 data를 card의 list로 return
+        """
+        sheet_list = self.get_all_values()[offset-1:]
+        cardlist = []
+        for row_value in sheet_list:
+            cardlist.append(Card(prettify(row_value, mode="reverse")))
+        return cardlist
+
 
     def delete_rows(self, rows):
         """
@@ -550,9 +560,7 @@ class GsInterface:
 if __name__ == '__main__':
     myCube = GsInterface('ScryfallCube-80b58226a864.json')
     myCube.file = 'ScryfallCubeIO'
-    myCube.sheet = "시트1"
+    myCube.sheet = "Test"
     # MyCube.currentSheet("시트1")은 안통함. property에는 __call__ method가 없음!
 
-    print(dir(myCube.file))
-    print(myCube.file.__dict__.keys())
-    # print(MyCube.currentSheet.get_all_records())
+    print(myCube.sheet.get_all_records())

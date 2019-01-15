@@ -37,14 +37,17 @@ class Card():
             self.subtype = data[7]
             self.set = data[8]
             self.rarity = data[9]
-            self.oracle = data[10]
-            self.layout = data[11]
-            self.hate = data[12]
-            self.buff = data[13]
-            self.nerf = data[14]
-            self.tags = data[15]
-            self.usd = data[16]
-            self.crop_image = data[17]
+            self.power = data[10]
+            self.toughness = data[11]
+            self.loyalty = data[12]
+            self.oracle = data[13]
+            self.layout = data[14]
+            self.hate = data[15]
+            self.buff = data[16]
+            self.nerf = data[17]
+            self.tags = data[18]
+            self.usd = data[19]
+            self.crop_image = data[20]
 
         if type(data) == dict:  # data is JSON from Scryfall
             self.hate = []
@@ -134,6 +137,18 @@ class Card():
             self.supertype.sort(key=typesort)
             self.subtype = subtypeSort(self.subtype)
 
+    def __str__(self):
+        return "Scryfall Card object for: {0}, {1}".format(self.name, self.set.upper())
+
+    def __eq__(self, other):
+        if self.__dict__ == other.__dict__:
+            return True
+        else:
+            return False
+
+    def __hash__(self):
+        return hash((self.name, self.set))
+
     def setter(self, data=None):
         pass
 
@@ -186,8 +201,8 @@ class Card():
             print("no such elements")
 
     def gsExport(self):
-        cardlist = [self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.supertype, self.subtype, self.set, self.rarity, self.power, self.toughness, self.loyalty, self.oracle, self.layout, self.hate, self.buff, self.nerf, self.tags, self.usd, self.crop_image]
-        return cardlist
+        property_list = [self.name, self.mana_cost, self.cmc, self.color, self.color_identity, self.type_line, self.supertype, self.subtype, self.set, self.rarity, self.power, self.toughness, self.loyalty, self.oracle, self.layout, self.hate, self.buff, self.nerf, self.tags, self.usd, self.crop_image]
+        return property_list
 
     def showCard(self):
         print("Name: {0}\nMana cost: {1}\nCMC: {2}\nColor: {3}\nColor_identity: {4}\nType: {5}\nSet: {6}\nRarity: {7}\nPower: {8}\nToughness: {9}\nLoyalty: {10}\nPrice: {11}\noracle: {12}".

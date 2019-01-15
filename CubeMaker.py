@@ -2,6 +2,7 @@ import re
 import pyparsing
 import pprint
 
+import Analyzer
 import ScryfallIO
 from Card import Card
 from GsInterface import GsInterface
@@ -16,6 +17,7 @@ def printMenu():
     menu.append("4. Prepare card data from unprepared sheet")
     menu.append("5. Match card for query from prepared sheet")
     menu.append("6. Edit and trim sheets")
+    menu.append("7. Analyze cards in sheets")
 
     for item in menu:
         print(item)
@@ -181,7 +183,7 @@ def parsequery(inputs):
 
 
 if __name__ == '__main__':
-    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "시트1", email="gattuk24@gmail.com")
+    pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "Test", email="gattuk24@gmail.com")
     target = GsInterface('ScryfallCube-80b58226a864.json', email="gattuk24@gmail.com")
     print("")
 
@@ -318,12 +320,12 @@ if __name__ == '__main__':
         if choice[0] == '4':  # 4. Prepare card data from unprepared sheet
             while True:
                 printLocation(pointer)
-                inputs = input('Enter source column values: ')
+                inputs = input('Enter source column indices: ')
                 if inputs[0:2].lower() == "^q":
                     print("")
                     break
                 columninput = parsecolumn(inputs)
-                inputs = input('Enter source column values: ')
+                inputs = input('Enter source row indices: ')
                 if inputs[0:2].lower() == "^q":
                     print("")
                     break
@@ -396,7 +398,7 @@ if __name__ == '__main__':
                     if matchselection[0] == "4":  # Remove properties
                         pass
 
-        if choice[0] == '6':  # 5. Match card for query from prepared sheet
+        if choice[0] == '6':  # Edit and trim sheets
             #while True:
 
             printLocation(pointer)
@@ -424,3 +426,20 @@ if __name__ == '__main__':
 
                 pointer.sheet.delete_rows(sorted(list(dupl_row_list)))
             print("")
+
+        if choice[0] == '7':  # Analyze cards in sheets
+            #while True:
+
+            query = selectSheet(pointer.file, "Enter sheet indices to analyze together: ")
+            if query[0:2].lower() == "^q":
+                print("")
+            else:
+                sheet_indices = parseIndex(query)
+                sheets = []
+                target.file = pointer.file
+                for index in sheet_indices:
+                    target.sheet = str(index)
+                    sheets.append(target.sheet.export_sheet_to_card(offset=3))
+                print("")
+                Analyzer.concatenate_sheets(*sheets)
+

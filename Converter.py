@@ -254,8 +254,7 @@ def prettify(cardlist, mode=None):
         prettylist.append("{:.2f}".format(cardlist[19]))  # usd(=float)
         prettylist.append(cardlist[20])  # crop_image
 
-
-    if mode == "reverse":  #  gspread row to Json cardlist
+    if mode == "reverse":  # gspread row to Card.Card eatable data
         prettylist.append(cardlist[0])  # name
         prettylist.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
         prettylist.append(float(cardlist[2]))  # CMC
