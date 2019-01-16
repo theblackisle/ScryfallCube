@@ -137,6 +137,117 @@ def cyclicOrder(color_list, sortstd=('W', 'U', 'B', 'R', 'G')):
         return W,U,B,R,G
 
 
+def color_to_nick(color_set):
+    nick = ""
+    priority = -1
+
+    if color_set == ():
+        priority = 0
+        nick = "Colorless"
+
+    if color_set == ('W',):
+        priority = 1
+        nick = "White"
+    if color_set == ('U',):
+        priority = 2
+        nick = "Blue"
+    if color_set == ('B',):
+        priority = 3
+        nick = "Black"
+    if color_set == ('R',):
+        priority = 4
+        nick = "Red"
+    if color_set == ('G',):
+        priority = 5
+        nick = "Green"
+
+    if color_set == ('W', 'U'):
+        priority = 6
+        nick = "Azorius"
+    if color_set == ('U', 'B'):
+        priority = 7
+        nick = "Dimir"
+    if color_set == ('B', 'R'):
+        priority = 8
+        nick = 'Rakdos'
+    if color_set == ('R', 'G'):
+        priority = 9
+        nick = "Gruul"
+    if color_set == ('G', 'W'):
+        priority = 10
+        nick = "Selesnya"
+
+    if color_set == ('W', 'B'):
+        priority = 11
+        nick = "Orzhov"
+    if color_set == ('B', 'G'):
+        priority = 12
+        nick = "Golgari"
+    if color_set == ('G', 'U'):
+        priority = 13
+        nick = "Simic"
+    if color_set == ('U', 'R'):
+        priority = 14
+        nick = "Izzet"
+    if color_set == ('R', 'W'):
+        priority = 15
+        nick = "Boros"
+
+    if color_set == ('W', 'U', 'B'):
+        priority = 16
+        nick = "Esper"
+    if color_set == ('U', 'B', 'R'):
+        priority = 17
+        nick = "Grixis"
+    if color_set == ('B', 'R', 'G'):
+        priority = 18
+        nick = "Jund"
+    if color_set == ('R', 'G', 'W'):
+        priority = 19
+        nick = "Naya"
+    if color_set == ('G', 'W', 'U'):
+        priority = 20
+        nick = "Bant"
+
+    if color_set == ('W', 'B', 'G'):
+        priority = 21
+        nick = "Abzan"
+    if color_set == ('U', 'R', 'W'):
+        priority = 22
+        nick = "Jeskai"
+    if color_set == ('B', 'G', 'U'):
+        priority = 23
+        nick = "Sultai"
+    if color_set == ('R', 'W', 'B'):
+        priority = 24
+        nick = "Mardu"
+    if color_set == ('G', 'U', 'R'):
+        priority = 25
+        nick = "Temur"
+
+    if color_set == ('W', 'U', 'B', 'R'):
+        priority = 26
+        nick = "Greenless"
+    if color_set == ('U', 'B', 'R', 'G'):
+        priority = 27
+        nick = "Whiteless"
+    if color_set == ('B', 'R', 'G', 'W'):
+        priority = 28
+        nick = "Blueless"
+    if color_set == ('R', 'G', 'W', 'U'):
+        priority = 29
+        nick = "Blackless"
+    if color_set == ('G', 'W', 'U', 'B'):
+        priority = 30
+        nick = "Redless"
+
+    if color_set == ('W', 'U', 'B', 'R', 'G'):
+        priority = 31
+        nick = "5C"
+
+    return (priority, nick)
+
+
 def typesort(string):  # case sensitive!
     if string == "Legendary":
         return "a" + string

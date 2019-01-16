@@ -441,5 +441,6 @@ if __name__ == '__main__':
                     target.sheet = str(index)
                     sheets.append(target.sheet.export_sheet_to_card(offset=3))
                 print("")
-                Analyzer.concatenate_sheets(*sheets)
+                target_list = Analyzer.concatenate_list(*sheets)
+                Analyzer.color_breakdown(target_list)
 
