@@ -8,11 +8,11 @@ class Card():
             self.properties["name"] = ""
             self.properties["mana_cost"] = ""
             self.properties["cmc"] = float(-1)
-            self.properties["color"] = []
-            self.properties["color_identity"] = []
+            self.properties["color"] = ()
+            self.properties["color_identity"] = ()
             self.properties["type_line"] = ""
-            self.properties["supertype"] = []
-            self.properties["subtype"] = []
+            self.properties["supertype"] = ()
+            self.properties["subtype"] = ()
             self.properties["set"] = ""
             self.properties["rarity"] = ""
             self.properties["power"] = ""
@@ -58,7 +58,7 @@ class Card():
             self.properties["nerf"] = []
             self.properties["tags"] = []  # fixing, infect, selfmill, big, small, ... ...
             self.properties["cmc"] = data['cmc']
-            self.properties["color_identity"] = data['color_identity']
+            self.properties["color_identity"] = tuple(data['color_identity'])
             self.properties["set"] = data['set'].upper()
             self.properties["rarity"] = data['rarity']
             self.properties["usd"] = float(data.get('usd', 0))
@@ -91,10 +91,10 @@ class Card():
                 self.properties["type_line"] = '{0} // {1}'.format(data['card_faces'][0]['type_line'], data['card_faces'][1]['type_line'])
                 front_types = data['card_faces'][0]['type_line'].split("—")
                 front_supertypes = front_types[0].split()
-                front_subtypes = front_types[1].split() if len(front_types) > 1 else []
+                front_subtypes = front_types[1].split()  # if len(front_types) > 1 else []
                 back_types = data['card_faces'][1]['type_line'].split("—")
                 back_supertypes = back_types[0].split()
-                back_subtypes = back_types[1].split() if len(back_types) > 1 else []
+                back_subtypes = back_types[1].split()  # if len(back_types) > 1 else []
                 self.properties["supertype"] = list(set(front_supertypes) | set(back_supertypes))
                 self.properties["subtype"] = list(set(front_subtypes) | set(back_subtypes))
                 self.properties["power"] = ""
@@ -137,8 +137,8 @@ class Card():
 
             self.properties["color"] = colorsort(self.properties["color"])
             self.properties["color_identity"] = colorsort(self.properties["color_identity"])
-            self.properties["supertype"].sort(key=typesort)
-            self.properties["subtype"] = subtypeSort(self.properties["subtype"])
+            self.properties["supertype"] = tuple(sorted(self.properties["supertype"], key=typesort))
+            self.properties["subtype"] = subtypeSort(self.properties["subtype"])  # 모두 tuple
 
     def __str__(self):
         return "Scryfall Card object for: {0}, {1}".format(self.properties["name"], self.properties["set"].upper())
