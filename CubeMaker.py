@@ -8,21 +8,43 @@ from Card import Card
 from GsInterface import GsInterface
 from Converter import number_to_colchar, colchar_to_number
 
+main_menu = [
+    "1. Manage files and sheets.",
+    "2. Search from Scryfall for exact card.",
+    "3. Search from Scryfall with query.",
+    "4. Prepare card data from unprepared sheet",
+    "5. Match card for query from prepared sheet",
+    "6. Edit and trim sheets",
+    "7. Analyze cards in sheets"
+]
 
-def printMenu():
+file_menu = [
+    "1. Open or create file",
+    "2. Open or create sheet",
+    "3. Delete file",
+    "4. Delete Sheet"
+]
+edit_menu = [
+    "1. Save to other sheet",
+    "2. Delete from the sheet",
+    "3. Add properties",
+    "4. Remove properties"
+]
+analyze_menu = [
+    "1. Color breakdown",
+    "2. Color burden analysis"
+]
+
+
+def printMenu(menu_item=main_menu, prompt="Select: "):
     menu = []
-    menu.append("1. Manage files and sheets.")
-    menu.append("2. Search from Scryfall for exact card.")
-    menu.append("3. Search from Scryfall with query.")
-    menu.append("4. Prepare card data from unprepared sheet")
-    menu.append("5. Match card for query from prepared sheet")
-    menu.append("6. Edit and trim sheets")
-    menu.append("7. Analyze cards in sheets")
+    for item in menu_item:
+        menu.append(item)
 
     for item in menu:
         print(item)
 
-    choice = input("Select: ")
+    choice = input(prompt)
     try:
         print(menu[int(choice[0])-1][3:])
     except IndexError and ValueError:
@@ -30,47 +52,12 @@ def printMenu():
 
     return choice
 
-
-def printFileMenu():
-    menu = []
-    menu.append("1. Open or create file")
-    menu.append("2. Open or create sheet")
-    menu.append("3. Delete file")
-    menu.append("4. Delete Sheet")
-
-    for item in menu:
-        print(item)
-
-    choice = input("Select: ")
-    try:
-        print(menu[int(choice[0])-1][3:])
-    except IndexError and ValueError:
-        pass
-
-    return choice
-
-def printEditMenu():
-    menu = []
-    menu.append("1. Save to other sheet")
-    menu.append("2. Delete from the sheet")
-    menu.append("3. Add properties")
-    menu.append("4. Remove properties")
-
-    for item in menu:
-        print(item)
-
-    choice = input("Select: ")
-    try:
-        print(menu[int(choice[0])-1][3:])
-    except IndexError and ValueError:
-        pass
-
-    return choice
 
 def printLocation(pointer):
     filename = pointer.file.title if pointer.file is not None else "None"
     sheetname = pointer.sheet.title if pointer.sheet is not None else "None"
     print('Open file: {0}\nOpen sheet: {1}'.format(filename, sheetname))
+
 
 def selectFile(client, prompt):
     try:
@@ -195,7 +182,7 @@ if __name__ == '__main__':
 
         if choice[0] == '1':  # 1. Manage files and sheets.
             while True:
-                filechoice = printFileMenu()
+                filechoice = printMenu(file_menu)
                 if filechoice[0:2].lower() == "^q":
                     print("")
                     break
@@ -371,7 +358,7 @@ if __name__ == '__main__':
                     print(rowlist)
                     print("")
 
-                    matchselection = printEditMenu()
+                    matchselection = printMenu(edit_menu)
                     if matchselection[0:2].lower() == "^q":
                         print("")
                         break
@@ -411,6 +398,9 @@ if __name__ == '__main__':
                 pprint.pprint(dupl_dict)
 
                 mode = input("Press F to leave the first item, L for the last, A for deleting all: ")
+                if mode[0:2].lower() == "^q":
+                    print("")
+                    break
 
                 dupl_row_list = set()
                 for key in dupl_dict:
@@ -428,19 +418,34 @@ if __name__ == '__main__':
             print("")
 
         if choice[0] == '7':  # Analyze cards in sheets
-            #while True:
+            while True:
+                query = selectSheet(pointer.file, "Enter sheet indices to analyze together: ")
+                if query[0:2].lower() == "^q":
+                    print("")
+                    break
+                else:
+                    sheet_indices = parseIndex(query)
+                    sheets = []
+                    target.file = pointer.file
+                    for index in sheet_indices:
+                        target.sheet = str(index)
+                        sheets.append(target.sheet.export_sheet_to_card(offset=3))
+                    print("")
+                    target_list = Analyzer.concatenate_list(*sheets)
 
-            query = selectSheet(pointer.file, "Enter sheet indices to analyze together: ")
-            if query[0:2].lower() == "^q":
-                print("")
-            else:
-                sheet_indices = parseIndex(query)
-                sheets = []
-                target.file = pointer.file
-                for index in sheet_indices:
-                    target.sheet = str(index)
-                    sheets.append(target.sheet.export_sheet_to_card(offset=3))
-                print("")
-                target_list = Analyzer.concatenate_list(*sheets)
-                Analyzer.color_breakdown(target_list)
+                    analyze_input = printMenu(analyze_menu)
+                    if analyze_input[0:2].lower() == "^q":
+                        print("")
+                        break
+                    elif analyze_input[0] == '1':  # Color breakdown
+                        Analyzer.color_breakdown(target_list)
+
+                    elif analyze_input[0] == '2':  # Color burden analysis
+                        Analyzer.color_burden_analysis(target_list)
+
+
+
+
+
+
 

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from Converter import color_to_nick
+import re
 
 def concatenate_list(*cardlists):
     """
@@ -47,7 +48,7 @@ def color_breakdown(cardlist, mode="color"):
         pass
 
     print("\nColor_breakdown:")
-    for key in sorted(color_identity.keys(), key=lambda color: color_to_nick(color)[0]):
+    for key in sorted(color_identity.keys(), key=lambda color_key: color_to_nick(color_key)[0]):
         print("{:10}: {}".format(color_to_nick(key)[1], color_identity[key]))
 
     print("\nColor_appearance:")
@@ -56,11 +57,51 @@ def color_breakdown(cardlist, mode="color"):
     print("")
 
 
-def color_requirement_analysis(cardlist):
-    raise NotImplementedError
-
-
 def color_burden_analysis(cardlist):
+    cmc_breakdown = defaultdict(lambda: defaultdict(lambda: 0))
+    for card in cardlist:
+        cmc = card.properties["cmc"]
+        generic = re.findall(r'{\d+}', card.properties["mana_cost"])
+        if len(generic) != 0:
+            generic_cmc = int(re.sub(r'{|}', '', generic[0]))
+        else:
+            generic_cmc = 0
+        cmc_breakdown[cmc][generic_cmc] += 1
+
+    for i in sorted(cmc_breakdown.keys()):
+        print("CMC %d" % i)
+        for j in sorted(cmc_breakdown[i].keys(), reverse=True):
+            print(" generic '%d' has %d" % (j, cmc_breakdown[i][j]))
+
+def color_requirement_analysis(cardlist):
+    symbols_breakdown = defaultdict(lambda:0)
+
+    weight = {
+        'hybrid': 0.75,
+        'mono_hybrid': 0.68,
+        'pyrexian' : 0.1,
+    }
+
+    for card in cardlist:
+        cmc = card.properties["cmc"]
+        symbols = re.findall(r'{W}', card.properties["mana_cost"])
+        hybrid_symbols = re.findall(r'{W/U}|{G/W}|{W/B}|{R/W}', card.properties["mana_cost"])
+        mono_hybrid_symbols = re.findall(r'{2/W}', card.properties["mana_cost"])
+        pyrexian_symbols = re.findall(r'{W/P}', card.properties["mana_cost"])
+        burden = 0
+
+    ''' {W/U}
+        {U/B}
+        {B/R}
+        {R/G}
+        {G/W}
+        {W/B}
+        {B/G}
+        {G/U}
+        {U/R}
+        {R/W}
+        '''
+
     raise NotImplementedError
 
 

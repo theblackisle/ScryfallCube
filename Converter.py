@@ -373,7 +373,7 @@ def uglify(cardlist):
     uglylist = []
     uglylist.append(cardlist[0])  # name
     uglylist.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
-    uglylist.append(float(cardlist[2]))  # CMC(=float)
+    uglylist.append(int(cardlist[2]))  # CMC(=int)
     uglylist.append(tuple(cardlist[3]) if cardlist[3] != "Colorless" else ())  # color(=tuple)
     uglylist.append(tuple(cardlist[4]) if cardlist[4] != "Colorless" else ())  # color_identity(=tuple)
     uglylist.append(cardlist[5])  # type_line

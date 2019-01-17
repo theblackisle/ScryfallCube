@@ -7,7 +7,7 @@ class Card():
             self.properties = {}
             self.properties["name"] = ""
             self.properties["mana_cost"] = ""
-            self.properties["cmc"] = float(-1)
+            self.properties["cmc"] = int(-1)
             self.properties["color"] = ()
             self.properties["color_identity"] = ()
             self.properties["type_line"] = ""
@@ -57,7 +57,7 @@ class Card():
             self.properties["buff"] = []
             self.properties["nerf"] = []
             self.properties["tags"] = []  # fixing, infect, selfmill, big, small, ... ...
-            self.properties["cmc"] = data['cmc']
+            self.properties["cmc"] = int(data['cmc'])
             self.properties["color_identity"] = tuple(data['color_identity'])
             self.properties["set"] = data['set'].upper()
             self.properties["rarity"] = data['rarity']
