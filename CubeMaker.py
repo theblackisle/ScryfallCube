@@ -441,7 +441,7 @@ if __name__ == '__main__':
                         Analyzer.color_breakdown(target_list)
 
                     elif analyze_input[0] == '2':  # Color burden analysis
-                        Analyzer.color_burden_analysis(target_list)
+                        Analyzer.burden_analysis(target_list)
 
 
 

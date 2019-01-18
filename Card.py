@@ -91,10 +91,10 @@ class Card():
                 self.properties["type_line"] = '{0} // {1}'.format(data['card_faces'][0]['type_line'], data['card_faces'][1]['type_line'])
                 front_types = data['card_faces'][0]['type_line'].split("—")
                 front_supertypes = front_types[0].split()
-                front_subtypes = front_types[1].split()  # if len(front_types) > 1 else []
+                front_subtypes = front_types[1].split() if len(front_types) > 1 else []
                 back_types = data['card_faces'][1]['type_line'].split("—")
                 back_supertypes = back_types[0].split()
-                back_subtypes = back_types[1].split()  # if len(back_types) > 1 else []
+                back_subtypes = back_types[1].split() if len(back_types) > 1 else []
                 self.properties["supertype"] = list(set(front_supertypes) | set(back_supertypes))
                 self.properties["subtype"] = list(set(front_subtypes) | set(back_subtypes))
                 self.properties["power"] = ""

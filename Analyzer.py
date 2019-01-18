@@ -1,5 +1,5 @@
 from collections import defaultdict
-from Converter import color_to_nick
+from Converter import color_to_nick, symbolprettify
 import re
 
 def concatenate_list(*cardlists):
@@ -56,22 +56,43 @@ def color_breakdown(cardlist, mode="color"):
         print("{}: {:3} of {}, total {:5.2f} %".format(key, color_share[key], len(cardlist), 100*color_share[key]/len(cardlist)))
     print("")
 
+def color_classify(cardlist, mode="color", seperate_split=False, seperate_transform=False):
+    for card in cardlist:
+        if seperate_split is True:
+            pass
+        if seperate_transform is True:
+            pass
 
-def color_burden_analysis(cardlist):
-    cmc_breakdown = defaultdict(lambda: defaultdict(lambda: 0))
+
+
+def burden_analysis(cardlist):
+    cmc_breakdown = defaultdict(lambda: defaultdict(lambda: []))
     for card in cardlist:
         cmc = card.properties["cmc"]
+        print(card.properties["name"], card.properties["mana_cost"])
         generic = re.findall(r'{\d+}', card.properties["mana_cost"])
         if len(generic) != 0:
             generic_cmc = int(re.sub(r'{|}', '', generic[0]))
         else:
             generic_cmc = 0
-        cmc_breakdown[cmc][generic_cmc] += 1
+        cmc_breakdown[cmc][generic_cmc].append( (card.properties["mana_cost"], card.properties["name"]) )
 
+    total_color_burden = 0
     for i in sorted(cmc_breakdown.keys()):
         print("CMC %d" % i)
+        local_color_burden = 0
+        CMC_card_length = 0
         for j in sorted(cmc_breakdown[i].keys(), reverse=True):
-            print(" generic '%d' has %d" % (j, cmc_breakdown[i][j]))
+            color_burden = 100*(i-j)/i if i != 0 else 0
+            CMC_card_length += len(cmc_breakdown[i][j])
+            local_color_burden += color_burden * len(cmc_breakdown[i][j])
+            total_color_burden += local_color_burden
+            print(" '{}' color burden({:2.1f}% of total CMC): {} card(s)".format(i-j, color_burden, len(cmc_breakdown[i][j])))
+            for k in sorted(cmc_breakdown[i][j]):
+                print("   %s: %s" % (symbolprettify(k[0]), k[1]))
+        print("Average color burden in CMC {} is: {:2.2f}%\n".format(i, local_color_burden/CMC_card_length))
+
+    print("Total average color burden is: {:2.2f}%\n".format(total_color_burden/len(cardlist)))
 
 def color_requirement_analysis(cardlist):
     symbols_breakdown = defaultdict(lambda:0)

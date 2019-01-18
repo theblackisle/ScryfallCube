@@ -327,14 +327,13 @@ def symbolprettify(string, mode=None):
         string = re.sub(r'Z', r'{U/R}', string)
         string = re.sub(r'S', r'{R/W}', string)
 
-        string = re.sub(r'([0-9]+)([^/])', r'{\1}\2', string)
-        string = re.sub(r'^([A-Z])([^}])', r'{\1}\2', string)
-        string = re.sub(r'([^{])([A-Z])$', r'\1{\2}', string)
-        oldstring = ""  # dump value
-        count = 0
-        while(oldstring != string):  # lookahead assertion 지원X
-            oldstring = string
-            string = re.sub(r'([^{])([A-Z])([^}])', r'\1{\2}\3', string)
+        string = re.sub(r'^([A-Z]|[0-9]+)$', r'{\1}', string)  # 단일위치
+        string = re.sub(r'^([A-Z]|[0-9]+)', r'{\1}', string)  # 선위치
+        string = re.sub(r'([A-Z]|[0-9]+)$', r'{\1}', string)  # 후위치
+        new_string = re.sub(r'([^{])([A-Z]|[0-9]+)([^}])', r'\1{\2}\3', string)  # 중위치
+        while new_string != string:  # lookahead assertion 지원X: loop으로 구현
+            string = new_string
+            new_string = re.sub(r'([^{])([A-Z]|[0-9]+)([^}])', r'\1{\2}\3', string)
 
     return string
 
