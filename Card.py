@@ -1,34 +1,15 @@
 import ScryfallIO
 from Converter import typesort, colorsort, subtypeSort, tolerInt
 
+from collections import defaultdict
+
 class Card():
     def __init__(self, data=None):
         if data is None:  # empty initialization
-            self.properties = {}
-            self.properties["name"] = ""
-            self.properties["mana_cost"] = ""
-            self.properties["cmc"] = int(-1)
-            self.properties["color"] = ()
-            self.properties["color_identity"] = ()
-            self.properties["type_line"] = ""
-            self.properties["supertype"] = ()
-            self.properties["subtype"] = ()
-            self.properties["set"] = ""
-            self.properties["rarity"] = ""
-            self.properties["power"] = ""
-            self.properties["toughness"] = ""
-            self.properties["loyalty"] = ""
-            self.properties["oracle"] = ""
-            self.properties["layout"] = ""
-            self.properties["hate"] = []
-            self.properties["buff"] = []
-            self.properties["nerf"] = []
-            self.properties["tags"] = []
-            self.properties["usd"] = float(-1)
-            self.properties["crop_image"] = ""
+            self.properties = defaultdict(lambda: defaultdict(lambda: None))
 
         if type(data) == list:  # data is "reverse-prettified" Google spreadsheet row
-            self.properties = {}
+            self.properties = defaultdict(lambda: defaultdict(lambda: None))
             self.properties["name"] = data[0]
             self.properties["mana_cost"] = data[1]
             self.properties["cmc"] = data[2]
@@ -52,7 +33,7 @@ class Card():
             self.properties["crop_image"] = data[20]
 
         if type(data) == dict:  # data is JSON from Scryfall
-            self.properties = {}
+            self.properties = defaultdict(lambda: defaultdict(lambda: None))
             self.properties["hate"] = []
             self.properties["buff"] = []
             self.properties["nerf"] = []
