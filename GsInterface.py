@@ -415,7 +415,7 @@ class GsSheet(gspread.models.Worksheet):
 
         if re.search(r'#', query):  # exact search
             query = query.replace("#", "")
-            query = r'(^|[\W]|[\s]+)' + query + r'([\s]+|[\W]|$)'
+            query = r'(^|[\W]|[\s]+)' + query + r'([\s]+|[\W]|$)'  # r'(\b|\s+)' + query + r'(\s+|\b)' test 해보기
 
         found_row = set([index for index, value in enumerate(col_values, 1) if re.search(query, value,
                                                                                       flags=is_case_sensitive)])

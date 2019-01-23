@@ -77,8 +77,7 @@ def getCard(searchquery, sets="f", mode="exact"):
                     print("{:25} is found from Scryfall".format(single_json['name']))
                     return single_json
 
-            print('''"%s" has not unique search result: %d many cards are found'''
-                  % (searchquery, json_structure["total_cards"]))
+            print('''"%s" has not unique search result: %d many cards are found''' % (searchquery, json_structure["total_cards"]))
             return None
         else:  # (json_structure["total_cards"]==0)
             print("no such card: %s" % searchquery)

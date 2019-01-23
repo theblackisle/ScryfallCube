@@ -275,6 +275,25 @@ def typesort(string):  # case sensitive!
         return "z" + string
 
 
+def mana_to_cmc(mana):
+    """
+    :param mana: uglyfied mana cost from Scryfall JSON
+    :return: cmc(int) is cmc calculated for param
+    """
+    if mana is "":
+        return 0
+
+    generic = re.findall(r'{\d+}', mana)
+    if len(generic) != 0:
+        generic_cmc = int(re.sub(r'{|}', '', generic[0]))
+    else:
+        generic_cmc = 0
+
+    colored_cmc = len(re.findall(r'{W/U}|{U/B}|{B/R}|{R/G}|{G/W}|{W/B}|{B/G}|{G/U}|{U/R}|{R/W}|{2/W}|{2/U}|{2/B}|{2/R}|{2/G}|{W/P}|{U/P}|{B/P}|{R/P}|{G/P}|{W}|{U}|{B}|{R}|{G}|{C}', mana))
+
+    return generic_cmc + colored_cmc
+
+
 def symbolprettify(string, mode=None):
     if mode != "reverse":
         string = re.sub(r'{W/U}', r'{A}', string)

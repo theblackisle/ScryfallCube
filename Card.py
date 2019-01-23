@@ -1,15 +1,17 @@
 import ScryfallIO
-from Converter import typesort, colorsort, subtypeSort, tolerInt
+from Converter import *
 
 from collections import defaultdict
 
 class Card():
     def __init__(self, data=None):
         if data is None:  # empty initialization
-            self.properties = defaultdict(lambda: defaultdict(lambda: None))
+            self.properties = defaultdict(lambda: defaultdict(lambda: ""))
+            self.actual = defaultdict(lambda: defaultdict(lambda: ""))  # layered data from a cube maker
 
         if type(data) == list:  # data is "reverse-prettified" Google spreadsheet row
-            self.properties = defaultdict(lambda: defaultdict(lambda: None))
+            self.properties = defaultdict(lambda: defaultdict(lambda: ""))
+            self.actual = defaultdict(lambda: defaultdict(lambda: ""))
             self.properties["name"] = data[0]
             self.properties["mana_cost"] = data[1]
             self.properties["cmc"] = data[2]
@@ -33,96 +35,190 @@ class Card():
             self.properties["crop_image"] = data[20]
 
         if type(data) == dict:  # data is JSON from Scryfall
-            self.properties = defaultdict(lambda: defaultdict(lambda: None))
-            self.properties["hate"] = []
-            self.properties["buff"] = []
-            self.properties["nerf"] = []
-            self.properties["tags"] = []  # fixing, infect, selfmill, big, small, ... ...
-            self.properties["cmc"] = int(data['cmc'])
-            self.properties["color_identity"] = tuple(data['color_identity'])
-            self.properties["set"] = data['set'].upper()
-            self.properties["rarity"] = data['rarity']
-            self.properties["usd"] = float(data.get('usd', 0))
+            '''
+            ☆properties constant to layout
+            color_identity
+            set
+            rarity
+            usd
+            layout
+            
+            ☆properties only in 'face0(=nominal)' dict
+            color_identity
+            set
+            rarity
+            usd
+            layout
+            supertype
+            subtype
+            
+            ☆properties only in actual 'dict'
+            buff
+            nerf
+            tags
+            '''
+            self.properties = defaultdict(lambda: defaultdict(lambda: ""))
+            self.actual = defaultdict(lambda: defaultdict(lambda: ""))
+            self.actual["face0"]["buff"] = []
+            self.actual["face0"]["nerf"] = []  # hate for color, tribe, and else ...
+            self.actual["face0"]["tags"] = []  # fixing, infect, selfmill, big, small, ... ...
+            self.properties["face0"]["color_identity"] = tuple(data['color_identity'])  # split 카드의 활성화비용 identity..이런건 무시하기로.
+            self.properties["face0"]["set"] = data['set'].upper()
+            self.properties["face0"]["rarity"] = data['rarity']
+            self.properties["face0"]["usd"] = float(data.get('usd', 0))
+            self.properties["face0"]["layout"] = data['layout'].title()
 
-            self.properties["layout"] = data['layout'].title()
-            if self.properties["layout"] == 'Transform':
-                self.properties["color"] = data['card_faces'][0]['colors']
-                self.properties["mana_cost"] = data['card_faces'][0]['mana_cost']
-                self.properties["name"] = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
-                self.properties["crop_image"] = '{0}\n{1}'.format(data['card_faces'][0]['image_uris']['border_crop'], data['card_faces'][1]['image_uris']['border_crop'])  # 다름
-                self.properties["type_line"] = '{0} // {1}'.format(data['card_faces'][0]['type_line'], data['card_faces'][1]['type_line'])
-                front_types = data['card_faces'][0]['type_line'].split("—")
-                front_supertypes = front_types[0].split()
-                front_subtypes = front_types[1].split() if len(front_types) > 1 else []
-                back_types = data['card_faces'][1]['type_line'].split("—")
-                back_supertypes = back_types[0].split()
-                back_subtypes = back_types[1].split() if len(back_types) > 1 else []
-                self.properties["supertype"] = list(set(front_supertypes) | set(back_supertypes))
-                self.properties["subtype"] = list(set(front_subtypes) | set(back_subtypes))
-                self.properties["power"] = tolerInt(data['card_faces'][0].get('power', ""))
-                self.properties["toughness"] = tolerInt(data['card_faces'][0].get('toughness', ""))
-                self.properties["loyalty"] = tolerInt(data['card_faces'][0].get('loyalty', data['card_faces'][1].get('loyalty', "")))
-                self.properties["oracle"] = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
+            if self.properties["face0"]["layout"] == 'Transform':
+                self.properties["face1"]["color"] = data['card_faces'][0]['colors']
+                self.properties["face2"]["color"] = data['card_faces'][1]['colors']
+                self.properties["face0"]["color"] = self.properties["face1"]["color"]
 
-            elif self.properties["layout"] == 'Split':
-                self.properties["color"] = self.properties["color_identity"]  # 다름
-                self.properties["mana_cost"] = '{0} // {1}'.format(data['card_faces'][0]['mana_cost'], data['card_faces'][1]['mana_cost'])  # 다름
-                self.properties["name"] = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
-                self.properties["crop_image"] = data['image_uris']['border_crop']  # 다름
-                self.properties["type_line"] = '{0} // {1}'.format(data['card_faces'][0]['type_line'], data['card_faces'][1]['type_line'])
-                front_types = data['card_faces'][0]['type_line'].split("—")
-                front_supertypes = front_types[0].split()
-                front_subtypes = front_types[1].split() if len(front_types) > 1 else []
-                back_types = data['card_faces'][1]['type_line'].split("—")
-                back_supertypes = back_types[0].split()
-                back_subtypes = back_types[1].split() if len(back_types) > 1 else []
-                self.properties["supertype"] = list(set(front_supertypes) | set(back_supertypes))
-                self.properties["subtype"] = list(set(front_subtypes) | set(back_subtypes))
-                self.properties["power"] = ""
-                self.properties["toughness"] = ""
-                self.properties["loyalty"] = ""  # No split creature nor planeswalker
-                self.properties["oracle"] = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
+                self.properties["face1"]["mana_cost"] = data['card_faces'][0]['mana_cost']
+                # self.properties["mana_cost"]["face2"] = ""
+                # transform 카드 뒷면은 mana_cost가 없음.
+                self.properties["face0"]["mana_cost"] = self.properties["face1"]["mana_cost"]
 
-            elif self.properties["layout"] == 'Flip':
-                self.properties["color"] = data['colors']  # 다름
-                self.properties["mana_cost"] = data['card_faces'][0]['mana_cost']
-                self.properties["name"] = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
-                self.properties["crop_image"] = data['image_uris']['border_crop']  # 다름
-                self.properties["type_line"] = '{0} // {1}'.format(data['card_faces'][0]['type_line'], data['card_faces'][1]['type_line'])
-                front_types = data['card_faces'][0]['type_line'].split("—")
-                front_supertypes = front_types[0].split()
-                front_subtypes = front_types[1].split() if len(front_types) > 1 else []
-                back_types = data['card_faces'][1]['type_line'].split("—")
-                back_supertypes = back_types[0].split()
-                back_subtypes = back_types[1].split() if len(back_types) > 1 else []
-                self.properties["supertype"] = list(set(front_supertypes) | set(back_supertypes))
-                self.properties["subtype"] = list(set(front_subtypes) | set(back_subtypes))
-                self.properties["power"] = tolerInt(data['card_faces'][0].get('power', ""))
-                self.properties["toughness"] = tolerInt(data['card_faces'][0].get('toughness', ""))
-                self.properties["loyalty"] = ""  # no flip planeswalker
-                self.properties["oracle"] = '{0} \n// {1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
+                self.properties["face0"]["cmc"] = int(data['cmc'])
+                self.properties["face1"]["cmc"] = self.properties["face0"]["cmc"]
+                self.properties["face2"]["cmc"] = self.properties["face0"]["cmc"]
+                # transform 카드는 앞면 뒷면의 cmc가 같음.
+
+                self.properties["face1"]["name"] = data['card_faces'][0]['name']
+                self.properties["face2"]["name"] = data['card_faces'][1]['name']
+                self.properties["face0"]["name"] = '{0} // {1}'.format(self.properties["face1"]["name"], self.properties["face2"]["name"])
+
+                self.properties["face1"]["type_line"] = data['card_faces'][0]['type_line']
+                self.properties["face2"]["type_line"] = data['card_faces'][1]['type_line']
+                self.properties["face0"]["type_line"] = '{0}\n{1}'.format(self.properties["face1"]["type_line"], self.properties["face2"]["type_line"])
+
+                face1_types = data['card_faces'][0]['type_line'].split("—")
+                face1_supertypes = face1_types[0].split()
+                face1_subtypes = face1_types[1].split() if len(face1_types) > 1 else []
+
+                face2_types = data['card_faces'][1]['type_line'].split("—")
+                face2_supertypes = face2_types[0].split()
+                face2_subtypes = face2_types[1].split() if len(face2_types) > 1 else []
+
+                self.properties["face0"]["supertype"] = list(set(face1_supertypes) | set(face2_supertypes))
+                self.properties["face0"]["subtype"] = list(set(face1_subtypes) | set(face2_subtypes))
+
+                self.properties["face1"]["power"] = tolerInt(data['card_faces'][0].get('power', ""))
+                self.properties["face2"]["power"] = tolerInt(data['card_faces'][1].get('power', ""))
+                self.properties["face0"]["power"] = '{0}\n{1}'.format(self.properties["face1"]["power"], self.properties["face2"]["power"])
+
+                self.properties["face1"]["toughness"] = tolerInt(data['card_faces'][0].get('toughness', ""))
+                self.properties["face2"]["toughness"] = tolerInt(data['card_faces'][1].get('toughness', ""))
+                self.properties["face0"]["toughness"] = '{0}\n{1}'.format(self.properties["face1"]["toughness"], self.properties["face2"]["toughness"])
+
+                self.properties["face1"]["loyalty"] = tolerInt(data['card_faces'][0].get('loyalty', ""))
+                self.properties["face2"]["loyalty"] = tolerInt(data['card_faces'][1].get('loyalty', ""))
+                self.properties["face0"]["loyalty"] = '{0}\n{1}'.format(self.properties["face1"]["loyalty"], self.properties["face2"]["loyalty"])
+
+                self.properties["face1"]["oracle"] = data['card_faces'][0]['oracle_text']
+                self.properties["face2"]["oracle"] = data['card_faces'][1]['oracle_text']
+                self.properties["face0"]["oracle"] = '{0}\n//\n{1}'.format(self.properties["face1"]["oracle"], self.properties["face2"]["oracle"])
+
+                self.properties["face1"]["crop_image"] = data['card_faces'][0]['crop_image']
+                self.properties["face2"]["crop_image"] = data['card_faces'][1]['crop_image']
+                self.properties["face0"]["crop_image"] = '{0}\n{1}'.format(self.properties["face1"]["crop_image"], self.properties["face2"]["crop_image"])  # 다름
+
+            elif self.properties["face0"]["layout"] == 'Split':
+                self.properties["face1"]["color"] = data['card_faces'][0]['colors']
+                self.properties["face2"]["color"] = data['card_faces'][1]['colors']
+                self.properties["face0"]["color"] = tuple(set(data['card_faces'][0]['colors']) | set(data['card_faces'][1]['colors']))
+
+                self.properties["face1"]["mana_cost"] = data['card_faces'][0]['mana_cost']
+                self.properties["face2"]["mana_cost"] = data['card_faces'][1]['mana_cost']
+                self.properties["face0"]["mana_cost"] = '{0}\n{1}'.format(self.properties["face1"]["mana_cost"], self.properties["face2"]["mana_cost"])
+
+                self.properties["face1"]["cmc"] = mana_to_cmc(self.properties["face1"]["mana_cost"])
+                self.properties["face2"]["cmc"] = mana_to_cmc(self.properties["face2"]["mana_cost"])
+                self.properties["face0"]["cmc"] = int(data['cmc'])
+
+                self.properties["face1"]["name"] = data['card_faces'][0]['name']
+                self.properties["face2"]["name"] = data['card_faces'][1]['name']
+                self.properties["face0"]["name"] = '{0} // {1}'.format(self.properties["face1"]["name"], self.properties["face2"]["name"])
+
+                self.properties["face1"]["type_line"] = data['card_faces'][0]['type_line']
+                self.properties["face2"]["type_line"] = data['card_faces'][1]['type_line']
+                self.properties["face0"]["type_line"] = '{0}\n{1}'.format(self.properties["face1"]["type_line"], self.properties["face2"]["type_line"])
+
+                face1_types = data['card_faces'][0]['type_line'].split("—")
+                face1_supertypes = face1_types[0].split()
+                face1_subtypes = face1_types[1].split() if len(face1_types) > 1 else []
+
+                face2_types = data['card_faces'][1]['type_line'].split("—")
+                face2_supertypes = face2_types[0].split()
+                face2_subtypes = face2_types[1].split() if len(face2_types) > 1 else []
+
+                self.properties["face0"]["supertype"] = list(set(face1_supertypes) | set(face2_supertypes))
+                self.properties["face0"]["subtype"] = list(set(face1_subtypes) | set(face2_subtypes))
+
+                # self.properties["face0"]["power"] = ""
+                # self.properties["face0"]["toughness"] = ""
+                # self.properties["face0"]["loyalty"] = ""
+                # No split creature nor planeswalker till now
+
+                self.properties["face1"]["oracle"] = data['card_faces'][0]['oracle_text']
+                self.properties["face2"]["oracle"] = data['card_faces'][1]['oracle_text']
+                self.properties["face0"]["oracle"] = '{0}\n//\n{1}'.format(self.properties["face1"]["oracle"], self.properties["face2"]["oracle"])
+
+                self.properties["crop_image"] = data['image_uris']['border_crop']
+                # split/flip card는 앞면밖에 없음.
+
+            elif self.properties["face0"]["layout"] == 'Flip':
+                self.properties["face0"]["color"] = data['colors']
+                self.properties["face0"]["mana_cost"] = data['card_faces'][0]['mana_cost']
+
+                self.properties["face0"]["name"] = '{0} // {1}'.format(data['card_faces'][0]['name'], data['card_faces'][1]['name'])
+                self.properties["face0"]["type_line"] = '{0}\n{1}'.format(data['card_faces'][0]['type_line'], data['card_faces'][1]['type_line'])
+
+                face1_types = data['card_faces'][0]['type_line'].split("—")
+                face1_supertypes = face1_types[0].split()
+                face1_subtypes = face1_types[1].split() if len(face1_types) > 1 else []
+
+                face2_types = data['card_faces'][1]['type_line'].split("—")
+                face2_supertypes = face2_types[0].split()
+                face2_subtypes = face2_types[1].split() if len(face2_types) > 1 else []
+
+                self.properties["face0"]["supertype"] = list(set(face1_supertypes) | set(face2_supertypes))
+                self.properties["face0"]["subtype"] = list(set(face1_subtypes) | set(face2_subtypes))
+
+                self.properties["face1"]["power"] = tolerInt(data['card_faces'][0].get('power', ""))
+                self.properties["face2"]["power"] = tolerInt(data['card_faces'][1].get('power', ""))
+                self.properties["face0"]["power"] = '{0}\n{1}'.format(self.properties["face1"]["power"], self.properties["face2"]["power"])
+
+                self.properties["face1"]["toughness"] = tolerInt(data['card_faces'][0].get('toughness', ""))
+                self.properties["face2"]["toughness"] = tolerInt(data['card_faces'][1].get('toughness', ""))
+                self.properties["face0"]["toughness"] = '{0}\n{1}'.format(self.properties["face1"]["toughness"], self.properties["face2"]["toughness"])
+
+                # self.properties["face0"]["loyalty"] = ""  no flip planeswalker
+
+                self.properties["oracle"] = '{0}\n//\n{1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
+
+                self.properties["crop_image"] = data['image_uris']['border_crop']
 
             else:  # normal, meld, saga, token, double_faced_token, emblem, planar, scheme, vanguard, augment, host
-                self.properties["name"] = data['name']
-                self.properties["mana_cost"] = data['mana_cost']
-                self.properties["color"] = data['colors']
-                self.properties["crop_image"] = data['image_uris']['border_crop']
-                self.properties["type_line"] = data['type_line']
+                self.properties["face0"]["name"] = data['name']
+                self.properties["face0"]["mana_cost"] = data['mana_cost']
+                self.properties["face0"]["color"] = data['colors']
+                self.properties["face0"]["crop_image"] = data['image_uris']['border_crop']
+                self.properties["face0"]["type_line"] = data['type_line']
                 types = data['type_line'].split("—")
-                self.properties["supertype"] = types[0].split()
-                self.properties["subtype"] = types[1].split() if len(types) > 1 else []
-                self.properties["power"] = tolerInt(data.get('power', ""))
-                self.properties["toughness"] = tolerInt(data.get('toughness', ""))
-                self.properties["loyalty"] = tolerInt(data.get('loyalty', ""))
-                self.properties["oracle"] = data['oracle_text']
+                self.properties["face0"]["supertype"] = types[0].split()
+                self.properties["face0"]["subtype"] = types[1].split() if len(types) > 1 else []
+                self.properties["face0"]["power"] = tolerInt(data.get('power', ""))
+                self.properties["face0"]["toughness"] = tolerInt(data.get('toughness', ""))
+                self.properties["face0"]["loyalty"] = tolerInt(data.get('loyalty', ""))
+                self.properties["face0"]["oracle"] = data['oracle_text']
 
-            self.properties["color"] = colorsort(self.properties["color"])
-            self.properties["color_identity"] = colorsort(self.properties["color_identity"])
-            self.properties["supertype"] = tuple(sorted(self.properties["supertype"], key=typesort))
-            self.properties["subtype"] = subtypeSort(self.properties["subtype"])  # 모두 tuple
+            self.properties["face0"]["color"] = colorsort(self.properties["color"])
+            self.properties["face0"]["color_identity"] = colorsort(self.properties["color_identity"])
+            self.properties["face0"]["supertype"] = tuple(sorted(self.properties["supertype"], key=typesort))
+            self.properties["face0"]["subtype"] = subtypeSort(self.properties["subtype"])  # 모두 tuple
 
     def __str__(self):
-        return "Scryfall Card object for: {0}, {1}".format(self.properties["name"], self.properties["set"].upper())
+        return "Scryfall Card object for: {0}, {1}".format(self.properties["face0"]["name"], self.properties["face0"]["set"].upper())
 
     def __eq__(self, other):
         if self.__dict__ == other.__dict__:
@@ -131,67 +227,49 @@ class Card():
             return False
 
     def __hash__(self):
-        return hash((self.properties["name"], self.properties["set"]))
+        return hash((self.properties["face0"]["name"], self.properties["face0"]["set"]))
 
     def setter(self, data=None):
-        pass
+        raise NotImplementedError
 
     def changer(self, **kwargs):
-        if 'mana_cost' in kwargs:  # kwargs의 key는 str
-            self.properties["mana_cost"] = kwargs['mana_cost']
-        if 'cmc' in kwargs:
-            self.properties["cmc"] = kwargs['cmc']
-        if 'colors' in kwargs:
-            self.properties["color"] = kwargs['colors']
-        if 'color_identity' in kwargs:
-            self.properties["color_identity"] = kwargs['color_identity']
-        if 'type' in kwargs:
-            self.properties["type_line"] = kwargs['type']
-        if 'supertype' in kwargs:
-            self.properties["supertype"].append(kwargs['supertype'])
-        if 'subtype' in kwargs:
-            self.properties["supertype"].append(kwargs['subtype'])
-        if 'set' in kwargs:
-            self.properties["set"] = kwargs['set'].upper()
-            new_card = ScryfallIO.getCard(self.properties["name"], self.properties["set"])
-            self.properties["crop_image"] = new_card['image_uris']['border_crop']
-            self.properties["rarity"] = new_card['rarity']
-        if 'hate' in kwargs:
-            self.properties["hate"].append(kwargs['hate'])
-        if 'buff' in kwargs:
-            self.properties["hate"].append(kwargs['buff'])
-        if 'nerf' in kwargs:
-            self.properties["hate"].append(kwargs['nerf'])
-        if 'tags' in kwargs:
-            self.properties["hate"].append(kwargs['tags'])
-        else:
-            print("no such elements")
+        raise NotImplementedError
 
     def remover(self, **kwargs):
-        if 'supertype' in kwargs:
-            self.properties["supertype"].remove(kwargs['supertype'])
-        if 'subtype' in kwargs:
-            self.properties["supertype"].remove(kwargs['subtype'])
-        if 'hate' in kwargs:
-            self.properties["hate"].remove(kwargs['hate'])
-        if 'buff' in kwargs:
-            self.properties["hate"].remove(kwargs['buff'])
-        if 'nerf' in kwargs:
-            self.properties["hate"].remove(kwargs['nerf'])
-        if 'tags' in kwargs:
-            self.properties["hate"].remove(kwargs['tags'])
-        else:
-            print("no such elements")
+        raise NotImplementedError
 
-    def showCard(self):
-        print("Name: {0}\nMana cost: {1}\nCMC: {2}\nColor: {3}\nColor_identity: {4}\nType: {5}\nSet: {6}\nRarity: {7}\nPower: {8}\nToughness: {9}\nLoyalty: {10}\nPrice: {11}\noracle: {12}".
-              format(self.properties["name"], self.properties["mana_cost"], self.properties["cmc"], self.properties["color"], self.properties["color_identity"], self.properties["type_line"], self.properties["set"], self.properties["rarity"], self.properties["power"], self.properties["toughness"], self.properties["loyalty"], self.properties["usd"], self.properties["oracle"]))
+    def show(self):
+        print("""Name: {0}
+        Mana cost: {1}
+        CMC: {2}
+        Color: {3}
+        Color identity: {4}
+        Type: {5}
+        Set: {6}
+        Rarity: {7}
+        Power: {8}
+        Toughness: {9}
+        Loyalty: {10}
+        Price: {11}
+        Oracle: {12}""".format(self.properties["face0"]["name"],
+                               self.properties["face0"]["mana_cost"],
+                               self.properties["face0"]["cmc"],
+                               self.properties["face0"]["color"],
+                               self.properties["face0"]["color_identity"],
+                               self.properties["face0"]["type_line"],
+                               self.properties["face0"]["set"],
+                               self.properties["face0"]["rarity"],
+                               self.properties["face0"]["power"],
+                               self.properties["face0"]["toughness"],
+                               self.properties["face0"]["loyalty"],
+                               self.properties["face0"]["usd"],
+                               self.properties["face0"]["oracle"]))
 
 while __name__ == '__main__':
     searchquery = input("search for: ")
     if searchquery == "quit":
         break
     card = Card(ScryfallIO.getCard(searchquery))
-    card.showCard()
+    card.show()
 
 

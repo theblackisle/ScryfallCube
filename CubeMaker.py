@@ -254,7 +254,7 @@ if __name__ == '__main__':
                 if result is not None:
                     card = Card(result)
                     print("")
-                    card.showCard()
+                    card.show()
                     print("")
 
                     if input("Export this card to current sheet(Y/N): ")[0].lower() == "y":
