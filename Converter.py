@@ -293,6 +293,45 @@ def mana_to_cmc(mana):
 
     return generic_cmc + colored_cmc
 
+def mana_sum(mana1, mana2):
+    """
+    :param mana1, mana2: uglyfied mana cost from Scryfall JSON
+    :return: sum(str) is mana added
+    """
+    mana = mana1+mana2
+    x = re.findall(r'{X}', mana)
+    x_sum = ""
+    for item in x:
+        x_sum += item
+
+    generic = re.findall(r'{\d+}', mana)
+    generic_sum = 0
+    if len(generic) > 0:
+        for item in generic:
+            generic_sum += int(re.sub(r'{|}', '', item))
+        generic_sum = "{%d}" % (generic_sum)
+    if len(generic) == 0 or (generic_sum == "{0}" and len(x) > 0):
+        generic_sum = ""
+
+    # 아직 hybrid, twobrid, pyrexian mana를 color sort할 필요가 있는 카드(=split)가 mtg 내에 없음. 미구현
+    hybrid = re.findall(r'{W/U}|{U/B}|{B/R}|{R/G}|{G/W}|{W/B}|{B/G}|{G/U}|{U/R}|{R/W}|{2/W}|{2/U}|{2/B}|{2/R}|{2/G}|{W/P}|{U/P}|{B/P}|{R/P}|{G/P}|{C}', mana)
+    hybrid_sum = ""
+    for item in hybrid:
+        hybrid_sum += item
+
+    color = {}
+    color["W"] = re.findall(r'{W}', mana)
+    color["U"] = re.findall(r'{U}', mana)
+    color["B"] = re.findall(r'{B}', mana)
+    color["R"] = re.findall(r'{R}', mana)
+    color["G"] = re.findall(r'{G}', mana)
+    present_color = colorsort([item for item in ('W', 'U', 'B', 'R', 'G') if len(color[item]) > 0])
+
+    color_sum = ""
+    for item in present_color:
+        color_sum += ("{%s}" % item) * len(color[item])
+
+    return x_sum + generic_sum + hybrid_sum + color_sum
 
 def symbolprettify(string, mode=None):
     if mode != "reverse":
