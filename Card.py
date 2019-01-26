@@ -69,7 +69,7 @@ class Card():
             self.properties["nominal"]["layout"] = data['layout'].title()
 
             if self.properties["nominal"]["layout"] == 'Transform':
-                # 무의미한 정보를 최대한 지우고 예외는 기억하는 방향으로...
+                # 무의미한 정보를 최대한 지우고 발생한 예외는 기억하는 방향으로...
                 self.properties["nominal"]["color"] = data['card_faces'][0]['colors']
                 # face1 == nominal
                 self.properties["back"]["color"] = data['card_faces'][1]['colors']
@@ -116,41 +116,41 @@ class Card():
                 self.properties["nominal"]["crop_image"] = [self.properties["front"]["crop_image"], self.properties["back"]["crop_image"]]
 
             elif self.properties["nominal"]["layout"] == 'Split':
-                self.properties["top"]["color"] = data['card_faces'][0]['colors']
+                self.properties["left"]["color"] = data['card_faces'][0]['colors']
                 self.properties["bottom"]["color"] = data['card_faces'][1]['colors']
-                self.properties["nominal"]["color"] = tuple(set(data['card_faces'][0]['colors']) | set(data['card_faces'][1]['colors']))
+                self.properties["nominal"]["color"] = tuple(set(self.properties["left"]["color"]) | set(self.properties["bottom"]["color"]))
 
-                self.properties["top"]["mana_cost"] = data['card_faces'][0]['mana_cost']
+                self.properties["left"]["mana_cost"] = data['card_faces'][0]['mana_cost']
                 self.properties["bottom"]["mana_cost"] = data['card_faces'][1]['mana_cost']
-                self.properties["nominal"]["mana_cost"] = '{0}\n{1}'.format(self.properties["top"]["mana_cost"], self.properties["bottom"]["mana_cost"])
+                self.properties["nominal"]["mana_cost"] = mana_sum(self.properties["left"]["mana_cost"], self.properties["bottom"]["mana_cost"])
 
-                self.properties["top"]["cmc"] = mana_to_cmc(self.properties["top"]["mana_cost"])
+                self.properties["left"]["cmc"] = mana_to_cmc(self.properties["left"]["mana_cost"])
                 self.properties["bottom"]["cmc"] = mana_to_cmc(self.properties["bottom"]["mana_cost"])
                 self.properties["nominal"]["cmc"] = int(data['cmc'])
 
-                self.properties["top"]["name"] = data['card_faces'][0]['name']
+                self.properties["left"]["name"] = data['card_faces'][0]['name']
                 self.properties["bottom"]["name"] = data['card_faces'][1]['name']
                 self.properties["nominal"]["name"] = data['name']
 
                 left_typeline = data['card_faces'][0]['type_line'].split("-")
                 right_typeline = data['card_faces'][1]['type_line'].split("-")
 
-                self.properties["top"]["supertype"] = left_typeline[0]
+                self.properties["left"]["supertype"] = left_typeline[0]
                 self.properties["bottom"]["supertype"] = right_typeline[0]
-                self.properties["nominal"]["supertype"] = [self.properties["top"]["supertype"], self.properties["bottom"]["supertype"]]
+                self.properties["nominal"]["supertype"] = [self.properties["left"]["supertype"], self.properties["bottom"]["supertype"]]
 
-                self.properties["top"]["subtype"] = left_typeline[1] if len(left_typeline) > 1 else ""
+                self.properties["left"]["subtype"] = left_typeline[1] if len(left_typeline) > 1 else ""
                 self.properties["bottom"]["subtype"] = right_typeline[1] if len(right_typeline) > 1 else ""
-                self.properties["nominal"]["subtype"] = [self.properties["top"]["subtype"], self.properties["bottom"]["subtype"]]
+                self.properties["nominal"]["subtype"] = [self.properties["left"]["subtype"], self.properties["bottom"]["subtype"]]
 
                 # self.properties["nominal"]["power"] = ""
                 # self.properties["nominal"]["toughness"] = ""
                 # self.properties["nominal"]["loyalty"] = ""
                 # No split creature nor planeswalker till now
 
-                self.properties["top"]["oracle"] = data['card_faces'][0]['oracle_text']
+                self.properties["left"]["oracle"] = data['card_faces'][0]['oracle_text']
                 self.properties["bottom"]["oracle"] = data['card_faces'][1]['oracle_text']
-                self.properties["nominal"]["oracle"] = '{0}\n//\n{1}'.format(self.properties["top"]["oracle"], self.properties["bottom"]["oracle"])
+                self.properties["nominal"]["oracle"] = [self.properties["left"]["oracle"], self.properties["bottom"]["oracle"]]
 
                 self.properties["nominal"]["crop_image"] = data['image_uris']['border_crop']
                 # split/flip card는 앞면밖에 없음.
@@ -187,7 +187,9 @@ class Card():
 
                 # self.properties["nominal"]["loyalty"] = ""  no flip planeswalker
 
-                self.properties["oracle"] = '{0}\n//\n{1}'.format(data['card_faces'][0]['oracle_text'], data['card_faces'][1]['oracle_text'])
+                self.properties["top"]["oracle"] = data['card_faces'][0]['oracle_text']
+                self.properties["bottom"]["oracle"] = data['card_faces'][1]['oracle_text']
+                self.properties["nominal"]["oracle"] = [self.properties["top"]["oracle"], self.properties["bottom"]["oracle"]]
 
                 self.properties["crop_image"] = data['image_uris']['border_crop']
 
