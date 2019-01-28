@@ -396,61 +396,144 @@ def symbolprettify(string, mode=None):
     return string
 
 
-def prettify(carddict):
+def prettify(card):
     """Card.card to displable gspread row"""
 
-    prettylist = []
-    prettylist.append(carddict["name"])
-    prettylist.append(symbolprettify(carddict["mana_cost"]))
-    prettylist.append(carddict["cmc"])
-    prettylist.append(''.join(carddict["color"]))
-    prettylist.append(''.join(carddict["color_identity"]))
-    prettylist.append(carddict["type_line"])
-    prettylist.append('\n'.join(carddict["supertype"]))
-    prettylist.append('\n'.join(carddict['subtype']))
-    prettylist.append(carddict["set"].upper())
-    prettylist.append(carddict["rarity"].title())
-    prettylist.append(carddict["power"])
-    prettylist.append(carddict["toughness"])
-    prettylist.append(carddict["loyalty"])
-    prettylist.append(carddict["oracle"])
-    prettylist.append(carddict["layout"])
-    prettylist.append('\n'.join(carddict["hate"]))
-    prettylist.append('\n'.join(carddict["buff"]))
-    prettylist.append('\n'.join(carddict["nerf"]))
-    prettylist.append('\n'.join(carddict["tags"]))
-    prettylist.append("{:.2f}".format(carddict["usd"]))
-    prettylist.append(carddict["crop_image"])
-    return prettylist
+    properties = card.properties
+    actual = card.actual
 
+    prettylist = []*19
+    prettylist[14] = '\n'.join(actual["nominal"]["buff"])
+    prettylist[15] = '\n'.join(actual["nominal"]["nerf"])
+    prettylist[16] = '\n'.join(actual["nominal"]["tags"])
+    prettylist[4] = ''.join(properties["nominal"]["color_identity"])
+    prettylist[7] = properties["nominal"]["set"]
+    prettylist[8] = properties["nominal"]["rarity"]
+    prettylist[17] = "{:.2f}".format(properties["nominal"]["usd"])
+    prettylist[13] = properties["nominal"]["layout"]
+
+    if properties["nominal"]["layout"] == 'Transform':
+        prettylist[0] = '{}\n// {}'.format(properties["front"]["name"], properties["back"]["name"])
+        # nominal name은 전달X; 재구성해서 사용
+        prettylist[1] = '{}{}'.format(symbolprettify(properties["nominal"]["mana_cost"]), symbolprettify(actual["nominal"]["mana_cost"]))
+        prettylist[2] = '{}{}'.format(properties["nominal"]["cmc"], actual["nominal"]["cmc"])
+        prettylist[3] = '{}\n{}'.format(''.join(properties["front"]["color"]),
+                                        ''.join(properties["back"]["color"]))
+        prettylist[5] = '{}{}\n{}{}'.format(' '.join(properties["front"]["supertype"]),
+                                            '+'+' '.join(actual["front"]["supertype"]) if actual["front"]["supertype"] != "" else "",
+                                            ' '.join(properties["back"]["supertype"]),
+                                            '+'+' '.join(actual["back"]["supertype"]) if actual["back"]["supertype"] != "" else "")
+        prettylist[6] = '{}{}\n{}{}'.format(' '.join(properties["front"]["subtype"]),
+                                            '+'+' '.join(actual["front"]["subtype"]) if actual["front"]["subtype"] != "" else "",
+                                            ' '.join(properties["back"]["subtype"]),
+                                            '+'+' '.join(actual["back"]["subtype"]) if actual["back"]["subtype"] != "" else "")
+        prettylist[9] = '{}{}\n{}{}'.format(properties["front"]["power"], actual["front"]["power"],
+                                            properties["back"]["power"], actual["back"]["power"])
+        prettylist[10] = '{}{}\n{}{}'.format(properties["front"]["toughness"], actual["front"]["toughness"],
+                                             properties["back"]["toughness"], actual["back"]["toughness"])
+        prettylist[11] = '{}{}\n{}{}'.format(properties["front"]["loyalty"], actual["front"]["loyalty"],
+                                             properties["back"]["loyalty"], actual["back"]["loyalty"])
+        prettylist[12] = '{}\n// {}'.format(properties["front"]["oracle"],
+                                            properties["back"]["oracle"])
+        prettylist[18] = '{}\n{}'.format(properties["front"]["crop_image"],
+                                         properties["back"]["crop_image"])
+
+    if properties["nominal"]["layout"] == 'Split':
+        prettylist[0] = '{}\n// {}'.format(properties["front"]["name"], properties["back"]["name"])
+        # nominal name은 전달X; 재구성해서 사용
+        prettylist[1] = '{}{}\n{}{}\n{}{}'.format(symbolprettify(properties["nominal"]["mana_cost"]), symbolprettify(actual["nominal"]["mana_cost"]),
+                                                  symbolprettify(properties["left"]["mana_cost"]), symbolprettify(actual["left"]["mana_cost"]),
+                                                  symbolprettify(properties["right"]["mana_cost"]), symbolprettify(actual["right"]["mana_cost"]))
+        prettylist[2] = '{}{}\n{}{}\n{}{}'.format(properties["nominal"]["cmc"], actual["nominal"]["cmc"],
+                                                  properties["left"]["cmc"], actual["left"]["cmc"],
+                                                  properties["right"]["cmc"], actual["right"]["cmc"])
+        prettylist[3] = '{}\n{}\n{}'.format(''.join(properties["nominal"]["color"]),
+                                            ''.join(properties["left"]["color"]),
+                                            ''.join(properties["right"]["color"]))
+        prettylist[5] = '{}{}\n{}{}'.format(' '.join(properties["left"]["supertype"]),
+                                            '+'+' '.join(actual["left"]["supertype"]) if actual["left"]["supertype"] != "" else "",
+                                            ' '.join(properties["right"]["supertype"]),
+                                            '+'+' '.join(actual["right"]["supertype"]) if actual["right"]["supertype"] != "" else "")
+        prettylist[6] = '{}{}\n{}{}'.format(' '.join(properties["left"]["subtype"]),
+                                            '+'+' '.join(actual["left"]["subtype"]) if actual["left"]["subtype"] != "" else "",
+                                            ' '.join(properties["right"]["subtype"]),
+                                            '+'+' '.join(actual["right"]["subtype"]) if actual["right"]["subtype"] != "" else "")
+        # Split card의 nominal supertype/subtype은 전달x; 재구성해서 사용
+
+        prettylist[9] = ""  # power
+        prettylist[10] = ""  # toughness
+        prettylist[11] = ""  # loyalty
+        prettylist[12] = '{}\n// {}'.format(properties["front"]["oracle"],
+                                            properties["back"]["oracle"])
+        prettylist[18] = properties["nominal"]["crop_image"]
+
+    if properties["nominal"]["layout"] == 'Flip':
+        prettylist[0] = '{}\n// {}'.format(properties["top"]["name"], properties["bottom"]["name"])
+        # nominal name은 전달X; 재구성해서 사용
+        prettylist[1] = symbolprettify(properties["nominal"]["mana_cost"])
+        prettylist[2] = properties["nominal"]["cmc"]
+        prettylist[3] = ''.join(properties["nominal"]["color"])
+        prettylist[5] = '{}{}\n{}{}'.format(' '.join(properties["top"]["supertype"]),
+                                            '+'+' '.join(actual["top"]["supertype"]) if actual["top"]["supertype"] != "" else "",
+                                            ' '.join(properties["bottom"]["supertype"]),
+                                            '+'+' '.join(actual["bottom"]["supertype"]) if actual["bottom"]["supertype"] != "" else "",)
+        prettylist[6] = '{}{}\n{}{}'.format(' '.join(properties["top"]["subtype"]),
+                                            '+'+' '.join(actual["top"]["subtype"]) if actual["top"]["subtype"] != "" else "",
+                                            ' '.join(properties["bottom"]["subtype"]),
+                                            '+'+' '.join(actual["bottom"]["subtype"]) if actual["top"]["subtype"] != "" else "",)
+        prettylist[9] = '{}{}\n{}{}'.format(properties["top"]["power"], actual["top"]["power"],
+                                            properties["bottom"]["power"], actual["bottom"]["power"])
+        prettylist[10] = '{}{}\n{}{}'.format(properties["top"]["toughness"], actual["top"]["toughness"],
+                                             properties["bottom"]["toughness"], actual["bottom"]["toughness"])
+        prettylist[11] = ''
+        prettylist[12] = '{}\n// {}'.format(properties["top"]["oracle"],
+                                            properties["bottom"]["oracle"])
+        prettylist[18] = properties["nominal"]["crop_image"]
+
+    else:
+        prettylist[0] = properties["nominal"]["name"]
+        prettylist[1] = '{}{}'.format(symbolprettify(properties["nominal"]["mana_cost"]), symbolprettify(actual["nominal"]["mana_cost"]))
+        prettylist[2] = '{}{}'.format(properties["nominal"]["cmc"], actual["nominal"]["cmc"])
+        prettylist[3] = ''.join(properties["nominal"]["color"])
+        prettylist[5] = '{}{}'.format(' '.join(properties["nominal"]["supertype"]),
+                                      '+'+' '.join(actual["nominal"]["supertype"]) if actual["nominal"]["supertype"] != "" else "")
+        prettylist[6] = '{}{}'.format(' '.join(properties["nominal"]['subtype']),
+                                      '+'+' '.join(actual["nominal"]["subtype"]) if actual["nominal"]["subtype"] != "" else "")
+        prettylist[9] = '{}{}'.format(properties["nominal"]["power"], actual["nominal"]["power"])
+        prettylist[10] = '{}{}'.format(properties["nominal"]["toughness"], actual["nominal"]["toughness"])
+        prettylist[11] = '{}{}'.format(properties["nominal"]["loyalty"], actual["nominal"]["loyalty"])
+        prettylist[12] = properties["nominal"]["oracle"]
+        prettylist[18] = properties["nominal"]["crop_image"]
+
+    return prettylist
 
 def uglify(cardlist):
     """gspread row to internal Card.Card eatable data"""
 
-    uglylist = []
-    uglylist.append(cardlist[0])  # name
-    uglylist.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
-    uglylist.append(int(cardlist[2]))  # CMC(=int)
-    uglylist.append(tuple(cardlist[3]) if cardlist[3] != "Colorless" else ())  # color(=tuple)
-    uglylist.append(tuple(cardlist[4]) if cardlist[4] != "Colorless" else ())  # color_identity(=tuple)
-    uglylist.append(cardlist[5])  # type_line
-    uglylist.append(tuple(cardlist[6].split("\n")))  # supertype(=tuple)
-    uglylist.append(tuple(cardlist[7].split("\n")))  # subtype(=tuple)
-    uglylist.append(cardlist[8].lower())  # set
-    uglylist.append(cardlist[9].lower())  # rarity
-    uglylist.append(tolerInt(cardlist[10]))  # power
-    uglylist.append(tolerInt(cardlist[11]))  # toughness
-    uglylist.append(tolerInt(cardlist[12]))  # loyalty
-    uglylist.append(cardlist[13])  # oracle
-    uglylist.append(cardlist[14])  # layout
-    uglylist.append(cardlist[15].split("\n"))  # hate(=list)
-    uglylist.append(cardlist[16].split("\n"))  # buff(=list)
-    uglylist.append(cardlist[17].split("\n"))  # nerf(=list)
-    uglylist.append(cardlist[18].split("\n"))  # tags(=list)
-    uglylist.append(float(cardlist[19]))  # usd(=float)
-    uglylist.append(cardlist[20])  # crop_image
+    uglydict = {}
+    uglydict.append(cardlist[0])  # name
+    uglydict.append(symbolprettify(cardlist[1], "reverse"))  # mana_cost
+    uglydict.append(int(cardlist[2]))  # CMC(=int)
+    uglydict.append(tuple(cardlist[3]) if cardlist[3] != "Colorless" else ())  # color(=tuple)
+    uglydict.append(tuple(cardlist[4]) if cardlist[4] != "Colorless" else ())  # color_identity(=tuple)
+    uglydict.append(cardlist[5])  # type_line
+    uglydict.append(tuple(cardlist[6].split("\n")))  # supertype(=tuple)
+    uglydict.append(tuple(cardlist[7].split("\n")))  # subtype(=tuple)
+    uglydict.append(cardlist[8].lower())  # set
+    uglydict.append(cardlist[9].lower())  # rarity
+    uglydict.append(tolerInt(cardlist[10]))  # power
+    uglydict.append(tolerInt(cardlist[11]))  # toughness
+    uglydict.append(tolerInt(cardlist[12]))  # loyalty
+    uglydict.append(cardlist[13])  # oracle
+    uglydict.append(cardlist[14])  # layout
+    uglydict.append(cardlist[15].split("\n"))  # hate(=list)
+    uglydict.append(cardlist[16].split("\n"))  # buff(=list)
+    uglydict.append(cardlist[17].split("\n"))  # nerf(=list)
+    uglydict.append(cardlist[18].split("\n"))  # tags(=list)
+    uglydict.append(float(cardlist[19]))  # usd(=float)
+    uglydict.append(cardlist[20])  # crop_image
 
-    return uglylist
+    return uglydict
 
 def tolerInt(string):
     if string.isdigit():

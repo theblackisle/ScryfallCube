@@ -129,7 +129,7 @@ class GsSheet(gspread.models.Worksheet):
         return self.spreadsheet.values_append(title_range, params, body)
 
     def importCard(self, card):
-        self.append_row(prettify(card.properties))
+        self.append_row(prettify(card))
         print("{:25} is recorded in '{}'".format(card.properties["name"], self.title))
 
     def import_rows(self, row_data):  # row_data = list of row data(=list).
@@ -165,7 +165,7 @@ class GsSheet(gspread.models.Worksheet):
 
     def searchImportCard(self, cardname, sets='f', indent=0):
         card = Card(ScryfallIO.getCard(cardname, sets=sets))
-        self.append_row(prettify(card.properties))
+        self.append_row(prettify(card))
         print(" "*indent + "{:25} is recorded in '{}'".format(card.properties["name"], self.title))
 
     def searchImportMass(self, namelist, sets='f'):
@@ -187,7 +187,7 @@ class GsSheet(gspread.models.Worksheet):
 
     def export_to_card(self, row):
         """가공된 row값을 받아 Card로 return"""
-        card = Card(uglify(self.row_values(row)))
+        card = Card(uglify(self.row_values(row)), reference="Gspread")
         return card
 
     def export_rows(self, rows):  # rows = list of row values(=int).
@@ -238,7 +238,7 @@ class GsSheet(gspread.models.Worksheet):
         sheet_list = self.get_all_values()[offset-1:]
         cardlist = []
         for row_value in sheet_list:
-            cardlist.append(Card(uglify(row_value)))
+            cardlist.append(Card(uglify(row_value), reference="Gspread"))
         return cardlist
 
 
