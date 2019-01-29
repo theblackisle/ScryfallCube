@@ -252,7 +252,7 @@ if __name__ == '__main__':
                                             sets=query[1].upper().strip() if len(query) > 1 else "f")
 
                 if result is not None:
-                    card = Card(result)
+                    card = Card(result, reference="Scryfall")
                     print("")
                     card.show()
                     print("")
