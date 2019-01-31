@@ -7,7 +7,7 @@ def concatenate_list(*cardlists):
     Card list들을 받아서 하나의 list로 합치고 중복되는 카드를 삭제함.
 
     Args:
-        *sheets (list): args of lists of Cards
+        *cardlists (list): args of lists of Cards
     """
 
     total_cards = 0
@@ -36,7 +36,7 @@ def color_breakdown(cardlist, mode="color"):
     color_identity = defaultdict(lambda: 0)
 
     for card in cardlist:
-        target = card.properties[mode]
+        target = card.get_value(mode)
         color_identity[target] += 1
         if len(target) == 0:
             color_share['C'] += 1
@@ -62,8 +62,6 @@ def color_classify(cardlist, mode="color", seperate_split=False, seperate_transf
             pass
         if seperate_transform is True:
             pass
-
-
 
 def burden_analysis(cardlist):
     cmc_breakdown = defaultdict(lambda: defaultdict(lambda: []))

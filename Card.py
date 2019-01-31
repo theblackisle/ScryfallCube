@@ -69,15 +69,15 @@ class Card():
                 # front == nominal
                 self.properties["back"]["color"] = colorsort(data['card_faces'][1]['colors'])
 
-                front_typeline = data['card_faces'][0]['type_line'].split(" - ")
-                back_typeline = data['card_faces'][1]['type_line'].split(" - ")
+                front_typeline = data['card_faces'][0]['type_line'].split(" — ")
+                back_typeline = data['card_faces'][1]['type_line'].split(" — ")
 
-                self.properties["front"]["supertype"] = tuple(front_typeline[0].split(" "))
-                self.properties["back"]["supertype"] = tuple(back_typeline[0].split(" "))
+                self.properties["front"]["supertype"] = front_typeline[0].split(" ")
+                self.properties["back"]["supertype"] = back_typeline[0].split(" ")
                 # self.properties["nominal"]["supertype"] = [self.properties["front"]["supertype"], self.properties["back"]["supertype"]]
 
-                self.properties["front"]["subtype"] = tuple(front_typeline[1].split(" ")) if len(front_typeline) > 1 else ()
-                self.properties["back"]["subtype"] = tuple(back_typeline[1].split(" ")) if len(back_typeline) > 1 else ()
+                self.properties["front"]["subtype"] = front_typeline[1].split(" ") if len(front_typeline) > 1 else []
+                self.properties["back"]["subtype"] = back_typeline[1].split(" ") if len(back_typeline) > 1 else []
                 # self.properties["nominal"]["subtype"] = [self.properties["front"]["subtype"], self.properties["back"]["subtype"]]
 
                 self.properties["front"]["power"] = tolerInt(data['card_faces'][0].get('power', ""))
@@ -113,21 +113,21 @@ class Card():
                 self.properties["right"]["cmc"] = mana_to_cmc(self.properties["right"]["mana_cost"])
                 self.properties["nominal"]["cmc"] = int(data['cmc'])
 
-                self.properties["left"]["color"] = colorsort(data['card_faces'][0]['colors'])
-                self.properties["right"]["color"] = colorsort(data['card_faces'][1]['colors'])
+                self.properties["left"]["color"] = mana_to_color(data['card_faces'][0]['mana_cost'])
+                self.properties["right"]["color"] = mana_to_color(data['card_faces'][1]['mana_cost'])
                 self.properties["nominal"]["color"] = data['colors']
 
-                left_typeline = data['card_faces'][0]['type_line'].split(" - ")
-                right_typeline = data['card_faces'][1]['type_line'].split(" - ")
+                left_typeline = data['card_faces'][0]['type_line'].split(" — ")
+                right_typeline = data['card_faces'][1]['type_line'].split(" — ")
 
-                self.properties["left"]["supertype"] = tuple(left_typeline[0].split(" "))
-                self.properties["right"]["supertype"] = tuple(right_typeline[0].split(" "))
+                self.properties["left"]["supertype"] = left_typeline[0].split(" ")
+                self.properties["right"]["supertype"] = right_typeline[0].split(" ")
                 supertype_set = list(set(self.properties["left"]["supertype"]) | set(self.properties["right"]["supertype"]))
-                self.properties["nominal"]["supertype"] = tuple(sorted(supertype_set, key=typesort))
+                self.properties["nominal"]["supertype"] = sorted(supertype_set, key=typesort)
 
-                self.properties["left"]["subtype"] = tuple(left_typeline[1].split(" ")) if len(left_typeline) > 1 else ()
-                self.properties["right"]["subtype"] = tuple(right_typeline[1].split(" ")) if len(right_typeline) > 1 else ()
-                subtype_set = list(set(self.properties["left"]["subtype"].split()) | set(self.properties["right"]["subtype"].split()))
+                self.properties["left"]["subtype"] = left_typeline[1].split(" ") if len(left_typeline) > 1 else []
+                self.properties["right"]["subtype"] = right_typeline[1].split(" ") if len(right_typeline) > 1 else []
+                subtype_set = list(set(self.properties["left"]["subtype"]) | set(self.properties["right"]["subtype"]))
                 self.properties["nominal"]["subtype"] = subtypeSort(subtype_set)
 
                 # self.properties["nominal"]["power"] = ""
@@ -155,15 +155,15 @@ class Card():
                 self.properties["nominal"]["color"] = data['colors']
                 # flip 카드는 모든 면의 색이 같음
 
-                top_typeline = data['card_faces'][0]['type_line'].split(" - ")
-                bottom_typeline = data['card_faces'][1]['type_line'].split(" - ")
+                top_typeline = data['card_faces'][0]['type_line'].split(" — ")
+                bottom_typeline = data['card_faces'][1]['type_line'].split(" — ")
 
-                self.properties["top"]["supertype"] = tuple(top_typeline[0].split(" "))
-                self.properties["bottom"]["supertype"] = tuple(bottom_typeline[0].split(" "))
+                self.properties["top"]["supertype"] = top_typeline[0].split(" ")
+                self.properties["bottom"]["supertype"] = bottom_typeline[0].split(" ")
                 # self.properties["nominal"]["supertype"] = [self.properties["top"]["supertype"], self.properties["bottom"]["supertype"]]
 
-                self.properties["top"]["subtype"] = tuple(top_typeline[1].split(" ")) if len(top_typeline) > 1 else ()
-                self.properties["bottom"]["subtype"] = tuple(bottom_typeline[1].split(" ")) if len(bottom_typeline) > 1 else ()
+                self.properties["top"]["subtype"] = top_typeline[1].split(" ") if len(top_typeline) > 1 else []
+                self.properties["bottom"]["subtype"] = bottom_typeline[1].split(" ") if len(bottom_typeline) > 1 else []
                 # self.properties["nominal"]["subtype"] = [self.properties["top"]["subtype"], self.properties["bottom"]["subtype"]]
 
                 self.properties["top"]["power"] = tolerInt(data['card_faces'][0].get('power', ""))
@@ -180,7 +180,7 @@ class Card():
                 self.properties["bottom"]["oracle"] = data['card_faces'][1]['oracle_text']
                 # self.properties["nominal"]["oracle"] = [self.properties["top"]["oracle"], self.properties["bottom"]["oracle"]]
 
-                self.properties["crop_image"] = data['image_uris']['border_crop']
+                self.properties["nominal"]["crop_image"] = data['image_uris']['border_crop']
 
             else:  # normal, meld, saga, token, double_faced_token, emblem, planar, scheme, vanguard, augment, host
                 self.properties["nominal"]["name"] = data['name']
@@ -189,8 +189,8 @@ class Card():
                 self.properties["nominal"]["color"] = data['colors']
 
                 types = data['type_line'].split(" — ")
-                self.properties["nominal"]["supertype"] = tuple(types[0].split(" "))
-                self.properties["nominal"]["subtype"] = tuple(types[1].split(" ")) if len(types) > 1 else ()
+                self.properties["nominal"]["supertype"] = types[0].split(" ")
+                self.properties["nominal"]["subtype"] = types[1].split(" ") if len(types) > 1 else []
                 self.properties["nominal"]["power"] = tolerInt(data.get('power', ""))
                 self.properties["nominal"]["toughness"] = tolerInt(data.get('toughness', ""))
                 self.properties["nominal"]["loyalty"] = tolerInt(data.get('loyalty', ""))
@@ -211,8 +211,13 @@ class Card():
                         self.actual["right"]["cmc"] = "+" + "X" * len(right_x)
             # X발비 포함 카드 actual cmc에 "+X" 추가
 
-            # self.properties["nominal"]["supertype"] = tuple(sorted(self.properties["nominal"]["supertype"], key=typesort))
-            # self.properties["nominal"]["subtype"] = subtypeSort(self.properties["nominal"]["subtype"])  # 모두 tuple
+    def get_value(self, index):
+        if (self.properties["nominal"]["layout"] not in ["Transform", "Flip"]) or (self.properties["nominal"][index] not in ["", (), [], {}, set(), None]):
+            return self.properties["nominal"][index]
+        elif self.properties["nominal"]["layout"] == 'Transform':
+            return self.properties["front"][index]
+        elif self.properties["nominal"]["layout"] == 'Flip':
+            return self.properties["top"][index]
 
     def __str__(self):
         return "Scryfall Card object for: {0}, {1}".format(self.properties["nominal"]["name"], self.properties["nominal"]["set"])
@@ -247,18 +252,18 @@ Rarity: {7}
 P/T: {8}
 Loyalty: {9}
 Price: {10}
-Oracle: {11}""".format(self.properties["nominal"]["name"],
-                       symbolprettify(self.properties["nominal"]["mana_cost"]),
-                       self.properties["nominal"]["cmc"],
-                       ''.join(self.properties["nominal"]["color"] if self.properties["nominal"]["color"] != () else "Colorless"),
-                       ''.join(self.properties["nominal"]["color_identity"] if self.properties["nominal"]["color_identity"] != () else "Colorless"),
-                       '{}{}'.format(' '.join(self.properties["nominal"]["supertype"]), ' - '+' '.join(self.properties["nominal"]["subtype"]) if self.properties["nominal"]["subtype"] != () else ""),
-                       self.properties["nominal"]["set"],
-                       self.properties["nominal"]["rarity"],
-                       '{}/{}'.format(self.properties["nominal"]["power"], self.properties["nominal"]["toughness"]) if self.properties["nominal"]["power"] != "" else "",
-                       self.properties["nominal"]["loyalty"],
-                      '${}'.format(self.properties["nominal"]["usd"]),
-                       self.properties["nominal"]["oracle"]))
+Oracle: {11}""".format(self.get_value("name"),
+                       symbolprettify(self.get_value("mana_cost")),
+                       self.get_value("cmc"),
+                       ''.join(self.get_value("color") if self.get_value("color") != () else "C"),
+                       ''.join(self.get_value("color_identity") if self.get_value("color_identity") != () else "C"),
+                       '{}{}'.format(' '.join(self.get_value("supertype")), ' - '+' '.join(self.get_value("subtype")) if self.get_value("subtype") != [] else ""),
+                       self.get_value("set"),
+                       self.get_value("rarity"),
+                       '{}/{}'.format(self.get_value("power"), self.get_value("toughness")) if self.get_value("power") != "" else "",
+                       self.get_value("loyalty"),
+                       '${}'.format(self.get_value("usd")),
+                       self.get_value("oracle")))
 
 while __name__ == '__main__':
     searchquery = input("search for: ")

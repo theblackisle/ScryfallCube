@@ -247,9 +247,14 @@ if __name__ == '__main__':
                 if query[0:2].lower() == "^q":
                     print("")
                     break
-                query = query.split("@", 1)
-                result = ScryfallIO.getCard(query[0].strip(),
-                                            sets=query[1].upper().strip() if len(query) > 1 else "f")
+
+                query = re.sub(r'[\n"]', "", query).split("@", 1)
+                query[0] = query[0].strip()
+                if len(query) == 1:
+                    query.append("f")
+                else:
+                    query[1] = query[1].upper().strip()
+                result = ScryfallIO.getCard(query[0], sets=query[1])
 
                 if result is not None:
                     card = Card(result, reference="Scryfall")
