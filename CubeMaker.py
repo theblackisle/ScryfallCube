@@ -312,6 +312,13 @@ if __name__ == '__main__':
         if choice[0] == '4':  # 4. Prepare card data from unprepared sheet
             while True:
                 printLocation(pointer)
+                inputs = selectSheet(pointer.file, "Enter index or name of source sheet: ")
+                if inputs[0:2].lower() == "^q":
+                    print("")
+                    break
+                pointer.sheet = inputs
+                print("")
+
                 inputs = input('Enter source column indices: ')
                 if inputs[0:2].lower() == "^q":
                     print("")
@@ -396,7 +403,14 @@ if __name__ == '__main__':
             printLocation(pointer)
 
             print("find duplicated")
-            dupl_dict = pointer.sheet.find_duplicated("A", "F", "I")
+            inputs = selectSheet(pointer.file, "Enter index or name of source sheet: ")
+            if inputs[0:2].lower() == "^q":
+                print("")
+                break
+            pointer.sheet = inputs
+            print("")
+
+            dupl_dict = pointer.sheet.find_duplicated("A", "H")
             if len(dupl_dict) == 0:
                 print("All items in sheet '%s' are unique." % pointer.sheet.title)
             else:
