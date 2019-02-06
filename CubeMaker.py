@@ -247,14 +247,19 @@ if __name__ == '__main__':
                 if query[0:2].lower() == "^q":
                     print("")
                     break
-                query = query.split("@", 1)
-                result = ScryfallIO.getCard(query[0].strip(),
-                                            sets=query[1].upper().strip() if len(query) > 1 else "f")
+
+                query = re.sub(r'[\n"]', "", query).split("@", 1)
+                query[0] = query[0].strip()
+                if len(query) == 1:
+                    query.append("f")
+                else:
+                    query[1] = query[1].upper().strip()
+                result = ScryfallIO.getCard(query[0], sets=query[1])
 
                 if result is not None:
-                    card = Card(result)
+                    card = Card(result, reference="Scryfall")
                     print("")
-                    card.showCard()
+                    card.show()
                     print("")
 
                     if input("Export this card to current sheet(Y/N): ")[0].lower() == "y":
@@ -275,11 +280,11 @@ if __name__ == '__main__':
                 result = ScryfallIO.get_from_query(query)
 
                 try:
-                    cards = [Card(datum) for datum in result]
+                    cards = [Card(datum, reference="Scryfall") for datum in result]
                     print("\nTotal %s cards are found." % len(result))
 
                     for card in cards:
-                        print("%2d. %s" % (cards.index(card)+1, card.properties["name"]))
+                        print("%2d. %s" % (cards.index(card)+1, card.properties["nominal"]["name"]))
 
                     selections = parseIndex(input("\nEnter card indices to import or range. Press Y to import all: "))
 
@@ -307,6 +312,13 @@ if __name__ == '__main__':
         if choice[0] == '4':  # 4. Prepare card data from unprepared sheet
             while True:
                 printLocation(pointer)
+                inputs = selectSheet(pointer.file, "Enter index or name of source sheet: ")
+                if inputs[0:2].lower() == "^q":
+                    print("")
+                    break
+                pointer.sheet = inputs
+                print("")
+
                 inputs = input('Enter source column indices: ')
                 if inputs[0:2].lower() == "^q":
                     print("")
@@ -391,7 +403,14 @@ if __name__ == '__main__':
             printLocation(pointer)
 
             print("find duplicated")
-            dupl_dict = pointer.sheet.find_duplicated("A", "F", "I")
+            inputs = selectSheet(pointer.file, "Enter index or name of source sheet: ")
+            if inputs[0:2].lower() == "^q":
+                print("")
+                break
+            pointer.sheet = inputs
+            print("")
+
+            dupl_dict = pointer.sheet.find_duplicated("A", "H")
             if len(dupl_dict) == 0:
                 print("All items in sheet '%s' are unique." % pointer.sheet.title)
             else:
@@ -431,7 +450,7 @@ if __name__ == '__main__':
                         target.sheet = str(index)
                         sheets.append(target.sheet.export_sheet_to_card(offset=3))
                     print("")
-                    target_list = Analyzer.concatenate_list(*sheets)
+                    target_list = Analyzer.concatenate_list(*sheets, ignore_set=True)
 
                     analyze_input = printMenu(analyze_menu)
                     if analyze_input[0:2].lower() == "^q":
@@ -441,7 +460,7 @@ if __name__ == '__main__':
                         Analyzer.color_breakdown(target_list)
 
                     elif analyze_input[0] == '2':  # Color burden analysis
-                        Analyzer.burden_analysis(target_list)
+                        Analyzer.burden_analysis(target_list, split=True)
 
 
 
