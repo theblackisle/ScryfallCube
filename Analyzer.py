@@ -31,9 +31,6 @@ def concatenate_list(*cardlists, ignore_set=False, sum_dupl=False):
 
     if sum_dupl:
         for card in dupl_sheet:
-
-
-
         dupl_sheet.append(card)
 
 
