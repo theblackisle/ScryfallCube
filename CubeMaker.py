@@ -280,11 +280,11 @@ if __name__ == '__main__':
                 result = ScryfallIO.get_from_query(query)
 
                 try:
-                    cards = [Card(datum) for datum in result]
+                    cards = [Card(datum, reference="Scryfall") for datum in result]
                     print("\nTotal %s cards are found." % len(result))
 
                     for card in cards:
-                        print("%2d. %s" % (cards.index(card)+1, card.properties["name"]))
+                        print("%2d. %s" % (cards.index(card)+1, card.properties["nominal"]["name"]))
 
                     selections = parseIndex(input("\nEnter card indices to import or range. Press Y to import all: "))
 
@@ -450,7 +450,7 @@ if __name__ == '__main__':
                         target.sheet = str(index)
                         sheets.append(target.sheet.export_sheet_to_card(offset=3))
                     print("")
-                    target_list = Analyzer.concatenate_list(*sheets)
+                    target_list = Analyzer.concatenate_list(*sheets, ignore_set=True)
 
                     analyze_input = printMenu(analyze_menu)
                     if analyze_input[0:2].lower() == "^q":
@@ -460,7 +460,7 @@ if __name__ == '__main__':
                         Analyzer.color_breakdown(target_list)
 
                     elif analyze_input[0] == '2':  # Color burden analysis
-                        Analyzer.burden_analysis(target_list)
+                        Analyzer.burden_analysis(target_list, split=True)
 
 
 

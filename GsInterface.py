@@ -233,7 +233,7 @@ class GsSheet(gspread.models.Worksheet):
     def export_sheet_to_card(self, offset):
         """
         가공된 sheet에서 사용
-        offset부터 sheet의 모든 data를 card의 list로 return
+        offset'부터' sheet의 모든 data를 card의 list로 return
         """
         sheet_list = self.get_all_values()[offset-1:]
         cardlist = []

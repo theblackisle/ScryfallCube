@@ -41,6 +41,7 @@ class Card():
             buff
             nerf
             tags
+            quantity
             '''
             self.properties = defaultdict(lambda: defaultdict(lambda: ""))
             self.actual = defaultdict(lambda: defaultdict(lambda: ""))
@@ -52,6 +53,7 @@ class Card():
             self.properties["nominal"]["rarity"] = data['rarity'].title()
             self.properties["nominal"]["usd"] = float(data.get('usd', 0))
             self.properties["nominal"]["layout"] = data['layout'].title()
+            self.actual["nominal"]["quantity"] = 1
 
             if self.properties["nominal"]["layout"] == 'Transform':
                 # 무의미한 정보를 최대한 지우고 발생한 예외는 기억하는 방향으로...
@@ -211,16 +213,74 @@ class Card():
                         self.actual["right"]["cmc"] = "+" + "X" * len(right_x)
             # X발비 포함 카드 actual cmc에 "+X" 추가
 
-    def get_value(self, index):
-        if (self.properties["nominal"]["layout"] not in ["Transform", "Flip"]) or (self.properties["nominal"][index] not in ["", (), [], {}, set(), None]):
-            return self.properties["nominal"][index]
+    def get_repr(self, index, weighted=False, back=False):
+        if weighted is False:
+            getfunc = lambda x, y: self.properties[x][y]
+        else:
+            getfunc = self.get_weighted
+
+        if back is False:
+            transform_face = 'front'
+            flip_face = 'top'
+        else:
+            transform_face = 'back'
+            flip_face = 'bottom'
+
+        if (self.properties["nominal"]["layout"] not in ("Transform", "Flip")) or (getfunc("nominal", index) not in ("", [])):
+            return getfunc("nominal", index)
         elif self.properties["nominal"]["layout"] == 'Transform':
-            return self.properties["front"][index]
+            return getfunc(transform_face, index)
         elif self.properties["nominal"]["layout"] == 'Flip':
-            return self.properties["top"][index]
+            return getfunc(flip_face, index)
+
+    def get_weighted(self, location, index):
+        if index == "mana_cost":
+            if re.match("-", self.actual[location][index]):  # -{G} 형태
+                operand = re.sub('-', "", self.actual[location][index])
+                return re.sub(operand, '', self.properties[location][index], count=1)
+
+            elif re.match(r'\+', self.actual[location][index]):  # +{G} 형태
+                operand = re.sub(r'\+', "", self.actual[location][index])
+                return mana_sum(self.properties[location][index], operand)
+
+            elif re.match(r'>', self.actual[location][index]):  # >{G} 형태
+                return re.sub(r'>', "", self.actual[location][index])
+
+            # 아무 return문에 걸리지 않음 -> 일반 property 리턴
+            return self.properties[location][index]
+
+        if index in ("power", "toughness", "loyalty"):
+            if re.match("-", self.actual[location][index]):  # -n 형태
+                digit = re.findall(r'[1-9]+', self.actual[location][index])
+                if len(digit) > 0:
+                    return int(self.properties[location][index]) - int(digit[0])
+
+            elif re.match(r'\+', self.actual[location][index]):  # +n 형태
+                digit = re.findall(r'[1-9]+', self.actual[location][index])
+                if len(digit) > 0:
+                    return int(self.properties[location][index]) + int(digit[0])
+
+            elif re.match(r'>', self.actual[location][index]):  # >n 형태
+                digit = re.findall(r'[1-9]+', self.actual[location][index])
+                return digit[0]
+
+            # 아무 return문에 걸리지 않음 -> 일반 property 리턴
+            return self.properties[location][index]
+
+        if index in ("supertype", "subtype"):
+            if re.match(r'\+', self.actual[location][index]):  # +n 형태
+                actual_types = re.sub(r'\+', "", self.actual[location][index]).strip().split(" ")
+                if len(actual_types) > 0:
+                    return self.properties[location][index] + actual_types
+
+            # 아무 return문에 걸리지 않음 -> 일반 property 리턴
+            return self.properties[location][index]
+
+        else:
+            return self.properties[location][index]
 
     def __str__(self):
-        return "Scryfall Card object for: {0}, {1}".format(self.properties["nominal"]["name"], self.properties["nominal"]["set"])
+        return "{0}, {1}".format(self.properties["nominal"]["name"], self.properties["nominal"]["set"])
 
     def __eq__(self, other):
         if self.__dict__ == other.__dict__:
@@ -252,18 +312,18 @@ Rarity: {7}
 P/T: {8}
 Loyalty: {9}
 Price: {10}
-Oracle: {11}""".format(self.get_value("name"),
-                       symbolprettify(self.get_value("mana_cost")),
-                       self.get_value("cmc"),
-                       ''.join(self.get_value("color") if self.get_value("color") != () else "C"),
-                       ''.join(self.get_value("color_identity") if self.get_value("color_identity") != () else "C"),
-                       '{}{}'.format(' '.join(self.get_value("supertype")), ' - '+' '.join(self.get_value("subtype")) if self.get_value("subtype") != [] else ""),
-                       self.get_value("set"),
-                       self.get_value("rarity"),
-                       '{}/{}'.format(self.get_value("power"), self.get_value("toughness")) if self.get_value("power") != "" else "",
-                       self.get_value("loyalty"),
-                       '${}'.format(self.get_value("usd")),
-                       self.get_value("oracle")))
+Oracle: {11}""".format(self.get_repr("name"),
+                       symbolprettify(self.get_repr("mana_cost")),
+                       self.get_repr("cmc"),
+                       ''.join(self.get_repr("color") if self.get_repr("color") != () else "C"),
+                       ''.join(self.get_repr("color_identity") if self.get_repr("color_identity") != () else "C"),
+                       '{}{}'.format(' '.join(self.get_repr("supertype")), ' - '+' '.join(self.get_repr("subtype")) if self.get_repr("subtype") != [] else ""),
+                       self.get_repr("set"),
+                       self.get_repr("rarity"),
+                       '{}/{}'.format(self.get_repr("power"), self.get_repr("toughness")) if self.get_repr("power") != "" else "",
+                       self.get_repr("loyalty"),
+                       '${}'.format(self.get_repr("usd")),
+                       self.get_repr("oracle")))
 
 while __name__ == '__main__':
     searchquery = input("search for: ")

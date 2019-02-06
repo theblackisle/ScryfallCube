@@ -340,12 +340,22 @@ def mana_sum(mana1, mana2):
 
 def mana_to_color(mana):
     color = {}
-    color["W"] = re.findall(r'{W}', mana)
-    color["U"] = re.findall(r'{U}', mana)
-    color["B"] = re.findall(r'{B}', mana)
-    color["R"] = re.findall(r'{R}', mana)
-    color["G"] = re.findall(r'{G}', mana)
+    color["W"] = re.findall(r'{W}|{2/W}|{W/P}|{W/U}|{G/W}|{W/B}|{R/W}', mana)
+    color["U"] = re.findall(r'{U}|{2/U}|{U/P}|{W/U}|{U/B}|{G/U}|{U/R}', mana)
+    color["B"] = re.findall(r'{B}|{2/B}|{B/P}|{U/B}|{B/R}|{W/B}|{B/G}', mana)
+    color["R"] = re.findall(r'{R}|{2/R}|{R/P}|{B/R}|{R/G}|{U/R}|{R/W}', mana)
+    color["G"] = re.findall(r'{G}|{2/G}|{G/P}|{R/G}|{G/W}|{B/G}|{G/U}', mana)
     return cyclicOrder([item for item in ('W', 'U', 'B', 'R', 'G') if len(color[item]) > 0])
+
+
+def generic_mana_strip(mana):
+    generic = re.findall(r'{\d+}', mana)
+    if len(generic) != 0:
+        generic_cmc = int(re.sub(r'{|}', '', generic[0]))
+    else:
+        generic_cmc = 0
+
+    return generic_cmc
 
 def symbolprettify(string, mode=None):
     if mode != "reverse":
@@ -416,7 +426,7 @@ def prettify(card):
     properties = card.properties
     actual = card.actual
 
-    prettylist = [""]*19
+    prettylist = [""]*20
     prettylist[14] = '\n'.join(actual["nominal"]["buff"])
     prettylist[15] = '\n'.join(actual["nominal"]["nerf"])
     prettylist[16] = '\n'.join(actual["nominal"]["tags"])
@@ -425,10 +435,10 @@ def prettify(card):
     prettylist[8] = properties["nominal"]["rarity"]
     prettylist[17] = "{:.2f}".format(properties["nominal"]["usd"])
     prettylist[13] = properties["nominal"]["layout"]
+    prettylist[19] = actual["nominal"]["quantity"]
 
     if properties["nominal"]["layout"] == 'Transform':
         prettylist[0] = '{}\n// {}'.format(properties["front"]["name"], properties["back"]["name"])
-        print(prettylist[0])
         # nominal name은 전달X; 재구성해서 사용
         prettylist[1] = '{}{}'.format(symbolprettify(properties["nominal"]["mana_cost"]), symbolprettify(actual["nominal"]["mana_cost"]))
         prettylist[2] = '{}{}'.format(properties["nominal"]["cmc"], actual["nominal"]["cmc"])
@@ -539,18 +549,21 @@ def uglify(cardlist):
     uglydict['properties']['nominal']['set'] = cardlist[7]  # set(=str, upper()-ed)
     uglydict['properties']['nominal']['rarity'] = cardlist[8]  # rarity(=str, title()-ed)
     uglydict['properties']['nominal']['usd'] = float(cardlist[17])  # usd(=float)
+    uglydict['actual']['nominal']['quantity'] = int(cardlist[19])  # usd(=float)
 
     uglydict['properties']['nominal']['layout'] = cardlist[13]  # layout(=str)
     if uglydict['properties']['nominal']['layout'] == 'Transform':
-        uglydict['properties']['front'] = uglydict['properties']['back'] = {}
-        uglydict['actual']['front'] = uglydict['actual']['back'] = {}
+        uglydict['properties']['front'] = {}
+        uglydict['properties']['back'] = {}
+        uglydict['actual']['front'] = {}
+        uglydict['actual']['back'] = {}
 
         split_temp = cardlist[0].split("\n// ")
         uglydict['properties']['front']['name'] = split_temp[0]  # name(=str)
         uglydict['properties']['back']['name'] = split_temp[1]
         uglydict['properties']['nominal']['name'] = "{} // {}".format(split_temp[0], split_temp[1])
 
-        split_temp = re.split(r'(?=[\-\+])', cardlist[1])
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[1])
         uglydict['properties']['nominal']['mana_cost'] = symbolprettify(split_temp[0], "reverse")  # mana_cost(=str)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['mana_cost'] = symbolprettify(split_temp[1], "reverse")
@@ -623,8 +636,10 @@ def uglify(cardlist):
         uglydict['properties']['back']['crop_image'] = split_temp[1]
 
     elif uglydict['properties']['nominal']['layout'] == 'Split':
-        uglydict['properties']['left'] = uglydict['properties']['right'] = {}
-        uglydict['actual']['left'] = uglydict['actual']['right'] = {}
+        uglydict['properties']['left'] = {}
+        uglydict['properties']['right'] = {}
+        uglydict['actual']['left'] = {}
+        uglydict['actual']['right'] = {}
 
         split_temp = cardlist[0].split("\n// ")
         uglydict['properties']['left']['name'] = split_temp[0]  # name(=str)
@@ -699,8 +714,10 @@ def uglify(cardlist):
         uglydict['properties']['nominal']['crop_image'] = cardlist[18]  # crop_image(=str, url)
 
     elif uglydict['properties']['nominal']['layout'] == 'Flip':
-        uglydict['properties']['top'] = uglydict['properties']['bottom'] = {}
-        uglydict['actual']['top'] = uglydict['actual']['bottom'] = {}
+        uglydict['properties']['top'] = {}
+        uglydict['properties']['bottom'] = {}
+        uglydict['actual']['top'] = {}
+        uglydict['actual']['bottom'] = {}
 
         split_temp = cardlist[0].split("\n// ")
         uglydict['properties']['top']['name'] = split_temp[0]  # name(=str)
