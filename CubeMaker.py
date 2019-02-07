@@ -450,7 +450,7 @@ if __name__ == '__main__':
                         target.sheet = str(index)
                         sheets.append(target.sheet.export_sheet_to_card(offset=3))
                     print("")
-                    target_list = Analyzer.concatenate_list(*sheets, ignore_set=True)
+                    target_list = Analyzer.concatenate_list(*sheets, ignore_set=True, sum_dupl=True)
 
                     analyze_input = printMenu(analyze_menu)
                     if analyze_input[0:2].lower() == "^q":

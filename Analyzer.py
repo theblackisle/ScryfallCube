@@ -1,5 +1,6 @@
 from collections import defaultdict
 from Converter import *
+
 import re
 
 def concatenate_list(*cardlists, ignore_set=False, sum_dupl=False):
@@ -8,13 +9,17 @@ def concatenate_list(*cardlists, ignore_set=False, sum_dupl=False):
 
     Args:
         *cardlists (list): args of lists of Cards
+        ignore_set (bool): set이 달라도 name이 같으면 중복으로 처리함.
+        sum_dupl (bool): 중복 카드를 삭제하면서 둘의 quantity를 더함.
     """
 
     total_cards = 0
     dupl_cards = 0
     seen = set()
     unique_sheet = []
-    dupl_sheet = []
+    if sum_dupl:
+        dupl_sheet = []
+
     for cardlist in cardlists:
         total_cards += len(cardlist)
         for card in cardlist:
@@ -31,8 +36,10 @@ def concatenate_list(*cardlists, ignore_set=False, sum_dupl=False):
 
     if sum_dupl:
         for card in dupl_sheet:
-        dupl_sheet.append(card)
-
+            involved_card = next((x for x in unique_sheet if x.get_repr("name") == card.get_repr("name"))) \
+                if ignore_set else next((x for x in unique_sheet if x == card))
+            involved_card.actual["nominal"]["quantity"] += card.actual["nominal"]["quantity"]
+            unique_sheet[unique_sheet.index(involved_card)] = involved_card  # involved_card quantity 변경 후 update
 
     print("%s cards are collected." % total_cards)
     print("%s duplicated cards are removed from list." % dupl_cards)

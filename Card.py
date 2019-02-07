@@ -283,7 +283,7 @@ class Card():
         return "{0}, {1}".format(self.properties["nominal"]["name"], self.properties["nominal"]["set"])
 
     def __eq__(self, other):
-        if self.__dict__ == other.__dict__:
+        if self.properties == other.properties:
             return True
         else:
             return False
