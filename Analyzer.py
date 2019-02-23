@@ -3,6 +3,7 @@ from Converter import *
 
 import re
 
+
 def concatenate_list(*cardlists, ignore_set=False, sum_dupl=False):
     """
     Card list들을 받아서 하나의 list로 합치고 중복되는 카드를 삭제함.
@@ -54,7 +55,6 @@ def color_breakdown(cardlist, mode="color", weighted=False):
 
     for card in cardlist:
         target = card.get_repr(mode, weighted=weighted)
-        print(target, card.get_repr("name"))
         color_identity[target] += 1
         if len(target) == 0:
             color_share['C'] += 1
@@ -67,13 +67,13 @@ def color_breakdown(cardlist, mode="color", weighted=False):
 
     print("\nColor_breakdown:")
     for key in sorted(color_identity.keys(), key=lambda x: color_to_nick(x)[0]):
-        print(key)
-        print("{:10}: {}".format(color_to_nick(key)[1], color_identity[key]))
+        print("{:10}: {:3} of {}, total {:5.2f} %".format(color_to_nick(key)[1], color_identity[key], len(cardlist), 100 * color_identity[key] / len(cardlist)))
 
     print("\nColor_appearance:")
     for key in color_share.keys():
         print("{}: {:3} of {}, total {:5.2f} %".format(key, color_share[key], len(cardlist), 100*color_share[key]/len(cardlist)))
     print("")
+
 
 def color_classify(cardlist, mode="color", seperate_split=False, seperate_transform=False):
     for card in cardlist:
@@ -81,6 +81,11 @@ def color_classify(cardlist, mode="color", seperate_split=False, seperate_transf
             pass
         if seperate_transform is True:
             pass
+
+
+def general_analysis(cardlist, target, color="all", weighted=False, split=False, Transform=False, Flip=False):
+    pass
+
 
 def burden_analysis(cardlist, split=False):
     cmc_breakdown = defaultdict(lambda: defaultdict(lambda: []))
@@ -102,12 +107,16 @@ def burden_analysis(cardlist, split=False):
         elif card.properties["nominal"]["layout"] in ("Flip", "Transform"):
             cmc = card.properties["nominal"]["cmc"]
             generic_cmc = generic_mana_strip(card.properties["nominal"]["mana_cost"])
-            cmc_breakdown[cmc][generic_cmc].append((card.properties["nominal"]["mana_cost"], "{} (// {})".format(card.get_repr("name"), card.get_repr("name", back=True)), card.actual["nominal"]["quantity"]))
+            cmc_breakdown[cmc][generic_cmc].append((card.properties["nominal"]["mana_cost"], "{} (// {})".format(card.get_repr("name"), card.get_repr("name", side="back")), card.actual["nominal"]["quantity"]))
 
         else:
             cmc = card.properties["nominal"]["cmc"]
             generic_cmc = generic_mana_strip(card.properties["nominal"]["mana_cost"])
+            if card.properties["nominal"]["mana_cost"] == "" and card.properties["nominal"]["cmc"] != 0:  # meld card 등
+                generic_cmc = card.properties["nominal"]["cmc"]
             cmc_breakdown[cmc][generic_cmc].append((card.properties["nominal"]["mana_cost"], card.properties["nominal"]["name"], card.actual["nominal"]["quantity"]))
+
+
 
     color_burden = {"total": 0}
     card_quantity = {"total": 0}
@@ -133,8 +142,9 @@ def burden_analysis(cardlist, split=False):
 
     print("Total average color burden is: {:2.2f}%\n".format(color_burden["total"]/card_quantity["total"]))
 
+
 def color_requirement_analysis(cardlist):
-    symbols_breakdown = defaultdict(lambda:0)
+    symbols_breakdown = defaultdict(lambda: 0)
 
     weight = {
         'hybrid': 0.75,
@@ -165,7 +175,10 @@ def color_requirement_analysis(cardlist):
     raise NotImplementedError
 
 
-def cmc_breakdown(cardlist):
+def pt_breakdown(cardlist, mode="pt"):
+
+    cmc_breakdown = defaultdict(lambda: defaultdict(lambda: []))
+
     raise NotImplementedError
 
 

@@ -5,7 +5,7 @@ import time
 import GspreadIO
 import ScryfallIO
 from Card import Card
-from Converter import prettify, uglify, number_to_colchar, colchar_to_number
+from Converter import prettify, number_to_colchar, colchar_to_number
 
 
 class GsClient(gspread.Client):
@@ -187,7 +187,7 @@ class GsSheet(gspread.models.Worksheet):
 
     def export_to_card(self, row):
         """가공된 row값을 받아 Card로 return"""
-        card = Card(uglify(self.row_values(row)), reference="Gspread")
+        card = Card(self.row_values(row), reference="Gspread")
         return card
 
     def export_rows(self, rows):  # rows = list of row values(=int).
@@ -221,7 +221,7 @@ class GsSheet(gspread.models.Worksheet):
             coldata = self.col_values(colchar_to_number(col))
             rows = [row for row in rows if row <= len(coldata)]
             for row in rows:
-                content = coldata[row-1]
+                content = coldata[row-1].replace('\n//', ' //')
                 location = "{0}{1}".format(col, row)
                 if content is not "":
                     namelist.append(content)
@@ -238,7 +238,7 @@ class GsSheet(gspread.models.Worksheet):
         sheet_list = self.get_all_values()[offset-1:]
         cardlist = []
         for row_value in sheet_list:
-            cardlist.append(Card(uglify(row_value), reference="Gspread"))
+            cardlist.append(Card(row_value, reference="Gspread"))
         return cardlist
 
 

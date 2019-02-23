@@ -6,7 +6,7 @@ import Analyzer
 import ScryfallIO
 from Card import Card
 from GsInterface import GsInterface
-from Converter import number_to_colchar, colchar_to_number
+from Converter import *
 
 main_menu = [
     "1. Manage files and sheets.",
@@ -28,7 +28,8 @@ edit_menu = [
     "1. Save to other sheet",
     "2. Delete from the sheet",
     "3. Add properties",
-    "4. Remove properties"
+    "4. Remove properties",
+    "5. Show card properties"
 ]
 analyze_menu = [
     "1. Color breakdown",
@@ -362,6 +363,7 @@ if __name__ == '__main__':
                     print("")
                     query = input("Enter query to search: ")
 
+                # query = query.replace('_//', '\n//')
                 searchset = parsequery(query)
                 rowlist = pointer.sheet.queries_in_cols(searchset)
 
@@ -396,6 +398,18 @@ if __name__ == '__main__':
 
                     if matchselection[0] == "4":  # Remove properties
                         pass
+
+                    if matchselection[0] == "5":  # Show card properties
+                        dataline = pointer.sheet.export_rows(rowlist)
+                        cardlist = []
+                        for data in dataline:
+                            pprint.pprint(data)
+                            pprint.pprint(uglify(data))
+                            cardlist.append(Card(data, reference="Gspread"))
+                        for card in cardlist:
+                            card.showall()
+                            card.show()
+
 
         if choice[0] == '6':  # Edit and trim sheets
             #while True:
@@ -450,7 +464,7 @@ if __name__ == '__main__':
                         target.sheet = str(index)
                         sheets.append(target.sheet.export_sheet_to_card(offset=3))
                     print("")
-                    target_list = Analyzer.concatenate_list(*sheets, ignore_set=True, sum_dupl=True)
+                    target_list = Analyzer.concatenate_list(*sheets, ignore_set=True, sum_dupl=False)
 
                     analyze_input = printMenu(analyze_menu)
                     if analyze_input[0:2].lower() == "^q":

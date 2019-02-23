@@ -1,4 +1,5 @@
 import re
+from itertools import combinations
 
 enchantment_subtypes = tuple("Aura, Cartouche, Curse, Saga, Shrine".split(', '))
 artifact_subtypes = tuple("Clue, Contraption, Equipment, Fortification, Treasure, Vehicle".split(', '))
@@ -28,6 +29,7 @@ def number_to_colchar(value):
 def colchar_to_number(value):
 
     col = 0
+    value = value.upper()
     for index, item in enumerate(value[::-1]):
         col += (ord(item) - 64) * (26 ** index)
 
@@ -64,82 +66,95 @@ def cyclicOrder(color_list, sortstd=('W', 'U', 'B', 'R', 'G')):
     G = sortstd[4]
 
     color_set = set(color_list)
+    isC = False
+    if 'C' in color_set:
+        isC = True
+        color_set = color_set - {'C'}
+    ordered_set = ('Error')
 
-    if color_set == set():
-        return ()
+    if color_set == set(): ordered_set = []
 
-    if color_set == {W}:
-        return W,
-    if color_set == {U}:
-        return U,
-    if color_set == {B}:
-        return B,
-    if color_set == {R}:
-        return R,
-    if color_set == {G}:
-        return G,
+    if color_set == {W}: ordered_set = [W]
+    if color_set == {U}: ordered_set = [U]
+    if color_set == {B}: ordered_set = [B]
+    if color_set == {R}: ordered_set = [R]
+    if color_set == {G}: ordered_set = [G]
 
-    if color_set == {W,U}:
-        return W,U
-    if color_set == {U,B}:
-        return U,B
-    if color_set == {B,R}:
-        return B,R
-    if color_set == {R,G}:
-        return R,G
-    if color_set == {G,W}:
-        return G,W
+    if color_set == {W,U}: ordered_set = [W,U]
+    if color_set == {U,B}: ordered_set = [U,B]
+    if color_set == {B,R}: ordered_set = [B,R]
+    if color_set == {R,G}: ordered_set = [R,G]
+    if color_set == {G,W}: ordered_set = [G,W]
 
-    if color_set == {W,B} :
-        return W,B
-    if color_set == {B,G}:
-        return B,G
-    if color_set == {G,U}:
-        return G,U
-    if color_set == {U,R}:
-        return U,R
-    if color_set == {R,W}:
-        return R,W
+    if color_set == {W,B}: ordered_set = [W,B]
+    if color_set == {B,G}: ordered_set = [B,G]
+    if color_set == {G,U}: ordered_set = [G,U]
+    if color_set == {U,R}: ordered_set = [U,R]
+    if color_set == {R,W}: ordered_set = [R,W]
 
-    if color_set == {W,U,B}:
-        return W,U,B
-    if color_set == {U,B,R}:
-        return U,B,R
-    if color_set == {B,R,G}:
-        return B,R,G
-    if color_set == {R,G,W}:
-        return R,G,W
-    if color_set == {G,W,U}:
-        return G,W,U
+    if color_set == {W,U,B}: ordered_set = [W,U,B]
+    if color_set == {U,B,R}: ordered_set = [U,B,R]
+    if color_set == {B,R,G}: ordered_set = [B,R,G]
+    if color_set == {R,G,W}: ordered_set = [R,G,W]
+    if color_set == {G,W,U}: ordered_set = [G,W,U]
 
-    if color_set == {W,B,G}:
-        return W,B,G
-    if color_set == {U,R,W}:
-        return U,R,W
-    if color_set == {B,G,U}:
-        return B,G,U
-    if color_set == {R,W,B}:
-        return R,W,B
-    if color_set == {G,U,R}:
-        return G,U,R
+    if color_set == {W,B,G}: ordered_set = [W,B,G]
+    if color_set == {U,R,W}: ordered_set = [U,R,W]
+    if color_set == {B,G,U}: ordered_set = [B,G,U]
+    if color_set == {R,W,B}: ordered_set = [R,W,B]
+    if color_set == {G,U,R}: ordered_set = [G,U,R]
 
-    if color_set == {W,U,B,R}:
-        return W,U,B,R
-    if color_set == {U,B,R,G}:
-        return U,B,R,G
-    if color_set == {B,R,G,W}:
-        return B,R,G,W
-    if color_set == {R,G,W,U}:
-        return R,G,W,U
-    if color_set == {G,W,U,B}:
-        return G,W,U,B
+    if color_set == {W,U,B,R}: ordered_set = [W,U,B,R]
+    if color_set == {U,B,R,G}: ordered_set = [U,B,R,G]
+    if color_set == {B,R,G,W}: ordered_set = [B,R,G,W]
+    if color_set == {R,G,W,U}: ordered_set = [R,G,W,U]
+    if color_set == {G,W,U,B}: ordered_set = [G,W,U,B]
 
-    if color_set == {W,U,B,R,G}:
-        return W,U,B,R,G
+    if color_set == {W,U,B,R,G}: ordered_set = [W,U,B,R,G]
 
-    else:
-        print("method cyclicOrder: check the input again")
-        raise ValueError
+    if isC:
+        ordered_set.append('C')
+
+    return tuple(ordered_set)
+
+def nick_to_color(nick):
+    if nick.title() == "Colorless": return ()
+
+    if nick.title() == "White": return 'W',
+    if nick.title() == "Blue": return 'U',
+    if nick.title() == "Black": return 'B',
+    if nick.title() == "Red": return 'R',
+    if nick.title() == "Green": return 'G',
+
+    if nick.title() == "Azorius": return 'W', 'U'
+    if nick.title() == "Dimir": return 'U', 'B'
+    if nick.title() == 'Rakdos': return 'B', 'R'
+    if nick.title() == "Gruul": return 'R', 'G'
+    if nick.title() == "Selesnya": return 'G', 'W'
+    if nick.title() == "Orzhov": return 'W', 'B'
+    if nick.title() == "Golgari": return 'B', 'G'
+    if nick.title() == "Simic": return 'G', 'U'
+    if nick.title() == "Izzet": return 'U', 'R'
+    if nick.title() == "Boros": return 'R', 'W'
+
+    if nick.title() == "Esper": return 'W', 'U', 'B'
+    if nick.title() == "Grixis": return 'U', 'B', 'R'
+    if nick.title() == "Jund": return 'B', 'R', 'G'
+    if nick.title() == "Naya": return 'R', 'G', 'W'
+    if nick.title() == "Bant": return 'G', 'W', 'U'
+    if nick.title() == "Abzan": return 'W', 'B', 'G'
+    if nick.title() == "Jeskai": return 'U', 'R', 'W'
+    if nick.title() == "Sultai": return 'B', 'G', 'U'
+    if nick.title() == "Mardu": return 'R', 'W', 'B'
+    if nick.title() == "Temur": return 'G', 'U', 'R'
+
+    if nick.title() == "Greenless": return 'W', 'U', 'B', 'R'
+    if nick.title() == "Whiteless": return 'U', 'B', 'R', 'G'
+    if nick.title() == "Blueless": return 'B', 'R', 'G', 'W'
+    if nick.title() == "Blackless": return 'R', 'G', 'W', 'U'
+    if nick.title() == "Redless": return 'G', 'W', 'U', 'B'
+
+    if nick.title() == "5C": return 'W', 'U', 'B', 'R', 'G'
 
 
 def color_to_nick(color_set):
@@ -280,6 +295,54 @@ def typesort(string):  # case sensitive!
         return "z" + string
 
 
+def mana_to_accessibility(mana):
+    """
+    :param mana: uglyfied mana cost from Scryfall JSON
+    :return: (list of tuples) acessible color set
+    """
+
+    local_accessibility = []
+    total_accessibility = set()
+    colored_cmc = re.findall(r'{W/U}|{U/B}|{B/R}|{R/G}|{G/W}|{W/B}|{B/G}|{G/U}|{U/R}|{R/W}|{2/W}|{2/U}|{2/B}|{2/R}|{2/G}|{W/P}|{U/P}|{B/P}|{R/P}|{G/P}|{W}|{U}|{B}|{R}|{G}|{C}', mana)
+    for symbol in colored_cmc:
+        if re.findall(r'{W/U}', symbol): local_accessibility.append(('W', 'U'))
+        if re.findall(r'{U/B}', symbol): local_accessibility.append(('U', 'B'))
+        if re.findall(r'{B/R}', symbol): local_accessibility.append(('B', 'R'))
+        if re.findall(r'{R/G}', symbol): local_accessibility.append(('R', 'G'))
+        if re.findall(r'{G/W}', symbol): local_accessibility.append(('G', 'W'))
+        if re.findall(r'{W/B}', symbol): local_accessibility.append(('W', 'B'))
+        if re.findall(r'{B/G}', symbol): local_accessibility.append(('B', 'G'))
+        if re.findall(r'{G/U}', symbol): local_accessibility.append(('G', 'U'))
+        if re.findall(r'{U/R}', symbol): local_accessibility.append(('U', 'R'))
+        if re.findall(r'{R/W}', symbol): local_accessibility.append(('R', 'W'))
+        if re.findall(r'{W}', symbol): local_accessibility.append(('W'))
+        if re.findall(r'{U}', symbol): local_accessibility.append(('U'))
+        if re.findall(r'{B}', symbol): local_accessibility.append(('B'))
+        if re.findall(r'{R}', symbol): local_accessibility.append(('R'))
+        if re.findall(r'{G}', symbol): local_accessibility.append(('G'))
+        if re.findall(r'{C}', symbol): local_accessibility.append(('C'))
+
+    for item in local_accessibility:
+        if len(total_accessibility) == 0:
+            total_accessibility = set([frozenset([j]) for j in item])
+        else:
+            set_product = [frozenset(set(i) | set([k])) for i in total_accessibility for k in item]
+            total_accessibility = set(set_product)
+
+    redundant = set()
+    for (i, j) in combinations(total_accessibility, 2):
+        if i.issuperset(j):
+            redundant.add(i)
+        if j.issuperset(i):
+            redundant.add(j)
+
+    total_accessibility = total_accessibility - redundant
+    total_accessibility = [cyclicOrder(item) for item in total_accessibility]
+    total_accessibility = sorted(total_accessibility, key=lambda x: color_to_nick(tuple(x))[0])
+
+    return total_accessibility
+
+
 def mana_to_cmc(mana):
     """
     :param mana: uglyfied mana cost from Scryfall JSON
@@ -298,6 +361,7 @@ def mana_to_cmc(mana):
 
     return generic_cmc + colored_cmc
 
+
 def mana_sum(mana1, mana2):
     """
     :param mana1, mana2: uglyfied mana cost from Scryfall JSON
@@ -314,7 +378,7 @@ def mana_sum(mana1, mana2):
     if len(generic) > 0:
         for item in generic:
             generic_sum += int(re.sub(r'{|}', '', item))
-        generic_sum = "{%d}" % (generic_sum)
+        generic_sum = "{%d}" % generic_sum
     if len(generic) == 0 or (generic_sum == "{0}" and len(x) > 0):
         generic_sum = ""
 
@@ -338,6 +402,7 @@ def mana_sum(mana1, mana2):
 
     return x_sum + generic_sum + hybrid_sum + color_sum
 
+
 def mana_to_color(mana):
     color = {}
     color["W"] = re.findall(r'{W}|{2/W}|{W/P}|{W/U}|{G/W}|{W/B}|{R/W}', mana)
@@ -356,6 +421,7 @@ def generic_mana_strip(mana):
         generic_cmc = 0
 
     return generic_cmc
+
 
 def symbolprettify(string, mode=None):
     if mode != "reverse":
@@ -421,21 +487,43 @@ def symbolprettify(string, mode=None):
 
 
 def prettify(card):
-    """Card.card to displable gspread row"""
+    """Card.card to displable gspread row
+'mana_cost'
+'name'
+'cmc'
+'color'
+'color_identity'
+'color_accessibility'
+'supertype'
+'subtype'
+'set'
+'rarity'
+'power'
+'toughness'
+'loyalty'
+'oracle'
+'layout'
+'buff'
+'nerf'
+'tags'
+'usd'
+'crop_image'
+'quantity'
+    """
 
     properties = card.properties
     actual = card.actual
 
-    prettylist = [""]*20
-    prettylist[14] = '\n'.join(actual["nominal"]["buff"])
-    prettylist[15] = '\n'.join(actual["nominal"]["nerf"])
-    prettylist[16] = '\n'.join(actual["nominal"]["tags"])
+    prettylist = [""]*21
+    prettylist[15] = '\n'.join(actual["nominal"]["buff"])
+    prettylist[16] = '\n'.join(actual["nominal"]["nerf"])
+    prettylist[17] = '\n'.join(actual["nominal"]["tags"])
     prettylist[4] = ''.join(properties["nominal"]["color_identity"])
-    prettylist[7] = properties["nominal"]["set"]
-    prettylist[8] = properties["nominal"]["rarity"]
-    prettylist[17] = "{:.2f}".format(properties["nominal"]["usd"])
-    prettylist[13] = properties["nominal"]["layout"]
-    prettylist[19] = actual["nominal"]["quantity"]
+    prettylist[8] = properties["nominal"]["set"]
+    prettylist[9] = properties["nominal"]["rarity"]
+    prettylist[18] = "{:.2f}".format(properties["nominal"]["usd"])
+    prettylist[14] = properties["nominal"]["layout"]
+    prettylist[20] = actual["nominal"]["quantity"]
 
     if properties["nominal"]["layout"] == 'Transform':
         prettylist[0] = '{}\n// {}'.format(properties["front"]["name"], properties["back"]["name"])
@@ -444,24 +532,51 @@ def prettify(card):
         prettylist[2] = '{}{}'.format(properties["nominal"]["cmc"], actual["nominal"]["cmc"])
         prettylist[3] = '{}\n{}'.format(''.join(properties["front"]["color"]),
                                         ''.join(properties["back"]["color"]))
-        prettylist[5] = '{}{}\n{}{}'.format(' '.join(properties["front"]["supertype"]),
+        prettylist[5] = '{}{}'.format(','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]]),
+                                      ',+'+','.join([''.join(item) for item in actual["nominal"]["color_accessibility"]]) if actual["nominal"]["color_accessibility"] != "" else "")
+        prettylist[6] = '{}{}\n{}{}'.format(' '.join(properties["front"]["supertype"]),
                                             '+'+' '.join(actual["front"]["supertype"]) if actual["front"]["supertype"] != "" else "",
                                             ' '.join(properties["back"]["supertype"]),
                                             '+'+' '.join(actual["back"]["supertype"]) if actual["back"]["supertype"] != "" else "")
-        prettylist[6] = '{}{}\n{}{}'.format(' '.join(properties["front"]["subtype"]),
+        prettylist[7] = '{}{}\n{}{}'.format(' '.join(properties["front"]["subtype"]),
                                             '+'+' '.join(actual["front"]["subtype"]) if actual["front"]["subtype"] != "" else "",
                                             ' '.join(properties["back"]["subtype"]),
                                             '+'+' '.join(actual["back"]["subtype"]) if actual["back"]["subtype"] != "" else "")
-        prettylist[9] = '{}{}\n{}{}'.format(properties["front"]["power"], actual["front"]["power"],
-                                            properties["back"]["power"], actual["back"]["power"])
-        prettylist[10] = '{}{}\n{}{}'.format(properties["front"]["toughness"], actual["front"]["toughness"],
+        prettylist[10] = '{}{}\n{}{}'.format(properties["front"]["power"], actual["front"]["power"],
+                                             properties["back"]["power"], actual["back"]["power"])
+        prettylist[11] = '{}{}\n{}{}'.format(properties["front"]["toughness"], actual["front"]["toughness"],
                                              properties["back"]["toughness"], actual["back"]["toughness"])
-        prettylist[11] = '{}{}\n{}{}'.format(properties["front"]["loyalty"], actual["front"]["loyalty"],
+        prettylist[12] = '{}{}\n{}{}'.format(properties["front"]["loyalty"], actual["front"]["loyalty"],
                                              properties["back"]["loyalty"], actual["back"]["loyalty"])
-        prettylist[12] = '{}\n// {}'.format(properties["front"]["oracle"],
+        prettylist[13] = '{}\n// {}'.format(properties["front"]["oracle"],
                                             properties["back"]["oracle"])
-        prettylist[18] = '{}\n{}'.format(properties["front"]["crop_image"],
+        prettylist[19] = '{}\n{}'.format(properties["front"]["crop_image"],
                                          properties["back"]["crop_image"])
+
+    elif properties["nominal"]["layout"] == 'Flip':
+        prettylist[0] = '{}\n// {}'.format(properties["top"]["name"], properties["bottom"]["name"])
+        # nominal name은 전달X; 재구성해서 사용
+        prettylist[1] = symbolprettify(properties["nominal"]["mana_cost"])
+        prettylist[2] = properties["nominal"]["cmc"]
+        prettylist[3] = ''.join(properties["nominal"]["color"])
+        prettylist[5] = '{}{}'.format(','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]]),
+                                      ',+'+','.join([''.join(item) for item in actual["nominal"]["color_accessibility"]]) if actual["nominal"]["color_accessibility"] != "" else "")
+        prettylist[6] = '{}{}\n{}{}'.format(' '.join(properties["top"]["supertype"]),
+                                            '+'+' '.join(actual["top"]["supertype"]) if actual["top"]["supertype"] != "" else "",
+                                            ' '.join(properties["bottom"]["supertype"]),
+                                            '+'+' '.join(actual["bottom"]["supertype"]) if actual["bottom"]["supertype"] != "" else "",)
+        prettylist[7] = '{}{}\n{}{}'.format(' '.join(properties["top"]["subtype"]),
+                                            '+'+' '.join(actual["top"]["subtype"]) if actual["top"]["subtype"] != "" else "",
+                                            ' '.join(properties["bottom"]["subtype"]),
+                                            '+'+' '.join(actual["bottom"]["subtype"]) if actual["top"]["subtype"] != "" else "",)
+        prettylist[10] = '{}{}\n{}{}'.format(properties["top"]["power"], actual["top"]["power"],
+                                             properties["bottom"]["power"], actual["bottom"]["power"])
+        prettylist[11] = '{}{}\n{}{}'.format(properties["top"]["toughness"], actual["top"]["toughness"],
+                                             properties["bottom"]["toughness"], actual["bottom"]["toughness"])
+        prettylist[12] = ''
+        prettylist[13] = '{}\n// {}'.format(properties["top"]["oracle"],
+                                            properties["bottom"]["oracle"])
+        prettylist[19] = properties["nominal"]["crop_image"]
 
     elif properties["nominal"]["layout"] == 'Split':
         prettylist[0] = '{}\n// {}'.format(properties["left"]["name"], properties["right"]["name"])
@@ -475,13 +590,19 @@ def prettify(card):
         prettylist[3] = '{}\n{}\n{}'.format(''.join(properties["nominal"]["color"]),
                                             ''.join(properties["left"]["color"]),
                                             ''.join(properties["right"]["color"]))
-        prettylist[5] = '{}{}\n{}{}\n{}{}'.format(' '.join(properties["nominal"]["supertype"]),
+        prettylist[5] = '{}{}\n{}{}\n{}{}'.format(','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]]),
+                                                  ',+'+','.join([''.join(item) for item in actual["nominal"]["color_accessibility"]]) if actual["nominal"]["color_accessibility"] != "" else "",
+                                                  ','.join([''.join(item) for item in properties["left"]["color_accessibility"]]),
+                                                  ',+' + ','.join([''.join(item) for item in actual["left"]["color_accessibility"]]) if actual["left"]["color_accessibility"] != "" else "",
+                                                  ','.join([''.join(item) for item in properties["right"]["color_accessibility"]]),
+                                                  ',+' + ','.join([''.join(item) for item in actual["right"]["color_accessibility"]]) if actual["right"]["color_accessibility"] != "" else "")
+        prettylist[6] = '{}{}\n{}{}\n{}{}'.format(' '.join(properties["nominal"]["supertype"]),
                                                   '+'+' '.join(actual["nominal"]["supertype"]) if actual["nominal"]["supertype"] != "" else "",
                                                   ' '.join(properties["left"]["supertype"]),
                                                   '+'+' '.join(actual["left"]["supertype"]) if actual["left"]["supertype"] != "" else "",
                                                   ' '.join(properties["right"]["supertype"]),
                                                   '+'+' '.join(actual["right"]["supertype"]) if actual["right"]["supertype"] != "" else "")
-        prettylist[6] = '{}{}\n{}{}\n{}{}'.format(' '.join(properties["nominal"]["subtype"]),
+        prettylist[7] = '{}{}\n{}{}\n{}{}'.format(' '.join(properties["nominal"]["subtype"]),
                                                   '+'+' '.join(actual["nominal"]["subtype"]) if actual["nominal"]["subtype"] != "" else "",
                                                   ' '.join(properties["left"]["subtype"]),
                                                   '+'+' '.join(actual["left"]["subtype"]) if actual["left"]["subtype"] != "" else "",
@@ -489,69 +610,49 @@ def prettify(card):
                                                   '+'+' '.join(actual["right"]["subtype"]) if actual["right"]["subtype"] != "" else "")
         # Split card의 nominal supertype/subtype은 전달x; 재구성해서 사용
 
-        prettylist[9] = ""  # power
-        prettylist[10] = ""  # toughness
-        prettylist[11] = ""  # loyalty
-        prettylist[12] = '{}\n// {}'.format(properties["left"]["oracle"],
+        prettylist[10] = ""  # power
+        prettylist[11] = ""  # toughness
+        prettylist[12] = ""  # loyalty
+        prettylist[13] = '{}\n// {}'.format(properties["left"]["oracle"],
                                             properties["right"]["oracle"])
-        prettylist[18] = properties["nominal"]["crop_image"]
-
-    elif properties["nominal"]["layout"] == 'Flip':
-        prettylist[0] = '{}\n// {}'.format(properties["top"]["name"], properties["bottom"]["name"])
-        # nominal name은 전달X; 재구성해서 사용
-        prettylist[1] = symbolprettify(properties["nominal"]["mana_cost"])
-        prettylist[2] = properties["nominal"]["cmc"]
-        prettylist[3] = ''.join(properties["nominal"]["color"])
-        prettylist[5] = '{}{}\n{}{}'.format(' '.join(properties["top"]["supertype"]),
-                                            '+'+' '.join(actual["top"]["supertype"]) if actual["top"]["supertype"] != "" else "",
-                                            ' '.join(properties["bottom"]["supertype"]),
-                                            '+'+' '.join(actual["bottom"]["supertype"]) if actual["bottom"]["supertype"] != "" else "",)
-        prettylist[6] = '{}{}\n{}{}'.format(' '.join(properties["top"]["subtype"]),
-                                            '+'+' '.join(actual["top"]["subtype"]) if actual["top"]["subtype"] != "" else "",
-                                            ' '.join(properties["bottom"]["subtype"]),
-                                            '+'+' '.join(actual["bottom"]["subtype"]) if actual["top"]["subtype"] != "" else "",)
-        prettylist[9] = '{}{}\n{}{}'.format(properties["top"]["power"], actual["top"]["power"],
-                                            properties["bottom"]["power"], actual["bottom"]["power"])
-        prettylist[10] = '{}{}\n{}{}'.format(properties["top"]["toughness"], actual["top"]["toughness"],
-                                             properties["bottom"]["toughness"], actual["bottom"]["toughness"])
-        prettylist[11] = ''
-        prettylist[12] = '{}\n// {}'.format(properties["top"]["oracle"],
-                                            properties["bottom"]["oracle"])
-        prettylist[18] = properties["nominal"]["crop_image"]
+        prettylist[19] = properties["nominal"]["crop_image"]
 
     else:
         prettylist[0] = properties["nominal"]["name"]
         prettylist[1] = '{}{}'.format(symbolprettify(properties["nominal"]["mana_cost"]), symbolprettify(actual["nominal"]["mana_cost"]))
         prettylist[2] = '{}{}'.format(properties["nominal"]["cmc"], actual["nominal"]["cmc"])
         prettylist[3] = ''.join(properties["nominal"]["color"])
-        prettylist[5] = '{}{}'.format(' '.join(properties["nominal"]["supertype"]),
+        prettylist[5] = '{}{}'.format(','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]]),
+                                      ',+'+','.join([''.join(item) for item in actual["nominal"]["color_accessibility"]]) if actual["nominal"]["color_accessibility"] != "" else "")
+        prettylist[6] = '{}{}'.format(' '.join(properties["nominal"]["supertype"]),
                                       '+'+' '.join(actual["nominal"]["supertype"]) if actual["nominal"]["supertype"] != "" else "")
-        prettylist[6] = '{}{}'.format(' '.join(properties["nominal"]['subtype']),
+        prettylist[7] = '{}{}'.format(' '.join(properties["nominal"]['subtype']),
                                       '+'+' '.join(actual["nominal"]["subtype"]) if actual["nominal"]["subtype"] != "" else "")
-        prettylist[9] = '{}{}'.format(properties["nominal"]["power"], actual["nominal"]["power"])
-        prettylist[10] = '{}{}'.format(properties["nominal"]["toughness"], actual["nominal"]["toughness"])
-        prettylist[11] = '{}{}'.format(properties["nominal"]["loyalty"], actual["nominal"]["loyalty"])
-        prettylist[12] = properties["nominal"]["oracle"]
-        prettylist[18] = properties["nominal"]["crop_image"]
+        prettylist[10] = '{}{}'.format(properties["nominal"]["power"], actual["nominal"]["power"])
+        prettylist[11] = '{}{}'.format(properties["nominal"]["toughness"], actual["nominal"]["toughness"])
+        prettylist[12] = '{}{}'.format(properties["nominal"]["loyalty"], actual["nominal"]["loyalty"])
+        prettylist[13] = properties["nominal"]["oracle"]
+        prettylist[19] = properties["nominal"]["crop_image"]
 
     return prettylist
 
+
 def uglify(cardlist):
-    """gspread row to internal Card.Card eatable data"""
+    """gspread row to internal Card.Card edible data"""
 
     uglydict = {'properties': {'nominal': {}}, 'actual': {'nominal': {}}}
 
-    uglydict['actual']['nominal']["buff"] = (cardlist[14].split("\n"))  # buff(=list)
-    uglydict['actual']['nominal']["nerf"] = (cardlist[15].split("\n"))  # nerf(=list)
-    uglydict['actual']['nominal']["tags"] = (cardlist[16].split("\n"))  # tags(=list)
+    uglydict['actual']['nominal']["buff"] = (cardlist[15].split("\n")) if cardlist[15] != "" else []  # buff(=list)
+    uglydict['actual']['nominal']["nerf"] = (cardlist[16].split("\n")) if cardlist[16] != "" else []  # nerf(=list)
+    uglydict['actual']['nominal']["tags"] = (cardlist[17].split("\n")) if cardlist[17] != "" else []  # tags(=list)
 
     uglydict['properties']['nominal']['color_identity'] = tuple(cardlist[4]) if cardlist[4] != "C" else ()  # color_identity(=tuple)
-    uglydict['properties']['nominal']['set'] = cardlist[7]  # set(=str, upper()-ed)
-    uglydict['properties']['nominal']['rarity'] = cardlist[8]  # rarity(=str, title()-ed)
-    uglydict['properties']['nominal']['usd'] = float(cardlist[17])  # usd(=float)
-    uglydict['actual']['nominal']['quantity'] = int(cardlist[19])  # usd(=float)
+    uglydict['properties']['nominal']['set'] = cardlist[8]  # set(=str, upper()-ed)
+    uglydict['properties']['nominal']['rarity'] = cardlist[9]  # rarity(=str, title()-ed)
+    uglydict['properties']['nominal']['usd'] = float(cardlist[18])  # usd(=float)
+    uglydict['actual']['nominal']['quantity'] = int(cardlist[20])  # quantity(=int)
 
-    uglydict['properties']['nominal']['layout'] = cardlist[13]  # layout(=str)
+    uglydict['properties']['nominal']['layout'] = cardlist[14]  # layout(=str)
     if uglydict['properties']['nominal']['layout'] == 'Transform':
         uglydict['properties']['front'] = {}
         uglydict['properties']['back'] = {}
@@ -563,12 +664,12 @@ def uglify(cardlist):
         uglydict['properties']['back']['name'] = split_temp[1]
         uglydict['properties']['nominal']['name'] = "{} // {}".format(split_temp[0], split_temp[1])
 
-        split_temp = re.split(r'(?=[\-\+>])', cardlist[1])
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[1], 1)
         uglydict['properties']['nominal']['mana_cost'] = symbolprettify(split_temp[0], "reverse")  # mana_cost(=str)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['mana_cost'] = symbolprettify(split_temp[1], "reverse")
 
-        split_temp = re.split(r'(?=[\-\+])', cardlist[2])
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[2], 1)
         uglydict['properties']['nominal']['cmc'] = int(split_temp[0])  # CMC(=int)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['cmc'] = split_temp[1]
@@ -577,63 +678,142 @@ def uglify(cardlist):
         uglydict['properties']['front']['color'] = tuple(split_temp[0]) if split_temp[0] != "C" else ()  # color(=tuple)
         uglydict['properties']['back']['color'] = tuple(split_temp[1]) if split_temp[1] != "C" else ()
 
-        split_temp = cardlist[5].split("\n")
-        split_subtemp = re.split(r'[\-\+]', split_temp[0])
-        uglydict['properties']['front']['supertype'] = tuple(split_subtemp[0].split(' '))  # supertype(=tuple)
-        if len(split_subtemp) > 1:
-            uglydict['actual']['front']['supertype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[1])
-        uglydict['properties']['back']['supertype'] = tuple(split_subtemp[0].split(' '))
-        if len(split_subtemp) > 1:
-            uglydict['actual']['back']['supertype'] = tuple(split_subtemp[1].split(' '))
+        split_temp = re.split(r',(?=[\-\+>])', cardlist[5], 1)
+        uglydict['properties']['nominal']['color_accessibility'] = [tuple(item) for item in split_temp[0].split(',')]  # color accessibility(=list of tuple)
+        if len(split_temp) > 1:
+            uglydict['actual']['nominal']['color_accessibility'] = [tuple(item) for item in split_temp[1].split(',')]
 
         split_temp = cardlist[6].split("\n")
-        split_subtemp = re.split(r'[\-\+]', split_temp[0])
-        uglydict['properties']['front']['subtype'] = tuple(split_subtemp[0].split(' '))  # subtype(=tuple)
+        split_subtemp = re.split(r'[\-\+>]', split_temp[0], 1)
+        uglydict['properties']['front']['supertype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []  # supertype(=list)
         if len(split_subtemp) > 1:
-            uglydict['actual']['front']['subtype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[1])
-        uglydict['properties']['back']['subtype'] = tuple(split_subtemp[0].split(' '))
+            uglydict['actual']['front']['supertype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[1], 1)
+        uglydict['properties']['back']['supertype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
         if len(split_subtemp) > 1:
-            uglydict['actual']['back']['subtype'] = tuple(split_subtemp[1].split(' '))
+            uglydict['actual']['back']['supertype'] = split_subtemp[1].split(' ')
 
-        split_temp = cardlist[9].split("\n")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[0])
+        split_temp = cardlist[7].split("\n")
+        split_subtemp = re.split(r'[\-\+>]', split_temp[0], 1)
+        uglydict['properties']['front']['subtype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []  # subtype(=tuple)
+        if len(split_subtemp) > 1:
+            uglydict['actual']['front']['subtype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[1], 1)
+        uglydict['properties']['back']['subtype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
+        if len(split_subtemp) > 1:
+            uglydict['actual']['back']['subtype'] = split_subtemp[1].split(' ')
+
+        split_temp = cardlist[10].split("\n")
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[0], 1)
         uglydict['properties']['front']['power'] = split_subtemp[0]  # power(=str)
         if len(split_subtemp) > 1:
             uglydict['actual']['front']['power'] = split_subtemp[1]
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[1])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[1], 1)
         uglydict['properties']['back']['power'] = split_subtemp[0]
         if len(split_subtemp) > 1:
             uglydict['actual']['back']['power'] = split_subtemp[1]
 
-        split_temp = cardlist[10].split("\n")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[0])
+        split_temp = cardlist[11].split("\n")
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[0], 1)
         uglydict['properties']['front']['toughness'] = split_subtemp[0]  # toughness(=str)
         if len(split_subtemp) > 1:
             uglydict['actual']['front']['toughness'] = split_subtemp[1]
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[1])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[1], 1)
         uglydict['properties']['back']['toughness'] = split_subtemp[0]
         if len(split_subtemp) > 1:
             uglydict['actual']['back']['toughness'] = split_subtemp[1]
 
-        split_temp = cardlist[11].split("\n")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[0])
+        split_temp = cardlist[12].split("\n")
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[0], 1)
         uglydict['properties']['front']['loyalty'] = split_subtemp[0]  # loyalty(=str)
         if len(split_subtemp) > 1:
             uglydict['actual']['front']['loyalty'] = split_subtemp[1]
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[1])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[1], 1)
         uglydict['properties']['back']['loyalty'] = split_subtemp[0]
         if len(split_subtemp) > 1:
             uglydict['actual']['back']['loyalty'] = split_subtemp[1]
 
-        split_temp = cardlist[12].split("\n// ")
+        split_temp = cardlist[13].split("\n// ")
         uglydict['properties']['front']['oracle'] = split_temp[0]  # oracle(=str)
         uglydict['properties']['back']['oracle'] = split_temp[1]
 
-        split_temp = cardlist[18].split("\n")
+        split_temp = cardlist[19].split("\n")
         uglydict['properties']['front']['crop_image'] = split_temp[0]  # crop_image(=str, url)
         uglydict['properties']['back']['crop_image'] = split_temp[1]
+
+    elif uglydict['properties']['nominal']['layout'] == 'Flip':
+        uglydict['properties']['top'] = {}
+        uglydict['properties']['bottom'] = {}
+        uglydict['actual']['top'] = {}
+        uglydict['actual']['bottom'] = {}
+
+        split_temp = cardlist[0].split("\n// ")
+        uglydict['properties']['top']['name'] = split_temp[0]  # name(=str)
+        uglydict['properties']['bottom']['name'] = split_temp[1]
+        uglydict['properties']['nominal']['name'] = "{} // {}".format(split_temp[0], split_temp[1])
+
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[1], 1)
+        uglydict['properties']['nominal']['mana_cost'] = symbolprettify(split_temp[0], "reverse")  # mana_cost(=str)
+        if len(split_temp) > 1:
+            uglydict['actual']['nominal']['mana_cost'] = symbolprettify(split_temp[1], "reverse")
+
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[2], 1)
+        uglydict['properties']['nominal']['cmc'] = int(split_temp[0])  # CMC(=int)
+        if len(split_temp) > 1:
+            uglydict['actual']['nominal']['cmc'] = split_temp[1]
+
+        uglydict['properties']['nominal']['color'] = tuple(cardlist[3]) if cardlist[3] != "C" else ()  # color(=tuple)
+
+        split_temp = re.split(r',(?=[\-\+>])', cardlist[5], 1)
+        uglydict['properties']['nominal']['color_accessibility'] = [tuple(item) for item in split_temp[0].split(',')]  # color accessibility(=list of tuple)
+        if len(split_temp) > 1:
+            uglydict['actual']['nominal']['color_accessibility'] = [tuple(item) for item in split_temp[1].split(',')]
+
+        split_temp = cardlist[6].split("\n")
+        split_subtemp = re.split(r'[\-\+>]', split_temp[0], 1)
+        uglydict['properties']['top']['supertype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []  # supertype(=list)
+        if len(split_subtemp) > 1:
+            uglydict['actual']['top']['supertype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[1], 1)
+        uglydict['properties']['bottom']['supertype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
+        if len(split_subtemp) > 1:
+            uglydict['actual']['bottom']['supertype'] = split_subtemp[1].split(' ')
+
+        split_temp = cardlist[7].split("\n")
+        split_subtemp = re.split(r'[\-\+>]', split_temp[0], 1)
+        uglydict['properties']['top']['subtype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []  # subtype(=list)
+        if len(split_subtemp) > 1:
+         uglydict['actual']['top']['subtype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[1], 1)
+        uglydict['properties']['bottom']['subtype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
+        if len(split_subtemp) > 1:
+            uglydict['actual']['bottom']['subtype'] = split_subtemp[1].split(' ')
+
+        split_temp = cardlist[10].split("\n")
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[0], 1)
+        uglydict['properties']['top']['power'] = split_subtemp[0]  # power(=str)
+        if len(split_subtemp) > 1:
+            uglydict['actual']['top']['power'] = split_subtemp[1]
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[1], 1)
+        uglydict['properties']['bottom']['power'] = split_subtemp[0]
+        if len(split_subtemp) > 1:
+            uglydict['actual']['bottom']['power'] = split_subtemp[1]
+
+        split_temp = cardlist[11].split("\n")
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[0], 1)
+        uglydict['properties']['top']['toughness'] = split_subtemp[0]  # toughness(=str)
+        if len(split_subtemp) > 1:
+            uglydict['actual']['top']['toughness'] = split_subtemp[1]
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[1], 1)
+        uglydict['properties']['bottom']['toughness'] = split_subtemp[0]
+        if len(split_subtemp) > 1:
+            uglydict['actual']['bottom']['toughness'] = split_subtemp[1]
+
+        split_temp = cardlist[13].split("\n// ")
+        uglydict['properties']['top']['oracle'] = split_temp[0]  # oracle(=str)
+        uglydict['properties']['bottom']['oracle'] = split_temp[1]
+
+        uglydict['properties']['nominal']['crop_image'] = cardlist[19]  # crop_image(=str, url)
 
     elif uglydict['properties']['nominal']['layout'] == 'Split':
         uglydict['properties']['left'] = {}
@@ -647,29 +827,29 @@ def uglify(cardlist):
         uglydict['properties']['nominal']['name'] = "{} // {}".format(split_temp[0], split_temp[1])
 
         split_temp = cardlist[1].split("\n")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[0])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[0], 1)
         uglydict['properties']['nominal']['mana_cost'] = symbolprettify(split_subtemp[0], "reverse")  # mana_cost(=str)
         if len(split_subtemp) > 1:
             uglydict['actual']['nominal']['mana_cost'] = symbolprettify(split_subtemp[1], "reverse")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[1])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[1], 1)
         uglydict['properties']['left']['mana_cost'] = symbolprettify(split_subtemp[0], "reverse")
         if len(split_subtemp) > 1:
             uglydict['actual']['left']['mana_cost'] = symbolprettify(split_subtemp[1], "reverse")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[2])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[2], 1)
         uglydict['properties']['right']['mana_cost'] = symbolprettify(split_subtemp[0], "reverse")
         if len(split_subtemp) > 1:
             uglydict['actual']['right']['mana_cost'] = symbolprettify(split_subtemp[1], "reverse")
 
         split_temp = cardlist[2].split("\n")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[0])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[0], 1)
         uglydict['properties']['nominal']['cmc'] = int(split_subtemp[0])  # CMC(=int)
         if len(split_subtemp) > 1:
             uglydict['actual']['nominal']['cmc'] = split_subtemp[1]
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[1])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[1], 1)
         uglydict['properties']['left']['cmc'] = int(split_subtemp[0])
         if len(split_subtemp) > 1:
             uglydict['actual']['left']['cmc'] = split_subtemp[1]
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[2])
+        split_subtemp = re.split(r'(?=[\-\+>])', split_temp[2], 1)
         uglydict['properties']['right']['cmc'] = int(split_subtemp[0])
         if len(split_subtemp) > 1:
             uglydict['actual']['right']['cmc'] = split_subtemp[1]
@@ -680,150 +860,100 @@ def uglify(cardlist):
         uglydict['properties']['right']['color'] = tuple(split_temp[2]) if split_temp[2] != "C" else ()
 
         split_temp = cardlist[5].split("\n")
-        split_subtemp = re.split(r'[\-\+]', split_temp[0])
-        uglydict['properties']['nominal']['supertype'] = tuple(split_subtemp[0].split(' '))  # supertype(=tuple)
+        split_subtemp = re.split(r',(?=[\-\+>])', split_temp[0], 1)
+        uglydict['properties']['nominal']['color_accessibility'] = [tuple(item) for item in split_subtemp[0].split(',')]  # color accessibility(=list of tuple)
         if len(split_subtemp) > 1:
-            uglydict['actual']['nominal']['supertype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[1])
-        uglydict['properties']['left']['supertype'] = tuple(split_subtemp[0].split(' '))
+            uglydict['actual']['nominal']['color_accessibility'] = [tuple(item) for item in split_subtemp[1].split(',')]
+        split_subtemp = re.split(r',(?=[\-\+>])', split_temp[1], 1)
+        uglydict['properties']['left']['color_accessibility'] = [tuple(item) for item in split_subtemp[0].split(',')]
         if len(split_subtemp) > 1:
-            uglydict['actual']['left']['supertype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[2])
-        uglydict['properties']['right']['supertype'] = tuple(split_subtemp[0].split(' '))
+            uglydict['actual']['left']['color_accessibility'] = [tuple(item) for item in split_subtemp[1].split(',')]
+        split_subtemp = re.split(r',(?=[\-\+>])', split_temp[2], 1)
+        uglydict['properties']['right']['color_accessibility'] = [tuple(item) for item in split_subtemp[0].split(',')]
         if len(split_subtemp) > 1:
-            uglydict['actual']['right']['supertype'] = tuple(split_subtemp[1].split(' '))
+            uglydict['actual']['right']['color_accessibility'] = [tuple(item) for item in split_subtemp[1].split(',')]
 
         split_temp = cardlist[6].split("\n")
-        split_subtemp = re.split(r'[\-\+]', split_temp[0])
-        uglydict['properties']['nominal']['subtype'] = tuple(split_subtemp[0].split(' '))  # subtype(=tuple)
+        split_subtemp = re.split(r'[\-\+>]', split_temp[0], 1)
+        uglydict['properties']['nominal']['supertype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []  # supertype(=list)
         if len(split_subtemp) > 1:
-            uglydict['actual']['nominal']['subtype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[1])
-        uglydict['properties']['left']['subtype'] = tuple(split_subtemp[0].split(' '))
+            uglydict['actual']['nominal']['supertype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[1], 1)
+        uglydict['properties']['left']['supertype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
         if len(split_subtemp) > 1:
-            uglydict['actual']['left']['subtype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[2])
-        uglydict['properties']['right']['subtype'] = tuple(split_subtemp[0].split(' '))
+            uglydict['actual']['left']['supertype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[2], 1)
+        uglydict['properties']['right']['supertype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
         if len(split_subtemp) > 1:
-            uglydict['actual']['right']['subtype'] = tuple(split_subtemp[1].split(' '))
+            uglydict['actual']['right']['supertype'] = split_subtemp[1].split(' ')
 
-        split_temp = cardlist[12].split("\n// ")
+        split_temp = cardlist[7].split("\n")
+        split_subtemp = re.split(r'[\-\+>]', split_temp[0], 1)
+        uglydict['properties']['nominal']['subtype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []  # subtype(=list)
+        if len(split_subtemp) > 1:
+            uglydict['actual']['nominal']['subtype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[1], 1)
+        uglydict['properties']['left']['subtype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
+        if len(split_subtemp) > 1:
+            uglydict['actual']['left']['subtype'] = split_subtemp[1].split(' ')
+        split_subtemp = re.split(r'[\-\+>]', split_temp[2], 1)
+        uglydict['properties']['right']['subtype'] = split_subtemp[0].split(' ') if split_subtemp[0] != "" else []
+        if len(split_subtemp) > 1:
+            uglydict['actual']['right']['subtype'] = split_subtemp[1].split(' ')
+
+        split_temp = cardlist[13].split("\n// ")
         uglydict['properties']['left']['oracle'] = split_temp[0]  # oracle(=str)
         uglydict['properties']['right']['oracle'] = split_temp[1]
 
-        uglydict['properties']['nominal']['crop_image'] = cardlist[18]  # crop_image(=str, url)
-
-    elif uglydict['properties']['nominal']['layout'] == 'Flip':
-        uglydict['properties']['top'] = {}
-        uglydict['properties']['bottom'] = {}
-        uglydict['actual']['top'] = {}
-        uglydict['actual']['bottom'] = {}
-
-        split_temp = cardlist[0].split("\n// ")
-        uglydict['properties']['top']['name'] = split_temp[0]  # name(=str)
-        uglydict['properties']['bottom']['name'] = split_temp[1]
-        uglydict['properties']['nominal']['name'] = "{} // {}".format(split_temp[0], split_temp[1])
-
-        split_temp = re.split(r'(?=[\-\+])', cardlist[1])
-        uglydict['properties']['nominal']['mana_cost'] = symbolprettify(split_temp[0], "reverse")  # mana_cost(=str)
-        if len(split_temp) > 1:
-            uglydict['actual']['nominal']['mana_cost'] = symbolprettify(split_temp[1], "reverse")
-
-        split_temp = re.split(r'(?=[\-\+])', cardlist[2])
-        uglydict['properties']['nominal']['cmc'] = int(split_temp[0])  # CMC(=int)
-        if len(split_temp) > 1:
-            uglydict['actual']['nominal']['cmc'] = split_temp[1]
-
-        uglydict['properties']['nominal']['color'] = tuple(cardlist[3]) if cardlist[3] != "C" else ()  # color(=tuple)
-
-        split_temp = cardlist[5].split("\n")
-        split_subtemp = re.split(r'[\-\+]', split_temp[0])
-        uglydict['properties']['top']['supertype'] = tuple(split_subtemp[0].split(' '))  # supertype(=tuple)
-        if len(split_subtemp) > 1:
-            uglydict['actual']['top']['supertype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[1])
-        uglydict['properties']['bottom']['supertype'] = tuple(split_subtemp[0].split(' '))
-        if len(split_subtemp) > 1:
-            uglydict['actual']['bottom']['supertype'] = tuple(split_subtemp[1].split(' '))
-
-        split_temp = cardlist[6].split("\n")
-        split_subtemp = re.split(r'[\-\+]', split_temp[0])
-        uglydict['properties']['top']['subtype'] = tuple(split_subtemp[0].split(' '))  # subtype(=tuple)
-        if len(split_subtemp) > 1:
-         uglydict['actual']['top']['subtype'] = tuple(split_subtemp[1].split(' '))
-        split_subtemp = re.split(r'[\-\+]', split_temp[1])
-        uglydict['properties']['bottom']['subtype'] = tuple(split_subtemp[0].split(' '))
-        if len(split_subtemp) > 1:
-            uglydict['actual']['bottom']['subtype'] = tuple(split_subtemp[1].split(' '))
-
-        split_temp = cardlist[9].split("\n")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[0])
-        uglydict['properties']['top']['power'] = split_subtemp[0]  # power(=str)
-        if len(split_subtemp) > 1:
-            uglydict['actual']['top']['power'] = split_subtemp[1]
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[1])
-        uglydict['properties']['bottom']['power'] = split_subtemp[0]
-        if len(split_subtemp) > 1:
-            uglydict['actual']['bottom']['power'] = split_subtemp[1]
-
-        split_temp = cardlist[10].split("\n")
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[0])
-        uglydict['properties']['top']['toughness'] = split_subtemp[0]  # toughness(=str)
-        if len(split_subtemp) > 1:
-            uglydict['actual']['top']['toughness'] = split_subtemp[1]
-        split_subtemp = re.split(r'(?=[\-\+])', split_temp[1])
-        uglydict['properties']['bottom']['toughness'] = split_subtemp[0]
-        if len(split_subtemp) > 1:
-            uglydict['actual']['bottom']['toughness'] = split_subtemp[1]
-
-        split_temp = cardlist[12].split("\n// ")
-        uglydict['properties']['top']['oracle'] = split_temp[0]  # oracle(=str)
-        uglydict['properties']['bottom']['oracle'] = split_temp[1]
-
-        uglydict['properties']['nominal']['crop_image'] = cardlist[18]  # crop_image(=str, url)
+        uglydict['properties']['nominal']['crop_image'] = cardlist[19]  # crop_image(=str, url)
 
     else:
         uglydict['properties']['nominal']['name'] = cardlist[0]  # name(=str)
 
-        split_temp = re.split(r'(?=[\-\+])', cardlist[1])
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[1], 1)
         uglydict['properties']['nominal']['mana_cost'] = symbolprettify(split_temp[0], "reverse")  # mana_cost(=str)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['mana_cost'] = symbolprettify(split_temp[1], "reverse")
 
-        split_temp = re.split(r'(?=[\-\+])', cardlist[2])
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[2], 1)
         uglydict['properties']['nominal']['cmc'] = int(split_temp[0])  # CMC(=int)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['cmc'] = split_temp[1]
 
         uglydict['properties']['nominal']['color'] = tuple(cardlist[3]) if cardlist[3] != "C" else ()  # color(=tuple)
 
-        split_temp = re.split(r'[\-\+]', cardlist[5])
-        uglydict['properties']['nominal']['supertype'] = tuple(split_temp[0].split(' '))  # supertype(=tuple)
+        split_temp = re.split(r',(?=[\-\+>])', cardlist[5], 1)
+        uglydict['properties']['nominal']['color_accessibility'] = [tuple(item) for item in split_temp[0].split(',')]  # color accessibility(=list of tuple)
         if len(split_temp) > 1:
-            uglydict['actual']['nominal']['supertype'] = tuple(split_temp[1].split(' '))
+            uglydict['actual']['nominal']['color_accessibility'] = [tuple(item) for item in split_temp[1].split(',')]
 
-        split_temp = re.split(r'[\-\+]', cardlist[6])
-        uglydict['properties']['nominal']['subtype'] = tuple(split_temp[0].split(' '))  # subtype(=tuple)
+        split_temp = re.split(r'[\-\+>]', cardlist[6], 1)
+        uglydict['properties']['nominal']['supertype'] = split_temp[0].split(' ') if split_temp[0] != "" else []  # supertype(=list)
         if len(split_temp) > 1:
-            uglydict['actual']['nominal']['subtype'] = tuple(split_temp[1].split(' '))
+            uglydict['actual']['nominal']['supertype'] = split_temp[1].split(' ')
 
-        split_temp = re.split(r'(?=[\-\+])', cardlist[9])
+        split_temp = re.split(r'[\-\+>]', cardlist[7], 1)
+        uglydict['properties']['nominal']['subtype'] = split_temp[0].split(' ') if split_temp[0] != "" else []  # subtype(=list)
+        if len(split_temp) > 1:
+            uglydict['actual']['nominal']['subtype'] = split_temp[1].split(' ')
+
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[10], 1)
         uglydict['properties']['nominal']['power'] = split_temp[0]  # power(=str)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['power'] = split_temp[1]
 
-        split_temp = re.split(r'(?=[\-\+])', cardlist[10])
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[11], 1)
         uglydict['properties']['nominal']['toughness'] = split_temp[0]  # toughness(=str)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['toughness'] = split_temp[1]
 
-        split_temp = re.split(r'(?=[\-\+])', cardlist[11])
+        split_temp = re.split(r'(?=[\-\+>])', cardlist[12], 1)
         uglydict['properties']['nominal']['loyalty'] = split_temp[0]  # loyalty(=str)
         if len(split_temp) > 1:
             uglydict['actual']['nominal']['loyalty'] = split_temp[1]
 
-        uglydict['properties']['nominal']['oracle'] = cardlist[12]
-        uglydict['properties']['nominal']['crop_image'] = cardlist[18]
+        uglydict['properties']['nominal']['oracle'] = cardlist[13]
+        uglydict['properties']['nominal']['crop_image'] = cardlist[19]
 
     return uglydict
 
@@ -836,6 +966,7 @@ def tolerInt(string):
 
 
 if __name__ == '__main__':
+    '''
     print(symbolprettify("{11}{B}{R}{G}{W/B}{R/W}{2/B}{G/P} // {R}{R}{R}{R}"))
     print(symbolprettify("11BRGOS(2/B)(G/P) // RRRR", "reverse"))
 
@@ -843,3 +974,10 @@ if __name__ == '__main__':
     print(alist)
     alist = subtypeSort(alist)
     print(alist)
+    '''
+    mana1 = "{11}{B}{R}{G}{W/B}{R/W}{2/B}{G/P}"
+    mana2 = "{W/U}{U/B}{U/R}"
+    print(mana_to_accessibility(mana2))
+    new_mana = ','.join([''.join(item) for item in mana_to_accessibility(mana2)])
+
+    print(new_mana)
