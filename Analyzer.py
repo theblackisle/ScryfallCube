@@ -47,6 +47,57 @@ def concatenate_list(*cardlists, ignore_set=False, sum_dupl=False):
     print("%s cards in list by now." % len(unique_sheet))
     return unique_sheet
 
+def card_check(card, target, operator, criterion, weighted=False, split=False, back=False)
+    """
+    :param card: (Card.Card)
+    :param target: (str) that in card property dict
+    :param operator: (str) that will be parsed to operate target property and criterion
+    :param criterion: (str) that allowed in target property range
+    :param weighted: (bool) if True, weighted value will be returned from target property
+    :param split: (bool) For split cards. 
+                  if True, each left/right card face will be checked together, if false, only physical card itself is checked.
+    :param back: (bool) For flip and transform cards. 
+                 if True, front and back card face will be checked together, if false, only front card face is checked.
+    
+    :return: (list of SimpleCard) return all cards that meets criterion in a list
+    """
+
+def list_filter(cardlist, criterion, operator, value, weighted=False, split=False):
+    result_list = []
+
+    for card in cardlist:
+        if card.get_repr()
+
+
+
+
+    return result_list
+
+
+
+
+def list_sorter
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def color_breakdown(cardlist, mode="color", weighted=False):
 

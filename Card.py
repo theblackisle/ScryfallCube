@@ -422,6 +422,9 @@ class SimpleCard(Card):
     def get_repr(self, index, side="front", weighted=False, split=False):
         return self.properties[index]
 
+    def set_property(self, index, value):
+        self.properties[index] = value
+
     def showall(self):
         print("properites:")
         for key in self.properties.keys():
@@ -435,5 +438,5 @@ while __name__ == '__main__':
     card = Card(ScryfallIO.getCard(searchquery))
     print(card.__hash__())
     card = SimpleCard(card)
-    print(card.__hash__())
-    card.show()
+    card.set_property('asdf', 200)
+    card.showall()

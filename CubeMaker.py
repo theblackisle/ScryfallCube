@@ -359,7 +359,7 @@ if __name__ == '__main__':
                     print("Use _ for spacing.                                 e.g) A:First_strike")
                     print("Prepend ! or - for negative search.                e.g) A:!Goblin, A:-Goblin")
                     print("Prepend ^ for case-sensitive search.               e.g) A:^Flying")
-                    print("Prepend # for exact match.                         e.g) A:#angel - that will not matches 'evangel'")
+                    print("Prepend # for exact match.                         e.g) A:#elf - that will not matches 'self'")
                     print("")
                     query = input("Enter query to search: ")
 
