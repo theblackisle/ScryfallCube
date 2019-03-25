@@ -148,8 +148,4 @@ while __name__ == '__main__':
         prettyprint(card, 4)
 
 
-while __name__ == '__main__':
-    searchquery = input("search for: ")
-    if searchquery == "quit":
-        break
-    prettyprint(getCard(searchquery), 4)
+

@@ -2,11 +2,12 @@ import re
 import pyparsing
 import pprint
 
-import Analyzer
+from Converter import *
+from GsInterface import GsInterface
 import ScryfallIO
 from Card import Card
-from GsInterface import GsInterface
-from Converter import *
+import Listfilter
+import Analyzer
 
 main_menu = [
     "1. Manage files and sheets.",
@@ -464,7 +465,7 @@ if __name__ == '__main__':
                         target.sheet = str(index)
                         sheets.append(target.sheet.export_sheet_to_card(offset=3))
                     print("")
-                    target_list = Analyzer.concatenate_list(*sheets, ignore_set=True, sum_dupl=False)
+                    target_list = Listfilter.concatenate_list(*sheets, ignore_set=True, sum_dupl=False)
 
                     analyze_input = printMenu(analyze_menu)
                     if analyze_input[0:2].lower() == "^q":

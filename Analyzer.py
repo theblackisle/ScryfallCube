@@ -1,53 +1,11 @@
 from collections import defaultdict
 from Converter import *
 
+import pprint
+import pyparsing
 import re
 
-
-def concatenate_list(*cardlists, ignore_set=False, sum_dupl=False):
-    """
-    Card list들을 받아서 하나의 list로 합치고 중복되는 카드를 삭제함.
-
-    Args:
-        *cardlists (list): args of lists of Cards
-        ignore_set (bool): set이 달라도 name이 같으면 중복으로 처리함.
-        sum_dupl (bool): 중복 카드를 삭제하면서 둘의 quantity를 더함.
-    """
-
-    total_cards = 0
-    dupl_cards = 0
-    seen = set()
-    unique_sheet = []
-    if sum_dupl:
-        dupl_sheet = []
-
-    for cardlist in cardlists:
-        total_cards += len(cardlist)
-        for card in cardlist:
-            sample = card.get_repr("name") if ignore_set else card
-            if sample not in seen:
-                # set의 'in' operator는 __hash__를 통해 1차비교 후, 값이 같으면 __eq__로 2차비교한다.
-                seen.add(sample)
-                unique_sheet.append(card)
-            else:
-                print(card, "is duplicated.")
-                dupl_cards += 1
-                if sum_dupl:
-                    dupl_sheet.append(card)
-
-    if sum_dupl:
-        for card in dupl_sheet:
-            involved_card = next((x for x in unique_sheet if x.get_repr("name") == card.get_repr("name"))) \
-                if ignore_set else next((x for x in unique_sheet if x == card))
-            involved_card.actual["nominal"]["quantity"] += card.actual["nominal"]["quantity"]
-            unique_sheet[unique_sheet.index(involved_card)] = involved_card  # involved_card quantity 변경 후 update
-
-    print("%s cards are collected." % total_cards)
-    print("%s duplicated cards are removed from list." % dupl_cards)
-    print("%s cards in list by now." % len(unique_sheet))
-    return unique_sheet
-
-def card_check(card, target, operator, criterion, weighted=False, split=False, back=False)
+def card_check(card, target, operator, criterion, weighted=False, split=False, back=False):
     """
     :param card: (Card.Card)
     :param target: (str) that in card property dict
@@ -61,43 +19,7 @@ def card_check(card, target, operator, criterion, weighted=False, split=False, b
     
     :return: (list of SimpleCard) return all cards that meets criterion in a list
     """
-
-def list_filter(cardlist, criterion, operator, value, weighted=False, split=False):
-    result_list = []
-
-    for card in cardlist:
-        if card.get_repr()
-
-
-
-
-    return result_list
-
-
-
-
-def list_sorter
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    pass
 
 def color_breakdown(cardlist, mode="color", weighted=False):
 
@@ -235,3 +157,5 @@ def pt_breakdown(cardlist, mode="pt"):
 
 def tag_breakdown(cardlist):
     raise NotImplementedError
+
+
