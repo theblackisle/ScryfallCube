@@ -66,12 +66,47 @@ def _parser_printer(item, indent=0):
     if isclose:
         print(" " *(indent), ")")
 
-def listfilter_parser(query):
+def _listfilter_nest_parser(query):
+    """
+
+    :param query: str
+    :return: <class 'pyparsing.ParseResults'>, a iterable which contains str or other ParseResults instances
+    """
+
     query = "(" + query + ")"
     parsed_query = pyparsing.nestedExpr().searchString(query)[0][0]
     # (subtype:goblin SEX AND CITY) (hello) () NONO
 
     return parsed_query
+
+def _listfilter_expr_parser(query):
+    flag = "init"
+    result = set()
+
+    for item in query:
+        if query in ("OR", "AND", "EXCEPT"):
+            flag = query
+
+        else:
+            if type(item) is pyparsing.ParseResults:
+                local_result = _listfilter_expr_parser(item)
+
+            elif type(item) is str:
+                local_result = _listfilter_interpreter(item)
+
+            if flag == "init":
+                result = local_result
+            if flag == "AND":
+                result &= local_result
+            if flag == "OR":
+                result |= local_result
+            if flag == "EXCEPT":
+                result -= local_result
+            flag = "AND"
+
+
+
+    found_expr = re.findall(r'(?:(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+))|(?:AND|OR|EXCEPT)', query)
 
     #found_expr = re.findall(r'(?:(?:[\S]+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[><=!:])(?:[\S]+))|(?:AND|OR|EXCEPT)', parsed_query)
 
@@ -79,12 +114,14 @@ def listfilter_parser(query):
 
     # A OR A-BB : word OR (spaced query with parentheses)
 
-def listfilter_interpreter(query):
-    pass
+def _listfilter_interpreter(query):
+    found_expr = re.findall(r'(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+)', query)
+    
 
 
 
-def list_filter(cardlist, criterion, operator, value, weighted=False, split=False):
+
+def listfilter(cardlist, criterion, operator, value, weighted=False, split=False):
     expr_set = []
     searchset = []
 
@@ -93,6 +130,41 @@ def list_filter(cardlist, criterion, operator, value, weighted=False, split=Fals
     for card in cardlist:
         if card.get_repr():
             pass
+
+    parser = pyparsing.nestedExpr(opener="(", closer=")")
+    parsed_query = parser.searchString(inputs)
+
+    print(parsed_query)
+    for nest in parsed_query:
+        print(nest)
+
+    found_expr = re.findall(r'(?:(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+))|(?:AND|OR|EXCEPT)', inputs)
+    # A OR A-BB : word OR (spaced query with parentheses)
+
+    expr_set = []
+    searchset = []
+
+    for item in found_expr:
+        if item in ("OR", "AND", "EXCEPT"):
+            expr_set.append((None, None, item))
+
+    '''
+            else:
+                splitted = item.split(":")
+                if splitted[1][0] == "(":  # query is a nested query
+                    parsed_query = parser.parseString(splitted[1]).asList()[0]
+                else:  # query is a single word
+                    parsed_query = splitted[1]
+                expr_set.append((splitted[0], parsed_query))
+
+        for index, (col, parsed_query) in enumerate(expr_set):
+            if type(col) == list:
+                for i in col:
+                    searchset.append((i, parsed_query))
+            else:
+                searchset.append((col, parsed_query))
+    '''
+    # return
 
 
 
@@ -109,5 +181,5 @@ while __name__ == '__main__':
     query = input("parse for: ")
     if query == "quit":
         break
-    print(listfilter_parser(query))
-    _parser_printer(listfilter_parser(query))
+    print(_listfilter_nest_parser(query))
+    _parser_printer(_listfilter_nest_parser(query))
