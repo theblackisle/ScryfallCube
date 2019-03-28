@@ -2,7 +2,7 @@ from collections import defaultdict
 from Converter import *
 
 import pprint
-import pyparsing
+from pyparsing import *
 import re
 
 
@@ -74,13 +74,13 @@ def _listfilter_nest_parser(query):
     """
 
     query = "(" + query + ")"
-    parsed_query = pyparsing.nestedExpr().searchString(query)[0][0]
+    parsed_query = nestedExpr().searchString(query)[0][0]
     # (subtype:goblin SEX AND CITY) (hello) () NONO
 
     return parsed_query
 
-def _listfilter_expr_parser(query):
-    flag = "init"
+def _listfilter_expr_parser(query, cardlist):
+    flag = "OR"
     result = set()
 
     for item in query:
@@ -88,19 +88,17 @@ def _listfilter_expr_parser(query):
             flag = query
 
         else:
-            if type(item) is pyparsing.ParseResults:
+            if type(item) is ParseResults:
                 local_result = _listfilter_expr_parser(item)
 
             elif type(item) is str:
-                local_result = _listfilter_interpreter(item)
+                local_result = _listfilter_interpreter(item, cardlist)
 
-            if flag == "init":
-                result = local_result
-            if flag == "AND":
+            elif flag == "AND":
                 result &= local_result
-            if flag == "OR":
+            elif flag == "OR":
                 result |= local_result
-            if flag == "EXCEPT":
+            elif flag == "EXCEPT":
                 result -= local_result
             flag = "AND"
 
@@ -114,14 +112,20 @@ def _listfilter_expr_parser(query):
 
     # A OR A-BB : word OR (spaced query with parentheses)
 
-def _listfilter_interpreter(query):
+def _listfilter_interpreter(query, cardlist=0):
     found_expr = re.findall(r'(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+)', query)
-    
+
+    propertyWord = Word(alphas + "_")
+    #operatorWord = ">=" + "<=" + "!=" + "!:" + Word("=:><")
+    operatorWord = ":"
+    valueWord = Word(alphanums + "_")
+
+    searchquery = Combine(propertyWord + operatorWord + valueWord)
+    parsedresult = searchquery.parseString(query)
+    return parsedresult
 
 
-
-
-def listfilter(cardlist, criterion, operator, value, weighted=False, split=False):
+def listfilter(cardlist, inputs, criterion, operator, value, weighted=False, split=False):
     expr_set = []
     searchset = []
 
@@ -131,7 +135,7 @@ def listfilter(cardlist, criterion, operator, value, weighted=False, split=False
         if card.get_repr():
             pass
 
-    parser = pyparsing.nestedExpr(opener="(", closer=")")
+    parser = nestedExpr(opener="(", closer=")")
     parsed_query = parser.searchString(inputs)
 
     print(parsed_query)
@@ -181,5 +185,8 @@ while __name__ == '__main__':
     query = input("parse for: ")
     if query == "quit":
         break
-    print(_listfilter_nest_parser(query))
-    _parser_printer(_listfilter_nest_parser(query))
+    #print(_listfilter_nest_parser(query))
+    #_parser_printer(_listfilter_nest_parser(query))
+
+    print(type(_listfilter_interpreter(query)))
+    print(_listfilter_interpreter(query))
