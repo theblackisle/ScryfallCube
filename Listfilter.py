@@ -66,6 +66,14 @@ def _parser_printer(item, indent=0):
     if isclose:
         print(" " *(indent), ")")
 
+def listfilter(query, cardlist):
+    nest_stctr = _listfilter_nest_parser(query)
+
+    filted_list = _listfilter_expr_parser(nest_stctr, cardlist)
+
+    return filted_list
+
+
 def _listfilter_nest_parser(query):
     """
 
@@ -79,17 +87,17 @@ def _listfilter_nest_parser(query):
 
     return parsed_query
 
-def _listfilter_expr_parser(query, cardlist):
+def _listfilter_expr_parser(nest_stctr, cardlist):
     flag = "OR"
     result = set()
 
-    for item in query:
-        if query in ("OR", "AND", "EXCEPT"):
-            flag = query
+    for item in nest_stctr:
+        if item in ("OR", "AND", "EXCEPT"):
+            flag = item
 
         else:
             if type(item) is ParseResults:
-                local_result = _listfilter_expr_parser(item)
+                local_result = _listfilter_expr_parser(item, cardlist)
 
             elif type(item) is str:
                 local_result = _listfilter_interpreter(item, cardlist)
@@ -102,27 +110,40 @@ def _listfilter_expr_parser(query, cardlist):
                 result -= local_result
             flag = "AND"
 
-
-
-    found_expr = re.findall(r'(?:(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+))|(?:AND|OR|EXCEPT)', query)
-
-    #found_expr = re.findall(r'(?:(?:[\S]+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[><=!:])(?:[\S]+))|(?:AND|OR|EXCEPT)', parsed_query)
-
-    #print(found_expr)
-
-    # A OR A-BB : word OR (spaced query with parentheses)
+    return list(result)
 
 def _listfilter_interpreter(query, cardlist=0):
-    found_expr = re.findall(r'(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+)', query)
+    #found_expr = re.findall(r'(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+)', query)
+    # subtype:goblin
 
     propertyWord = Word(alphas + "_")
-    #operatorWord = ">=" + "<=" + "!=" + "!:" + Word("=:><")
-    operatorWord = ":"
+    operatorWord = Literal(">=") | Literal("<=") | Literal("!=") | Literal("!:") | Word("=:><")
     valueWord = Word(alphanums + "_")
 
-    searchquery = Combine(propertyWord + operatorWord + valueWord)
+
+    '''
+            else:
+                splitted = item.split(":")
+                if splitted[1][0] == "(":  # query is a nested query
+                    parsed_query = parser.parseString(splitted[1]).asList()[0]
+                else:  # query is a single word
+                    parsed_query = splitted[1]
+                expr_set.append((splitted[0], parsed_query))
+
+        for index, (col, parsed_query) in enumerate(expr_set):
+            if type(col) == list:
+                for i in col:
+                    searchset.append((i, parsed_query))
+            else:
+                searchset.append((col, parsed_query))
+    '''
+
+    searchquery = propertyWord.setResultsName('property') + operatorWord.setResultsName('operator') + valueWord.setResultsName('value')
     parsedresult = searchquery.parseString(query)
+    print(parsedresult['value'])
     return parsedresult
+
+
 
 
 def listfilter(cardlist, inputs, criterion, operator, value, weighted=False, split=False):
@@ -152,22 +173,6 @@ def listfilter(cardlist, inputs, criterion, operator, value, weighted=False, spl
         if item in ("OR", "AND", "EXCEPT"):
             expr_set.append((None, None, item))
 
-    '''
-            else:
-                splitted = item.split(":")
-                if splitted[1][0] == "(":  # query is a nested query
-                    parsed_query = parser.parseString(splitted[1]).asList()[0]
-                else:  # query is a single word
-                    parsed_query = splitted[1]
-                expr_set.append((splitted[0], parsed_query))
-
-        for index, (col, parsed_query) in enumerate(expr_set):
-            if type(col) == list:
-                for i in col:
-                    searchset.append((i, parsed_query))
-            else:
-                searchset.append((col, parsed_query))
-    '''
     # return
 
 
@@ -185,8 +190,5 @@ while __name__ == '__main__':
     query = input("parse for: ")
     if query == "quit":
         break
-    #print(_listfilter_nest_parser(query))
-    #_parser_printer(_listfilter_nest_parser(query))
 
-    print(type(_listfilter_interpreter(query)))
     print(_listfilter_interpreter(query))

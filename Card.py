@@ -372,6 +372,13 @@ Oracle: {12}""".format(self.get_repr("name", side="nominal"),
 
 class SimpleCard(Card):
     def __init__(self, data=None, side="front", weighted=False, split=False, opposite_name=True):
+        """
+        :param data: initial data source. could be from a Google spreadsheet row or a scryfallCube.Card, and not from Scryfall Json data directly
+        :param side: in a multiple-sided card, determines information of which side of the card is stored
+        :param weighted: if True, weighted vaules are contained
+        :param split: if True, split cards are treated as multiple-sided cards. the left side is 'front'
+        :param opposite_name: if True, a name of a multiple-sided card is presented as "AA (// BB)" form. otherwise, only a name of current side is presented.
+        """
         if data is None:  # empty initialization
             self.properties = defaultdict(lambda: "")
 
@@ -403,21 +410,22 @@ class SimpleCard(Card):
                 'crop_image',
                 'quantity']
 
+            special_group = ["Transform", "Flip"]
+            if split is True:
+                special_group.append("Split")
+
             for attribute in attributes:
-                if attribute == 'name' and opposite_name:
-                    if side == "front":
-                        self.properties[attribute] = "{} (// {})".format(data.get_repr(attribute, side="front", weighted=weighted, split=split),
-                                                                         data.get_repr(attribute, side="back", weighted=weighted, split=split))
-                    elif side == "back":
-                        self.properties[attribute] = "{} (// {})".format(data.get_repr(attribute, side="back", weighted=weighted, split=split),
-                                                                         data.get_repr(attribute, side="front", weighted=weighted, split=split))
-                    else:
-                        self.properties[attribute] = data.get_repr(attribute, side=side, weighted=weighted, split=split)
+                self.properties[attribute] = data.get_repr(attribute, side=side, weighted=weighted, split=split)
 
-                else:
-                    self.properties[attribute] = data.get_repr(attribute, side=side, weighted=weighted, split=split)
-
-
+            if self.properties['layout'] in special_group and opposite_name:
+                if side == "front":
+                    self.properties['name'] = "{} (// {})".format(
+                        data.get_repr('name', side="front", weighted=True, split=True),
+                        data.get_repr('name', side="back", weighted=True, split=True))
+                elif side == "back":
+                    self.properties['name'] = "{} (// {})".format(
+                        data.get_repr('name', side="back", weighted=True, split=True),
+                        data.get_repr('name', side="front", weighted=True, split=True))
 
     def get_repr(self, index, side="front", weighted=False, split=False):
         return self.properties[index]
@@ -437,6 +445,6 @@ while __name__ == '__main__':
         break
     card = Card(ScryfallIO.getCard(searchquery))
     print(card.__hash__())
-    card = SimpleCard(card)
+    card = SimpleCard(card, side='back', split=True)
     card.set_property('asdf', 200)
     card.showall()
