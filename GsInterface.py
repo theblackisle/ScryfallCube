@@ -163,27 +163,23 @@ class GsSheet(gspread.models.Worksheet):
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
 
-    def searchImportCard(self, cardname, sets='f', indent=0):
-        card = Card(ScryfallIO.getCard(cardname, sets=sets), reference="Scryfall")
+    def searchImportCard(self, cardname, sets='f', indent=0, mode='default'):
+        card = Card(ScryfallIO.getCard(cardname, sets=sets), reference="Scryfall", mode=mode)
         self.append_row(prettify(card))
         print(" "*indent + "{:25} is recorded in '{}'".format(card.properties["nominal"]["name"], self.title))
 
-    def searchImportMass(self, namelist, sets='f'):
+    def searchImportMass(self, namelist, mode='default'):
         for index, cardname in enumerate(namelist, 1):
             while True:
                 try:
                     print("{:3}. ".format(index), end='')
-                    self.searchImportCard(cardname, indent=5)
+                    self.searchImportCard(cardname, indent=5, mode=mode)
                     break
                 except gspread.exceptions.APIError:
                     print(" "*5 + "{:25} failed to record in '{}' due to quota limit ".format(cardname, self.title))
                     sleeper = 20
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
-
-    def importFromQuery(self, searchquery, sets='f', sort=None, order=None):
-        cardlist = ScryfallIO.get_from_query(searchquery, sets=sets, sort=sort, order=order)
-        self.ImportMass(cardlist)
 
     def export_to_card(self, row):
         """가공된 row값을 받아 Card로 return"""

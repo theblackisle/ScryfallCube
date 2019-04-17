@@ -5,7 +5,7 @@ from collections import defaultdict
 
 
 class Card():
-    def __init__(self, data=None, reference="Scryfall"):
+    def __init__(self, data=None, reference="Scryfall", mode='default'):
         if data is None:  # empty initialization
             self.properties = defaultdict(lambda: defaultdict(lambda: ""))
             self.actual = defaultdict(lambda: defaultdict(lambda: ""))  # layered data from a cube maker
@@ -52,6 +52,8 @@ class Card():
             self.actual["nominal"]["tags"] = []  # fixing, infect, selfmill, big, small, ... ...
             self.properties["nominal"]["color_identity"] = tuple(data['color_identity'])  # split 카드의 활성화비용 identity..이런건 무시하기로.
             self.properties["nominal"]["set"] = data['set'].upper()
+            if mode == 'Cardkingdom':
+                self.properties["nominal"]["set"] = data['set_name']
             self.properties["nominal"]["rarity"] = data['rarity'].title()
             self.properties["nominal"]["usd"] = float(data.get('usd', 0))
             self.properties["nominal"]["layout"] = data['layout'].title()

@@ -302,7 +302,7 @@ if __name__ == '__main__':
                         for selection in selections:
                             target.sheet.importCard(cards[int(selection) - 1])
                     elif selections[0].lower() == "y":
-                        target.sheet.importMass(cards)
+                        target.sheet. importMass(cards)
                     else:
                         print("Import process aborted")
 
@@ -341,7 +341,13 @@ if __name__ == '__main__':
                 print("")
                 namelist = pointer.sheet.export_from_sheet(rowinput, columninput)
                 print("")
-                target.sheet.searchImportMass(namelist)
+
+                modeword = re.search(r'(?:-)(\w+)', choice)  # "4 -cardkingdom" style
+                if modeword.groups()[0].lower() == 'cardkingdom':
+                    mode = 'Cardkingdom'
+                else:
+                    mode = 'default'
+                target.sheet.searchImportMass(namelist, mode=mode)
 
 
         if choice[0] == '5':  # 5. Match card for query from prepared sheet
