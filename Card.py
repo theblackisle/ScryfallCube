@@ -23,6 +23,16 @@ class Card():
 
         elif reference == "Scryfall":  # data is JSON from Scryfall
             '''
+            type of properties
+            int = cmc, quantity
+            float = usd
+            tuple = color, color_identity
+            string = set, rarity, layout
+            list of tuples = color_accessibility
+            list of strings = supertype, subtype, buff, nerf, tags
+            int/string = power, toughness, loyalty
+        
+            
             ☆properties constant to layout
             color_identity
             set
@@ -52,7 +62,7 @@ class Card():
             self.actual["nominal"]["tags"] = []  # fixing, infect, selfmill, big, small, ... ...
             self.properties["nominal"]["color_identity"] = tuple(data['color_identity'])  # split 카드의 활성화비용 identity..이런건 무시하기로.
             self.properties["nominal"]["set"] = data['set'].upper()
-            if mode == 'Cardkingdom':
+            if mode.lower() == 'cardkingdom':
                 self.properties["nominal"]["set"] = data['set_name']
             self.properties["nominal"]["rarity"] = data['rarity'].title()
             self.properties["nominal"]["usd"] = float(data.get('usd', 0))

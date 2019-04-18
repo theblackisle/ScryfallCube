@@ -128,10 +128,6 @@ class GsSheet(gspread.models.Worksheet):
         title_range = self.title + '!A1:A%s' % self.row_count
         return self.spreadsheet.values_append(title_range, params, body)
 
-    def importCard(self, card):
-        self.append_row(prettify(card))
-        print("{:25} is recorded in '{}'".format(card.properties["nominal"]["name"], self.title))
-
     def import_rows(self, row_data):  # row_data = list of row data(=list).
         """가공된 row값들을 받아 sheet에 붙여넣기"""
         for i in range(len(row_data)):
@@ -146,6 +142,13 @@ class GsSheet(gspread.models.Worksheet):
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
 
+    def importCard(self, card, indent=0):
+        '''
+        :param card:
+        :return:
+        '''
+        self.append_row(prettify(card))
+        print(" "*indent + "{:25} is recorded in '{}'".format(card.properties["nominal"]["name"], self.title))
 
     def importMass(self, cardlist):
         for index, card in enumerate(cardlist, 1):
@@ -158,33 +161,10 @@ class GsSheet(gspread.models.Worksheet):
                     # "code": 429,
                     # "status": "RESOURCE_EXHAUSTED",
                     # "message": "Quota exceeded for quota group 'WriteGroup' and limit 'USER-100s'
-                    print("{:25} failed to record in '{}' due to quota limit ".format(card.properties["nominal"]["name"], self.title))
+                    print(" "*5 + "{:25} failed to record in '{}' due to quota limit ".format(card.properties["nominal"]["name"], self.title))
                     sleeper = 20
                     print("Program paused for %s seconds." % sleeper)
                     time.sleep(sleeper)
-
-    def searchImportCard(self, cardname, sets='f', indent=0, mode='default'):
-        card = Card(ScryfallIO.getCard(cardname, sets=sets), reference="Scryfall", mode=mode)
-        self.append_row(prettify(card))
-        print(" "*indent + "{:25} is recorded in '{}'".format(card.properties["nominal"]["name"], self.title))
-
-    def searchImportMass(self, namelist, mode='default'):
-        for index, cardname in enumerate(namelist, 1):
-            while True:
-                try:
-                    print("{:3}. ".format(index), end='')
-                    self.searchImportCard(cardname, indent=5, mode=mode)
-                    break
-                except gspread.exceptions.APIError:
-                    print(" "*5 + "{:25} failed to record in '{}' due to quota limit ".format(cardname, self.title))
-                    sleeper = 20
-                    print("Program paused for %s seconds." % sleeper)
-                    time.sleep(sleeper)
-
-    def export_to_card(self, row):
-        """가공된 row값을 받아 Card로 return"""
-        card = Card(self.row_values(row), reference="Gspread")
-        return card
 
     def export_rows(self, rows):  # rows = list of row values(=int).
         """

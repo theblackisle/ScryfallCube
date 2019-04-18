@@ -170,6 +170,14 @@ def parsequery(inputs):
     return searchset
 
 
+def find_mode(inputs, defaultword=''):
+    modeword = re.search(r'(?:-)(\w+)', inputs)  # "4 -cardkingdom" style
+    if modeword is None:
+        mode = defaultword
+    else:
+        mode = modeword.groups()[0]
+
+    return mode
 
 if __name__ == '__main__':
     pointer = GsInterface('ScryfallCube-80b58226a864.json', 'ScryfallCubeIO', "Test", email="gattuk24@gmail.com")
@@ -259,7 +267,12 @@ if __name__ == '__main__':
                 result = ScryfallIO.getCard(query[0], sets=query[1])
 
                 if result is not None:
-                    card = Card(result, reference="Scryfall")
+                    modeword = re.search(r'(?:-)(\w+)', choice)  # "2 -cardkingdom" style
+                    if modeword.groups()[0].lower() == 'cardkingdom':
+                        mode = 'Cardkingdom'
+                    else:
+                        mode = 'default'
+                    card = Card(result, reference="Scryfall", mode=mode)
                     print("")
                     card.show()
                     print("")
@@ -339,15 +352,14 @@ if __name__ == '__main__':
                 target.file = pointer.file
                 target.sheet = inputs
                 print("")
+
                 namelist = pointer.sheet.export_from_sheet(rowinput, columninput)
                 print("")
-
-                modeword = re.search(r'(?:-)(\w+)', choice)  # "4 -cardkingdom" style
-                if modeword.groups()[0].lower() == 'cardkingdom':
-                    mode = 'Cardkingdom'
-                else:
-                    mode = 'default'
-                target.sheet.searchImportMass(namelist, mode=mode)
+                Jsonlist = ScryfallIO.getMass(namelist)
+                cardlist = [Card(card, reference="Scryfall", mode=find_mode(choice, defaultword='default')) for card in Jsonlist]
+                print("")
+                target.sheet.importMass(cardlist)
+                print("")
 
 
         if choice[0] == '5':  # 5. Match card for query from prepared sheet

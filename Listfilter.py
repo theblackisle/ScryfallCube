@@ -112,41 +112,54 @@ def _listfilter_expr_parser(nest_stctr, cardlist):
 
     return list(result)
 
-def _listfilter_interpreter(query, cardlist=0):
-    #found_expr = re.findall(r'(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+)', query)
-    # subtype:goblin
-
+def _listfilter_interpreter(query, cardlist=0, weighted=False, split=False):
     propertyWord = Word(alphas + "_")
     operatorWord = Literal(">=") | Literal("<=") | Literal("!=") | Literal("!:") | Word("=:><")
     valueWord = Word(alphanums + "_")
 
-
-    '''
-            else:
-                splitted = item.split(":")
-                if splitted[1][0] == "(":  # query is a nested query
-                    parsed_query = parser.parseString(splitted[1]).asList()[0]
-                else:  # query is a single word
-                    parsed_query = splitted[1]
-                expr_set.append((splitted[0], parsed_query))
-
-        for index, (col, parsed_query) in enumerate(expr_set):
-            if type(col) == list:
-                for i in col:
-                    searchset.append((i, parsed_query))
-            else:
-                searchset.append((col, parsed_query))
-    '''
-
     searchquery = propertyWord.setResultsName('property') + operatorWord.setResultsName('operator') + valueWord.setResultsName('value')
     parsedresult = searchquery.parseString(query)
-    print(parsedresult['value'])
+
+    result = set()
+    for card in cardlist:
+        if parsedresult['operator'] == ">=":
+            if float(parsedresult['value']) >= float(card.get_repr(parsedresult['property'])):
+                result.add(card)
+        elif parsedresult['operator'] == "<=":
+            if float(parsedresult['value']) <= float(card.get_repr(parsedresult['property'])):
+                result.add(card)
+        elif parsedresult['operator'] == "!=":
+            if parsedresult['value'] != card.get_repr(parsedresult['property']):
+                result.add(card)
+        elif parsedresult['operator'] == "!:":
+            if parsedresult['value'] not in card.get_repr(parsedresult['property']):
+                result.add(card)
+        elif parsedresult['operator'] == "=":
+            if parsedresult['value'] == card.get_repr(parsedresult['property']):
+                result.add(card)
+        elif parsedresult['operator'] == ">":
+            if parsedresult['value'] > card.get_repr(parsedresult['property']):
+                result.add(card)
+        elif parsedresult['operator'] == "<":
+            if parsedresult['value'] > card.get_repr(parsedresult['property']):
+                result.add(card)
+        elif parsedresult['operator'] == ":":
+            if parsedresult['value'] in card.get_repr(parsedresult['property']):
+                result.add(card)
+
+
+
+    parsedresult['property']
+    parsedresult['operator']
+    parsedresult['value']
+
+
     return parsedresult
 
 
+def _listfilter_comparer(cardlist, weighted=False, split=False):
 
 
-def listfilter(cardlist, inputs, criterion, operator, value, weighted=False, split=False):
     expr_set = []
     searchset = []
 
