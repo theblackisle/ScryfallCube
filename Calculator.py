@@ -141,3 +141,6 @@ def alt_cost_finder(oracle, mode='finder'):
     re.findall(r'(?:(?:\S+)(?:(?:>=)|(?:<=)|(?:!=)|(?:!:)|[=:><])(?:\S+))|(?:AND|OR|EXCEPT)', oracle)
     if mode is 'finder':
         return
+
+def is_empty_properties(value):
+    if value in ("", )

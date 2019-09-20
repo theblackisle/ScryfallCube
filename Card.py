@@ -70,7 +70,8 @@ class Card():
 
             if self.properties["nominal"]["layout"] == 'Transform':
                 # Transform: nominal = side_A = 앞면
-                # 무의미한 정보를 최대한 지우고 발생한 예외는 기억하는 방향으로...
+                # 무의미한 중복 데이터는 최대한 생성하지 말고 발생한 예외는 get_repr에서 기억하는 방향으로...
+                # sided: color(+actual), supertype(+actual), subtype(+actual), power(+actual, tend), toughness(+actual, tend), loyalty(+actual, tend), oracle, image
                 self.properties["side_A"]["name"] = data["card_faces"][0]["name"]
                 self.properties["side_B"]["name"] = data["card_faces"][1]["name"]
                 # self.properties["nominal"]["name"] = data["name"]
@@ -112,6 +113,7 @@ class Card():
 
             elif self.properties["nominal"]["layout"] == 'Flip':
                 # Flip: nominal = side_A = 윗면
+                # sided: supertype(+actual), subtype(+actual), power(+actual, tend), toughness(+actual, tend), loyalty(+actual, tend), oracle
                 self.properties["side_A"]["name"] = data["card_faces"][0]["name"]
                 self.properties["side_B"]["name"] = data["card_faces"][1]["name"]
 
@@ -149,6 +151,7 @@ class Card():
 
             elif self.properties["nominal"]["layout"] == 'Split':
                 # Transform: nominal = side_A(왼면) + side_B(오른면)
+                # sided: mama_cost(+alt), cmc(+x), color(+actual), color_accessibility, supertype(+actual), subtype(+actual), oracle
                 self.properties["side_A"]["name"] = data["card_faces"][0]["name"]
                 self.properties["side_B"]["name"] = data["card_faces"][1]["name"]
                 self.properties["nominal"]["name"] = '{} // {}'.format(self.properties["side_A"]["name"], self.properties["side_B"]["name"])
@@ -204,6 +207,7 @@ class Card():
 
             elif self.properties["nominal"]["layout"] == 'Adventure':
                 # Adventure: nominal = side_A = creature 파트
+                # sided: mama_cost(+alt), cmc(+x), supertype(+actual), subtype(+actual), power(+actual, tend), toughness(+actual, tend), loyalty(+actual, tend), oracle, image
                 self.properties["side_A"]["name"] = data["card_faces"][0]["name"]
                 self.properties["side_B"]["name"] = data["card_faces"][1]["name"]
                 # self.properties["nominal"]["name"] = data["name"]
@@ -282,19 +286,26 @@ class Card():
 
 
     def get_repr(self, index, side="nominal", weighted=False, split=False):
-        if weighted is False:
-            if index in ["buff", "nerf", "tags", "quantity"]:
-                getfunc = lambda x, y: self.properties[x][y]
-            else:
-                getfunc = lambda x, y: self.properties[x][y]
-        else:
+        if weighted is True:
             getfunc = self._get_weighted
+        else:
+            def getfunc(x, y):
+                return self.properties[x][y]
+            # getfunc = lambda x, y: self.properties[x][y]
 
-        special_group = ["Transform", "Flip"]
+        special_group = ["Transform", "Flip", "Adventure"]
         if split is True:
             special_group.append("Split")
 
-        target_face = "nominal"
+        dangerous_properties = ["name", "mana_cost", "cmc", "color", "color_accessibility", "supertype", "subtype", "power", "toughness", "loyalty", "oracle"]
+        #target_face = "nominal"
+
+        if side == "nominal":
+            if self.properties["nominal"]["layout"] in special_group:
+
+                target_face = 'side_A'
+            if self.properties["nominal"]["layout"] == 'Flip':
+                target_face = 'top'
         if side == "A":
             if self.properties["nominal"]["layout"] == 'Transform':
                 target_face = 'front'
@@ -302,7 +313,7 @@ class Card():
                 target_face = 'top'
             if self.properties["nominal"]["layout"] == 'Split':
                 target_face = 'left'
-        if side == "back":
+        if side == "B":
             if self.properties["nominal"]["layout"] == 'Transform':
                 target_face = 'back'
             if self.properties["nominal"]["layout"] == 'Flip':
@@ -445,27 +456,39 @@ class SimpleCard(Card):
         if type(data) == Card:
             self.properties = defaultdict(lambda: "")
             attributes = [
-                'mana_cost',
                 'name',
+                'mana_cost',
+                'alt_cost',
                 'cmc',
+                'x_in_cmc',
                 'color',
+                'actual_color',
                 'color_identity',
                 'color_accessibility',
                 'supertype',
+                'actual_supertype',
                 'subtype',
+                'actual_subtype',
                 'set',
                 'rarity',
-                'power',
-                'toughness',
-                'loyalty',
-                'oracle',
                 'layout',
+                'power',
+                'actual_power',
+                'power_tendency',
+                'toughness',
+                'actual_toughness',
+                'toughness_tendency',
+                'loyalty',
+                'actual_loyalty',
+                'loyalty_tendency',
+                'oracle',
                 'buff',
                 'nerf',
                 'tags',
                 'usd',
                 'crop_image',
-                'quantity"]
+                'quantity',
+            ]
 
             special_group = ["Transform", "Flip"]
             if split is True:
