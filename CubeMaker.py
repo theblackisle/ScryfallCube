@@ -252,6 +252,13 @@ if __name__ == '__main__':
 
 
         if choice[0] == '2':  # 2. Search exact card from Scryfall.
+            modeword = re.search(r'(?:-)(\w+)', choice)  # "2 -cardkingdom" style
+            if modeword is not None:
+                if modeword.groups()[0].lower() == 'cardkingdom':
+                    mode = 'Cardkingdom'
+            else:
+                mode = 'default'
+
             while True:
                 query = input('Enter cardname (and setcode) in "name @set" form: ')
                 if query[0:2].lower() == "^q":
@@ -267,11 +274,6 @@ if __name__ == '__main__':
                 result = ScryfallIO.getCard(query[0], sets=query[1])
 
                 if result is not None:
-                    modeword = re.search(r'(?:-)(\w+)', choice)  # "2 -cardkingdom" style
-                    if modeword.groups()[0].lower() == 'cardkingdom':
-                        mode = 'Cardkingdom'
-                    else:
-                        mode = 'default'
                     card = Card(result, reference="Scryfall", mode=mode)
                     print("")
                     card.show()

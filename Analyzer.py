@@ -1,5 +1,5 @@
 from collections import defaultdict
-from Converter import *
+from Calculator import *
 
 import pprint
 import pyparsing
@@ -30,7 +30,7 @@ def color_breakdown(cardlist, mode="color", weighted=False):
         target = card.get_repr(mode, weighted=weighted)
         color_identity[target] += 1
         if len(target) == 0:
-            color_share['C'] += 1
+            color_share["C"] += 1
         else:
             for char in target:
                 color_share[char] += 1
@@ -65,13 +65,13 @@ def burden_analysis(cardlist, split=False):
     for card in cardlist:
         if card.properties["nominal"]["layout"] == "Split":
             if split is True:
-                cmc = card.properties["left"]["cmc"]
-                generic_cmc = generic_mana_strip(card.properties["left"]["mana_cost"])
-                cmc_breakdown[cmc][generic_cmc].append((card.properties["left"]["mana_cost"], "{} (// {})".format(card.properties["left"]["name"], card.properties["right"]["name"]), card.actual["nominal"]["quantity"]))
+                cmc = card.properties["side_A"]["cmc"]
+                generic_cmc = generic_mana_strip(card.properties["side_A"]["mana_cost"])
+                cmc_breakdown[cmc][generic_cmc].append((card.properties["side_A"]["mana_cost"], "{} (// {})".format(card.properties["side_A"]["name"], card.properties["side_B"]["name"]), card.actual["nominal"]["quantity"]))
 
-                cmc = card.properties["right"]["cmc"]
-                generic_cmc = generic_mana_strip(card.properties["right"]["mana_cost"])
-                cmc_breakdown[cmc][generic_cmc].append((card.properties["right"]["mana_cost"], "{} (// {})".format(card.properties["right"]["name"], card.properties["left"]["name"]), card.actual["nominal"]["quantity"]))
+                cmc = card.properties["side_B"]["cmc"]
+                generic_cmc = generic_mana_strip(card.properties["side_B"]["mana_cost"])
+                cmc_breakdown[cmc][generic_cmc].append((card.properties["side_B"]["mana_cost"], "{} (// {})".format(card.properties["side_B"]["name"], card.properties["side_A"]["name"]), card.actual["nominal"]["quantity"]))
 
             else:
                 cmc = card.properties["nominal"]["cmc"]
@@ -88,8 +88,6 @@ def burden_analysis(cardlist, split=False):
             if card.properties["nominal"]["mana_cost"] == "" and card.properties["nominal"]["cmc"] != 0:  # meld card 등
                 generic_cmc = card.properties["nominal"]["cmc"]
             cmc_breakdown[cmc][generic_cmc].append((card.properties["nominal"]["mana_cost"], card.properties["nominal"]["name"], card.actual["nominal"]["quantity"]))
-
-
 
     color_burden = {"total": 0}
     card_quantity = {"total": 0}

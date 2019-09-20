@@ -10,8 +10,8 @@ from Converter import prettify, number_to_colchar, colchar_to_number
 
 class GsClient(gspread.Client):
     """
-    ['copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
-    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
+    ["copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request"]
     """
 
     def __init__(self, gsclient):
@@ -65,8 +65,8 @@ class GsClient(gspread.Client):
 
 class GsFile(gspread.models.Spreadsheet):
     """
-    ['copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
-    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
+    ["copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request"]
     """
 
     def __init__(self, gsspreadsheet):
@@ -100,8 +100,8 @@ class GsFile(gspread.models.Spreadsheet):
 
 class GsSheet(gspread.models.Worksheet):
     """
-    ['copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
-    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request']
+    ["copy', 'create', 'del_spreadsheet', 'import_csv', 'insert_permission', 'list_permissions',
+    'list_spreadsheet_files', 'login', 'open', 'open_by_key', 'open_by_url', 'openall', 'remove_permission', 'request"]
     """
 
     def __init__(self, gsworksheet):

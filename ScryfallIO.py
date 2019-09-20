@@ -68,13 +68,13 @@ def getCard(searchquery, sets="f", mode="exact"):
         json_structure = json.loads(s=response.read().decode('utf-8'))
         # 둘다 str이지만 인자로 response.read()를 넣어야지 json_dump를 넣으면 pretty printing 안됨.
         if json_structure["total_cards"] == 1:  # 정확한 카드 매칭
-            print("{:25} is found from Scryfall".format(json_structure["data"][0]['name']))
+            print("{:25} is found from Scryfall".format(json_structure["data"][0]["name"]))
             return json_structure["data"][0]
 
         elif json_structure["total_cards"] > 1:
             for single_json in json_structure["data"]:  # query에 xxxquery, queryxxx가 반환된 경우
-                if single_json['name'].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
-                    print("{:25} is found from Scryfall".format(single_json['name']))
+                if single_json["name"].lower() == searchquery.lower():  # 정확한 카드 매칭 찾기
+                    print("{:25} is found from Scryfall".format(single_json["name"]))
                     return single_json
 
             print('''"%s" has not unique search result: %d many cards are found''' % (searchquery, json_structure["total_cards"]))

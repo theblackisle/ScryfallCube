@@ -122,39 +122,22 @@ def _listfilter_interpreter(query, cardlist=0, weighted=False, split=False):
 
     result = set()
     for card in cardlist:
-        if parsedresult['operator'] == ">=":
-            if float(parsedresult['value']) >= float(card.get_repr(parsedresult['property'])):
-                result.add(card)
-        elif parsedresult['operator'] == "<=":
-            if float(parsedresult['value']) <= float(card.get_repr(parsedresult['property'])):
-                result.add(card)
-        elif parsedresult['operator'] == "!=":
-            if parsedresult['value'] != card.get_repr(parsedresult['property']):
-                result.add(card)
-        elif parsedresult['operator'] == "!:":
-            if parsedresult['value'] not in card.get_repr(parsedresult['property']):
-                result.add(card)
-        elif parsedresult['operator'] == "=":
-            if parsedresult['value'] == card.get_repr(parsedresult['property']):
-                result.add(card)
-        elif parsedresult['operator'] == ">":
-            if parsedresult['value'] > card.get_repr(parsedresult['property']):
-                result.add(card)
-        elif parsedresult['operator'] == "<":
-            if parsedresult['value'] > card.get_repr(parsedresult['property']):
-                result.add(card)
-        elif parsedresult['operator'] == ":":
-            if parsedresult['value'] in card.get_repr(parsedresult['property']):
-                result.add(card)
+        if _listfilter_operator(card, parsedresult["property"], parsedresult["operator"], parsedresult["value"]):
+            result.add(card)
 
 
 
-    parsedresult['property']
-    parsedresult['operator']
-    parsedresult['value']
+
+
+
 
 
     return parsedresult
+
+def _listfilter_operator(card, properties, operator, value):
+
+
+    return True
 
 
 def _listfilter_comparer(cardlist, weighted=False, split=False):

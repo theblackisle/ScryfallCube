@@ -11,14 +11,14 @@ def create_assertion_session(conf_file, scopes, subject=None):
             print("unable to decode Credential file")
             return None
 
-    token_url = conf['token_uri']
-    issuer = conf['client_email']
-    key = conf['private_key']
+    token_url = conf["token_uri"]
+    issuer = conf["client_email"]
+    key = conf["private_key"]
     key_id = conf.get('private_key_id')
 
     header = {'alg': 'RS256'}
     if key_id:
-        header['kid'] = key_id
+        header["kid"] = key_id
 
     # Google puts scope in payload
     claims = {'scope': ' '.join(scopes)}
