@@ -1,8 +1,69 @@
+from typing import Set, Any, Union
+
 import ScryfallIO
 import Card_to_Gspread
 from Calculator import *
 
 from collections import defaultdict
+
+all_properties = {
+    "name",
+    "mana_cost",
+    "alt_cost",
+    "cmc",
+    "x_in_cmc",
+    "color",
+    "actual_color",
+    "color_identity",
+    "color_accessibility",
+    "supertype",
+    "actual_supertype",
+    "subtype",
+    "actual_subtype",
+    "set",
+    "rarity",
+    "layout",
+    "power",
+    "actual_power",
+    "power_tendency",
+    "toughness",
+    "actual_toughness",
+    "toughness_tendency",
+    "loyalty",
+    "actual_loyalty",
+    "loyalty_tendency",
+    "oracle",
+    "buff",
+    "nerf",
+    "tags",
+    "usd",
+    "crop_image",
+    "quantity",
+}
+
+special_layout = ("Transform", "Flip", "Split", "Adventure")
+special_properties = {'name', 'oracle',
+                      'mana_cost', 'alt_cost', 'cmc', 'x_in_cmc',
+                      'color', 'actual_color', 'color_accessibility',
+                      'supertype', 'actual_supertype', 'subtype', 'actual_subtype',
+                      'power', 'actual_power', 'power_tendency',
+                      'toughness', 'actual_toughness', 'toughness_tendency',
+                      'loyalty', 'actual_loyalty', 'loyalty_tendency',
+                      'crop_image'}
+
+dangerous_properties = dict()
+dangerous_properties["Transform"] = special_properties - {'mana_cost', 'alt_cost', 'cmc', 'x_in_cmc',
+                                                             'color_accessibility'}
+dangerous_properties["Flip"] = special_properties - {'mana_cost', 'alt_cost', 'cmc', 'x_in_cmc',
+                                                     'color_accessibility', 'color', 'actual_color',
+                                                     'loyalty', 'actual_loyalty', 'loyalty_tendency',
+                                                     'crop_image'}
+dangerous_properties["Split"] = special_properties - {"power", "actual_power", "power_tendency",
+                                                      "toughness", "actual_toughness", "toughness_tendency",
+                                                      'crop_image'}
+dangerous_properties["Adventure"] = special_properties - {'color_accessibility', 'color', 'actual_color',
+                                                          'loyalty', 'actual_loyalty', 'loyalty_tendency',
+                                                          'crop_image'}
 
 
 class Card():
@@ -233,13 +294,9 @@ class Card():
 
                 self.properties["side_A"]["supertype"] = left_typeline[0].split(" ")
                 self.properties["side_B"]["supertype"] = right_typeline[0].split(" ")
-                supertype_set = list(set(self.properties["side_A"]["supertype"]) | set(self.properties["side_B"]["supertype"]))
-                self.properties["nominal"]["supertype"] = sorted(supertype_set, key=typesort)
 
                 self.properties["side_A"]["subtype"] = left_typeline[1].split(" ") if len(left_typeline) > 1 else []
                 self.properties["side_B"]["subtype"] = right_typeline[1].split(" ") if len(right_typeline) > 1 else []
-                subtype_set = list(set(self.properties["side_A"]["subtype"]) | set(self.properties["side_B"]["subtype"]))
-                self.properties["nominal"]["subtype"] = subtypeSort(subtype_set)
 
                 # self.properties["nominal"]["power"] = ""
                 # self.properties["nominal"]["toughness"] = ""
@@ -248,8 +305,6 @@ class Card():
 
                 self.properties["side_A"]["oracle"] = data["card_faces"][0]["oracle_text"]
                 self.properties["side_B"]["oracle"] = data["card_faces"][1]["oracle_text"]
-                self.properties["nominal"]["oracle"] = '{}\n// {}'.format(self.properties["side_A"]["oracle"],
-                                                                          self.properties["side_B"]["oracle"])
 
                 self.properties["nominal"]["crop_image"] = data["image_uris"]["border_crop"]
 
@@ -285,96 +340,38 @@ class Card():
                         self.properties["side_B"]["x_in_cmc"] = "X" * len(right_x)
 
 
-    def get_repr(self, index, side="nominal", weighted=False, split=False):
-        if weighted is True:
-            getfunc = self._get_weighted
-        else:
-            def getfunc(x, y):
-                return self.properties[x][y]
+    def get_repr(self, index, side="nominal", actual=False):
             # getfunc = lambda x, y: self.properties[x][y]
 
-        special_group = ["Transform", "Flip", "Adventure"]
-        if split is True:
-            special_group.append("Split")
-
-        dangerous_properties = ["name", "mana_cost", "cmc", "color", "color_accessibility", "supertype", "subtype", "power", "toughness", "loyalty", "oracle"]
-        #target_face = "nominal"
-
-        if side == "nominal":
-            if self.properties["nominal"]["layout"] in special_group:
-
-                target_face = 'side_A'
-            if self.properties["nominal"]["layout"] == 'Flip':
-                target_face = 'top'
-        if side == "A":
-            if self.properties["nominal"]["layout"] == 'Transform':
-                target_face = 'front'
-            if self.properties["nominal"]["layout"] == 'Flip':
-                target_face = 'top'
-            if self.properties["nominal"]["layout"] == 'Split':
-                target_face = 'left'
-        if side == "B":
-            if self.properties["nominal"]["layout"] == 'Transform':
-                target_face = 'back'
-            if self.properties["nominal"]["layout"] == 'Flip':
-                target_face = 'bottom'
-            if self.properties["nominal"]["layout"] == 'Split':
-                target_face = 'right'
-
-        if self.properties["nominal"]["layout"] in special_group:
-            if getfunc(target_face, index) not in ("", []):
-                return getfunc(target_face, index)
-        return getfunc("nominal", index)
-
-    def _get_weighted(self, side, index):
-        if index == "mana_cost":
-            if re.match("-", self.properties[side][index]):  # -{G} 형태
-                operand = re.sub('-', "", self.properties[side][index])
-                return re.sub(operand, '', self.properties[side][index], count=1)
-
-            elif re.match(r'\+', self.properties[side][index]):  # +{G} 형태
-                operand = re.sub(r'\+', "", self.properties[side][index])
-                return mana_sum(self.properties[side][index], operand)
-
-            elif re.match(r'>', self.properties[side][index]):  # >{G} 형태
-                return re.sub(r'>', "", self.properties[side][index])
-
-            # 아무 return문에 걸리지 않음 -> 일반 property 리턴
-            return self.properties[side][index]
-
-        elif index in ("power", "toughness", "loyalty"):
-            if re.match("-", self.properties[side][index]):  # -n 형태
-                digit = re.findall(r'[1-9]+', self.properties[side][index])
-                if len(digit) > 0:
-                    return int(self.properties[side][index]) - int(digit[0])
-
-            elif re.match(r'\+', self.properties[side][index]):  # +n 형태
-                digit = re.findall(r'[1-9]+', self.properties[side][index])
-                if len(digit) > 0:
-                    return int(self.properties[side][index]) + int(digit[0])
-
-            elif re.match(r'>', self.properties[side][index]):  # >n 형태
-                digit = re.findall(r'[1-9]+', self.properties[side][index])
-                return digit[0]
-
-            # 아무 return문에 걸리지 않음 -> 일반 property 리턴
-            return self.properties[side][index]
-
-        elif index in ("supertype", "subtype"):
-            if re.match(r'\+', self.properties[side][index]):  # +n 형태
-                actual_types = re.sub(r'\+', "", self.properties[side][index]).strip().split(" ")
-                if len(actual_types) > 0:
-                    return self.properties[side][index] + actual_types
-
-            # 아무 return문에 걸리지 않음 -> 일반 property 리턴
-            return self.properties[side][index]
-
+        layout = self.properties["nominal"]["layout"]
+        if layout in special_layout:
+            if index not in dangerous_properties[layout]:
+                side = "nominal"
         else:
-            if index in ("buff", "nerf", "tags", "quantity"):
-                getfunc = lambda x, y: self.properties[x][y]
+            side = "nominal"
+
+        value = self.properties[side][index]
+        if actual is True:
+            if index in {"color", "power", "toughness", "loyalty"}:
+                index = "actual_" + index
+                value = self.properties[side][index]
+            elif index in {"supertype", "subtype"}:
+                index = "actual_" + index
+                value += self.properties[side][index]
+
+        return value
+
+    def set_property(self, index, value, side="nominal"):
+        layout = self.properties["nominal"]["layout"]
+        if layout in special_layout:
+            if side == "nominal" and index in dangerous_properties[layout]:
+                self.properties["side_A"][index] = value
+            elif side != "nominal" and index not in dangerous_properties[layout]:
+                self.properties["nominal"][index] = value
             else:
-                getfunc = lambda x, y: self.properties[x][y]
-            return getfunc(side, index)
+                self.properties[side][index] = value
+        else:
+            self.properties[side][index] = value
 
     def __str__(self):
         return "{0}, {1}".format(self.get_repr("name"), self.get_repr("set"))
@@ -411,40 +408,43 @@ class Card():
                 print("    %s: %s" % (second_key, self.properties[first_key][second_key]))
 
     def show(self):
-        print("""Name: {0}
-Mana cost: {1}
-CMC: {2}
-Color: {3}
-Color identity: {4}
-Color accessibility: {5}
-Type: {6}
-Set: {7}
-Rarity: {8}
-P/T: {9}
-Loyalty: {10}
-Price: {11}
-Oracle: {12}""".format(self.get_repr("name", side="nominal"),
-                       symbolprettify(self.get_repr("mana_cost")),
-                       self.get_repr("cmc"),
-                       ''.join(self.get_repr("color") if self.get_repr("color") != () else "C"),
-                       ''.join(self.get_repr("color_identity") if self.get_repr("color_identity") != () else "C"),
-                       ','.join([''.join(item) for item in self.get_repr("color_accessibility")]),
-                       '{}{}'.format(' '.join(self.get_repr("supertype")), (' - ' + ' '.join(self.get_repr("subtype"))) if self.get_repr("subtype") != [] else ""),
-                       self.get_repr("set"),
-                       self.get_repr("rarity"),
-                       '{}/{}'.format(self.get_repr("power"), self.get_repr("toughness")) if self.get_repr("power") != "" else "",
-                       self.get_repr("loyalty"),
-                       '${}'.format(self.get_repr("usd")),
-                       self.get_repr("oracle")))
+        print(
+            """Name: {0}
+            Mana cost: {1}
+            CMC: {2}
+            Color: {3}
+            Color identity: {4}
+            Color accessibility: {5}
+            Type: {6}
+            Set: {7}
+            Rarity: {8}
+            P/T: {9}
+            Loyalty: {10}
+            Price: {11}
+            Oracle: {12}"""
+            .format(self.get_repr("name", side="nominal"),
+                    symbolprettify(self.get_repr("mana_cost")),
+                    self.get_repr("cmc"),
+                    ''.join(self.get_repr("color") if self.get_repr("color") != () else "C"),
+                    ''.join(self.get_repr("color_identity") if self.get_repr("color_identity") != () else "C"),
+                    ','.join([''.join(item) for item in self.get_repr("color_accessibility")]),
+                    '{}{}'.format(' '.join(self.get_repr("supertype")), (' - ' + ' '.join(self.get_repr("subtype"))) if self.get_repr("subtype") != [] else ""),
+                    self.get_repr("set"),
+                    self.get_repr("rarity"),
+                    '{}/{}'.format(self.get_repr("power"), self.get_repr("toughness")) if self.get_repr("power") != "" else "",
+                    self.get_repr("loyalty"),
+                    '${}'.format(self.get_repr("usd")),
+                    self.get_repr("oracle")
+                    )
+        )
 
 
 class SimpleCard(Card):
-    def __init__(self, data=None, side="front", weighted=False, split=False, opposite_name=True):
+    def __init__(self, data=None, side="nominal", actual=False, opposite_name=True):
         """
         :param data: initial data source. could be from a Google spreadsheet row or a scryfallCube.Card, and not from Scryfall Json data directly
         :param side: in a multiple-sided card, determines information of which side of the card is stored
-        :param weighted: if True, weighted vaules are contained
-        :param split: if True, split cards are treated as multiple-sided cards. the left side is 'front'
+        :param actual: if True, actual(weighted) vaules are contained
         :param opposite_name: if True, a name of a multiple-sided card is presented as "AA (// BB)" form. otherwise, only a name of current side is presented.
         """
         if data is None:  # empty initialization
@@ -455,62 +455,29 @@ class SimpleCard(Card):
 
         if type(data) == Card:
             self.properties = defaultdict(lambda: "")
-            attributes = [
-                'name',
-                'mana_cost',
-                'alt_cost',
-                'cmc',
-                'x_in_cmc',
-                'color',
-                'actual_color',
-                'color_identity',
-                'color_accessibility',
-                'supertype',
-                'actual_supertype',
-                'subtype',
-                'actual_subtype',
-                'set',
-                'rarity',
-                'layout',
-                'power',
-                'actual_power',
-                'power_tendency',
-                'toughness',
-                'actual_toughness',
-                'toughness_tendency',
-                'loyalty',
-                'actual_loyalty',
-                'loyalty_tendency',
-                'oracle',
-                'buff',
-                'nerf',
-                'tags',
-                'usd',
-                'crop_image',
-                'quantity',
-            ]
 
-            special_group = ["Transform", "Flip"]
-            if split is True:
-                special_group.append("Split")
+            for index in all_properties:
+                self.properties[index] = data.get_repr(index, side=side, actual=actual)
 
-            for attribute in attributes:
-                self.properties[attribute] = data.get_repr(attribute, side=side, weighted=weighted, split=split)
-
-            if self.properties["layout"] in special_group and opposite_name:
-                if side == "front":
+            if opposite_name is True and self.properties["layout"] not in {"Transform", "Flip", "Split", "Adventure"}:
+                if side == "side_A":
                     self.properties["name"] = "{} (// {})".format(
-                        data.get_repr('name', side="front", weighted=True, split=True),
-                        data.get_repr('name', side="back", weighted=True, split=True))
-                elif side == "back":
+                        data.get_repr('name', side="side_A"),
+                        data.get_repr('name', side="side_B"))
+                elif side == "side_B":
                     self.properties["name"] = "{} (// {})".format(
-                        data.get_repr('name', side="back", weighted=True, split=True),
-                        data.get_repr('name', side="front", weighted=True, split=True))
+                        data.get_repr('name', side="side_B"),
+                        data.get_repr('name', side="side_A"))
+                elif side == "nominal":
+                    if self.properties["layout"] != "Split":
+                        self.properties["name"] = "{} (// {})".format(
+                            data.get_repr('name', side="side_A"),
+                            data.get_repr('name', side="side_B"))
 
-    def get_repr(self, index, side="front", weighted=False, split=False):
+    def get_repr(self, index, side="nominal", actual=False):
         return self.properties[index]
 
-    def set_property(self, index, value):
+    def set_property(self, index, value, side="nominal"):
         self.properties[index] = value
 
     def showall(self):

@@ -1,39 +1,74 @@
 from Converter import *
 
 gspread_index = {
-    'name': 0,  # str
-    'mana_cost': 1,  # str
-    'alt_cost': 2,  # str
-    'cmc': 3,  # int
-    'x_in_cmc': 4, # str
-    'color': 5,  # tuple of str
-    'actual_color': 6,  # tuple of str - ACTUAL
-    'color_identity': 7,  # tuple of str
-    'color_accessibility': 8,  # list of tuple of str - ACTUAL # accessibility는 원래가 actual한 것.
-    'supertype': 9,  # list of str
-    'actual_supertype': 10,  # list of str - ACTUAL
-    'subtype': 11,  # list of str
-    'actual_subtype': 12,  # list of str - ACTUAL
-    'set': 13,  # str, upper()-ed
-    'rarity': 14,  # str, title()-ed
-    'layout': 15,  # str
-    'power': 16,  # str
-    'actual_power': 17,  # str - ACTUAL
-    'power_tendency': 18,  # str - ACTUAL
-    'toughness': 19,  # str
-    'actual_toughness': 20,  # str - ACTUAL
-    'toughness_tendency': 21,  # str - ACTUAL
-    'loyalty': 22,  # str
-    'actual_loyalty': 23,  # str - ACTUAL
-    'loyalty_tendency': 24,  # str - ACTUAL
-    'oracle': 25,  # str
-    'buff': 26,  # list of str - ACTUAL
-    'nerf': 27,  # list of str - ACTUAL
-    'tags': 28,  # list of str - ACTUAL
-    'usd': 29,  # float
-    'crop_image': 30,  # str
-    'quantity': 31  # int - ACTUAL
+    "name": 0,  # str
+    "mana_cost": 1,  # str
+    "alt_cost": 2,  # str
+    "cmc": 3,  # int
+    "x_in_cmc": 4, # str
+    "color": 5,  # tuple of str
+    "actual_color": 6,  # tuple of str - ACTUAL
+    "color_identity": 7,  # tuple of str
+    "color_accessibility": 8,  # list of tuple of str - ACTUAL # accessibility는 원래가 actual한 것.
+    "supertype": 9,  # list of str
+    "actual_supertype": 10,  # list of str - ACTUAL
+    "subtype": 11,  # list of str
+    "actual_subtype": 12,  # list of str - ACTUAL
+    "set": 13,  # str, upper()-ed
+    "rarity": 14,  # str, title()-ed
+    "layout": 15,  # str
+    "power": 16,  # str
+    "actual_power": 17,  # str - ACTUAL
+    "power_tendency": 18,  # str - ACTUAL
+    "toughness": 19,  # str
+    "actual_toughness": 20,  # str - ACTUAL
+    "toughness_tendency": 21,  # str - ACTUAL
+    "loyalty": 22,  # str
+    "actual_loyalty": 23,  # str - ACTUAL
+    "loyalty_tendency": 24,  # str - ACTUAL
+    "oracle": 25,  # str
+    "buff": 26,  # list of str - ACTUAL
+    "nerf": 27,  # list of str - ACTUAL
+    "tags": 28,  # list of str - ACTUAL
+    "usd": 29,  # float
+    "crop_image": 30,  # str
+    "quantity": 31  # int - ACTUAL
 }
+'''
+"name"
+"mana_cost"
+"alt_cost"
+"cmc"
+"x_in_cmc"
+"color"
+"actual_color"
+"color_identity"
+"color_accessibility"
+"supertype"
+"actual_supertype"
+"subtype"
+"actual_subtype"
+"set"
+"rarity"
+"layout"
+"power"
+"actual_power"
+"power_tendency"
+"toughness"
+"actual_toughness"
+"toughness_tendency"
+"loyalty"
+"actual_loyalty"
+"loyalty_tendency"
+"oracle"
+"buff"
+"nerf"
+"tags"
+"usd"
+"crop_image"
+"quantity"
+'''
+
 
 def prettify(card):
     # Card.card to displayable gspread row
