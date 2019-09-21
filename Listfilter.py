@@ -102,7 +102,7 @@ def _listfilter_expr_parser(nest_stctr, cardlist):
             elif type(item) is str:
                 local_result = _listfilter_interpreter(item, cardlist)
 
-            elif flag == "AND":
+            if flag == "AND":
                 result &= local_result
             elif flag == "OR":
                 result |= local_result
@@ -114,8 +114,8 @@ def _listfilter_expr_parser(nest_stctr, cardlist):
 
 def _listfilter_interpreter(query, cardlist=0, weighted=False, split=False):
     propertyWord = Word(alphas + "_")
-    operatorWord = Literal(">=") | Literal("<=") | Literal("!=") | Literal("!:") | Word("=:><")
-    valueWord = Word(alphanums + "_")
+    operatorWord = Literal(">=") | Literal("<=") | Literal("!=") | Literal("!:") | Literal("=") | Literal(":") | Literal(">") | Literal("<")
+    valueWord = Word(alphanums + "*{}_,.:;+-/'æÆ" + '"')  # oracle:{T}:
 
     searchquery = propertyWord.setResultsName('property') + operatorWord.setResultsName('operator') + valueWord.setResultsName('value')
     parsedresult = searchquery.parseString(query)
@@ -124,13 +124,6 @@ def _listfilter_interpreter(query, cardlist=0, weighted=False, split=False):
     for card in cardlist:
         if _listfilter_operator(card, parsedresult["property"], parsedresult["operator"], parsedresult["value"]):
             result.add(card)
-
-
-
-
-
-
-
 
     return parsedresult
 
