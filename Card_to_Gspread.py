@@ -133,7 +133,7 @@ def prettify(card):
         prettylist[gspread_index["name"]] = '{}\n{}\n{}'.format(properties["nominal"]["name"], properties["side_A"]["name"], properties["side_B"]["name"])
         prettylist[gspread_index["mana_cost"]] = '{}\n{}\n{}'.format(symbolprettify(properties["nominal"]["mana_cost"]),
                                                                      symbolprettify(properties["side_A"]["mana_cost"]),
-                                                                     symbolprettify(properties["side_B"]["mana_cost"])) 
+                                                                     symbolprettify(properties["side_B"]["mana_cost"]))
         prettylist[gspread_index["alt_cost"]] = '{}\n{}\n{}'.format(symbolprettify(properties["nominal"]["alt_cost"]),
                                                                     symbolprettify(properties["side_A"]["alt_cost"]),
                                                                     symbolprettify(properties["side_B"]["alt_cost"]))
