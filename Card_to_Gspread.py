@@ -62,7 +62,7 @@ def prettify(card):
                                                              ''.join(properties["side_B"]["color"]))
         prettylist[gspread_index["actual_color"]] = '{}\n{}'.format(''.join(properties["side_A"]["actual_color"]),
                                                                     ''.join(properties["side_B"]["actual_color"]))
-        prettylist[gspread_index["color_accessibility"]] = ''.join(properties["nominal"]["color_accessibility"])
+        prettylist[gspread_index["color_accessibility"]] = ','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]])
         prettylist[gspread_index["supertype"]] = '{}\n{}'.format(' '.join(properties["side_A"]["supertype"]),
                                                                  ' '.join(properties["side_B"]["supertype"]))
         prettylist[gspread_index["actual_supertype"]] = '{}\n{}'.format(' '.join(properties["side_A"]["actual_supertype"]),
@@ -103,7 +103,7 @@ def prettify(card):
         prettylist[gspread_index["x_in_cmc"]] = properties["nominal"]["x_in_cmc"]
         prettylist[gspread_index["color"]] = ''.join(properties["nominal"]["color"])
         prettylist[gspread_index["actual_color"]] = ''.join(properties["nominal"]["actual_color"])
-        prettylist[gspread_index["color_accessibility"]] = ''.join(properties["nominal"]["color_accessibility"])
+        prettylist[gspread_index["color_accessibility"]] = ','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]])
         prettylist[gspread_index["supertype"]] = '{}\n{}'.format(' '.join(properties["side_A"]["supertype"]),
                                                                  ' '.join(properties["side_B"]["supertype"]))
         prettylist[gspread_index["actual_supertype"]] = '{}\n{}'.format(' '.join(properties["side_A"]["actual_supertype"]),
@@ -149,9 +149,9 @@ def prettify(card):
         prettylist[gspread_index["actual_color"]] = '{}\n{}\n{}'.format(''.join(properties["nominal"]["actual_color"]),
                                                                         ''.join(properties["side_A"]["actual_color"]),
                                                                         ''.join(properties["side_B"]["actual_color"]))
-        prettylist[gspread_index["color_accessibility"]] = '{}\n{}\n{}'.format(''.join(properties["nominal"]["color_accessibility"]),
-                                                                               ''.join(properties["side_A"]["color_accessibility"]),
-                                                                               ''.join(properties["side_B"]["color_accessibility"]))  # if properties["side_B"]["color_accessibility"] != "" else "")
+        prettylist[gspread_index["color_accessibility"]] = '{}\n{}\n{}'.format(','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]]),
+                                                                               ','.join([''.join(item) for item in properties["side_A"]["color_accessibility"]]),
+                                                                               ','.join([''.join(item) for item in properties["side_B"]["color_accessibility"]]))  # if properties["side_B"]["color_accessibility"] != "" else "")
         prettylist[gspread_index["supertype"]] = '{}\n{}\n{}'.format(''.join(properties["nominal"]["supertype"]),
                                                                      ''.join(properties["side_A"]["supertype"]),
                                                                      ''.join(properties["side_B"]["supertype"]))
@@ -184,7 +184,7 @@ def prettify(card):
                                                                 symbolprettify(properties["side_B"]["x_in_cmc"]))
         prettylist[gspread_index["color"]] = ''.join(properties["nominal"]["color"])
         prettylist[gspread_index["actual_color"]] = ''.join(properties["nominal"]["actual_color"])
-        prettylist[gspread_index["color_accessibility"]] = ''.join(properties["nominal"]["color_accessibility"])
+        prettylist[gspread_index["color_accessibility"]] = ','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]])
         # 지금까지는 side 색이 다른 adventure카드 없음
         prettylist[gspread_index["supertype"]] = '{}\n{}'.format(' '.join(properties["side_A"]["supertype"]),
                                                                  ' '.join(properties["side_B"]["supertype"]))
@@ -211,19 +211,26 @@ def prettify(card):
                                                                  properties["side_B"]["oracle"])
         prettylist[gspread_index["crop_image"]] = properties["nominal"]["crop_image"]
     else:
-        prettylist[gspread_index["name"]] = properties["nominal"]["name"]
-        prettylist[gspread_index["mana_cost"]] = '{}{}'.format(symbolprettify(properties["nominal"]["mana_cost"]), symbolprettify(properties["nominal"]["mana_cost"]))
-        prettylist[gspread_index["cmc"]] = '{}{}'.format(properties["nominal"]["cmc"], properties["nominal"]["cmc"])
+        prettylist[gspread_index["mana_cost"]] = symbolprettify(properties["nominal"]["mana_cost"])
+        prettylist[gspread_index["alt_cost"]] = symbolprettify(properties["nominal"]["alt_cost"])
+        prettylist[gspread_index["cmc"]] = properties["nominal"]["cmc"]
+        prettylist[gspread_index["x_in_cmc"]] = properties["nominal"]["x_in_cmc"]
         prettylist[gspread_index["color"]] = ''.join(properties["nominal"]["color"])
-        prettylist[gspread_index["color_accessibility"]] = '{}{}'.format(','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]]),
-                                      ',+'+','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]]) if properties["nominal"]["color_accessibility"] != "" else "")
-        prettylist[gspread_index["supertype"]] = '{}{}'.format(' '.join(properties["nominal"]["supertype"]),
-                                      '+'+' '.join(properties["nominal"]["supertype"]) if properties["nominal"]["supertype"] != "" else "")
-        prettylist[gspread_index["subtype"]] = '{}{}'.format(' '.join(properties["nominal"]["subtype"]),
-                                      '+'+' '.join(properties["nominal"]["subtype"]) if properties["nominal"]["subtype"] != "" else "")
-        prettylist[gspread_index["power"]] = '{}{}'.format(properties["nominal"]["power"], properties["nominal"]["power"])
-        prettylist[gspread_index["toughness"]] = '{}{}'.format(properties["nominal"]["toughness"], properties["nominal"]["toughness"])
-        prettylist[gspread_index["loyalty"]] = '{}{}'.format(properties["nominal"]["loyalty"], properties["nominal"]["loyalty"])
+        prettylist[gspread_index["actual_color"]] = ''.join(properties["nominal"]["actual_color"])
+        prettylist[gspread_index["color_accessibility"]] = ','.join([''.join(item) for item in properties["nominal"]["color_accessibility"]])
+        prettylist[gspread_index["supertype"]] = ' '.join(properties["nominal"]["supertype"])
+        prettylist[gspread_index["actual_supertype"]] = ' '.join(properties["nominal"]["actual_supertype"])
+        prettylist[gspread_index["subtype"]] = ' '.join(properties["nominal"]["subtype"])
+        prettylist[gspread_index["actual_subtype"]] = ' '.join(properties["nominal"]["actual_subtype"])
+        prettylist[gspread_index["power"]] = properties["nominal"]["power"]
+        prettylist[gspread_index["actual_power"]] = properties["nominal"]["actual_power"]
+        prettylist[gspread_index["power_tendency"]] = properties["nominal"]["power_tendency"]
+        prettylist[gspread_index["toughness"]] = properties["nominal"]["toughness"]
+        prettylist[gspread_index["actual_toughness"]] = properties["nominal"]["actual_toughness"]
+        prettylist[gspread_index["toughness_tendency"]] = properties["nominal"]["toughness_tendency"]
+        prettylist[gspread_index["loyalty"]] = properties["nominal"]["loyalty"]
+        prettylist[gspread_index["actual_loyalty"]] = properties["nominal"]["actual_loyalty"]
+        prettylist[gspread_index["loyalty_tendency"]] = properties["nominal"]["loyalty_tendency"]
         prettylist[gspread_index["oracle"]] = properties["nominal"]["oracle"]
         prettylist[gspread_index["crop_image"]] = properties["nominal"]["crop_image"]
 
